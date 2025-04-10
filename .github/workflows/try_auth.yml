@@ -1,0 +1,21 @@
+name: try_auth
+on:
+  workflow_dispatch:
+
+jobs:
+  try_auth:
+    runs-on: ubuntu-latest
+    environment: dev
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::354918379455:role/GitHubDevOIDC
+          aws-region: eu-west-1
+     
