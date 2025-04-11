@@ -1,7 +1,59 @@
 [project]
-name = "oreilly-mlops-with-databricks"
-version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.10"
-dependencies = []
+name = "hotel-booking"
+dynamic = ["version"]
+description = "Code accompanying MLOps with Databrick O'Reilly book"
+requires-python = ">=3.11, <3.12"
+dependencies = ["mlflow==2.17.0",
+                "cffi==1.17.1",
+                "cloudpickle==3.1.0",
+                "matplotlib==3.9.2",
+                "numpy==1.26.4",
+                "pandas==2.2.3",
+                "psutil==6.0.0",
+                "pyarrow==14.0.1",
+                "scikit-learn==1.5.2",
+                "lightgbm==4.5.0",
+                "scipy==1.14.1",
+                "databricks-feature-engineering==0.6",
+                "databricks-feature-lookup==1.2.0",
+                "databricks-sdk==0.32.0",
+                "pydantic==2.9.2",
+                "loguru==0.7.3"
+                ]
+
+[project.optional-dependencies]
+dev = ["databricks-connect>=15.4.1, <16",
+       "ipykernel>=6.29.5, <7",
+       "pip>=24.2",
+       "pre-commit>=4.1.0, <5"]
+
+[build-system]
+requires = [
+  "setuptools>=72.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+requires = ["setuptools_scm[toml]>=7.0"]
+version_scheme = "post-release"
+local_scheme = "node-and-date"
+fallback_version = "0.1.0"
+
+[tool.setuptools.packages.find]
+where =["src"]
+include = ["hotel_booking*"]
+
+[tool.ruff]
+line-length = 120
+select = [
+    "F",  # pyflakes rules
+    "E",  # pycodestyle error rules
+    "W",  # pycodestyle warning rules
+    "B",  # flake8-bugbear rules
+    "I",  # isort rules
+]
+ignore = [
+    "E501",  # line-too-long
+]
+
+[tool.ruff.format]
+indent-style = "space"
