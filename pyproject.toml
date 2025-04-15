@@ -27,6 +27,8 @@ dev = ["databricks-connect>=15.4.1, <16",
        "pip>=24.2",
        "pre-commit>=4.1.0, <5"]
 
+ci = ["pre-commit>=4.1.0, <5"]
+
 [build-system]
 requires = [
   "setuptools>=72.0"]
@@ -42,17 +44,33 @@ fallback_version = "0.1.0"
 where =["src"]
 include = ["hotel_booking*"]
 
+[tool.pytest.ini_options]
+addopts = "-s --no-header --no-summary"
+testpaths = [ "tests" ]
+pythonpath = [ "." ]
+
 [tool.ruff]
 line-length = 120
+
 select = [
-    "F",  # pyflakes rules
-    "E",  # pycodestyle error rules
-    "W",  # pycodestyle warning rules
-    "B",  # flake8-bugbear rules
-    "I",  # isort rules
+    "F",    # pyflakes rules
+    "E",    # pycodestyle error rules
+    "W",    # pycodestyle warning rules
+    "B",    # flake8-bugbear rules
+    "I",    # isort rules
+    "UP",   # pyupgrade rules
+    "SIM",  # flake8-simplify rules
+    "ERA",  # eradicate rules
+    "C",    # pylint convention rules
+    "D",    # pydocstyle rules
+    "ANN"   # flake8-annotations rules
 ]
 ignore = [
-    "E501",  # line-too-long
+    "D107", # Missing docstring in `__init__`
+    "D203", # incorrect-blank-line-before-class
+    "D213", # multi-line-summary-second-line
+    "E501", # line-too-long
+    "C901", # too complex
 ]
 
 [tool.ruff.format]
