@@ -18,12 +18,10 @@ resources:
       name: hotel-booking-model-training
       tags:
         project_name: "hotel-booking"
-
       tasks:
         - task_key: "preprocessing"
-          job_cluster_key: "house-price-cluster"
           spark_python_task:
-            python_file: "scripts/01.process_data.py"
+            python_file: "scripts/preprocess_data.py"
             parameters:
               - "--root_path"
               - ${workspace.root_path}
