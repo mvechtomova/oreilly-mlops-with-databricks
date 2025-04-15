@@ -7,8 +7,7 @@ from pydantic import BaseModel
 
 
 class ProjectConfig(BaseModel):
-    """Project configuration parameters loaded from project_config.yml.
-    """
+    """Project configuration parameters loaded from project_config.yml."""
 
     num_features: list[str]
     cat_features: list[str]
@@ -38,16 +37,6 @@ class ProjectConfig(BaseModel):
             config_dict = yaml.safe_load(f)
             config_dict["catalog_name"] = config_dict[env]["catalog_name"]
             config_dict["schema_name"] = config_dict[env]["schema_name"]
-            config_dict["pipeline_id"] = config_dict[env]["pipeline_id"]
-
+            if "pipeline_id" in config_dict[env]:
+                config_dict["pipeline_id"] = config_dict[env]["pipeline_id"]
             return cls(**config_dict)
-
-
-class Tags(BaseModel):
-    """Represents a set of tags for a Git commit.
-
-    Contains information about the Git SHA, branch, and job run ID.
-    """
-    git_sha: str
-    branch: str
-    job_run_id: str

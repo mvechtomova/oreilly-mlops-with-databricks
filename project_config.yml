@@ -1,0 +1,35 @@
+dev:
+  catalog_name: mlops_dev
+  schema_name: hotel_cancellation
+
+acc:
+  catalog_name: mlops_acc
+  schema_name: hotel_cancellation
+
+prd:
+  catalog_name: mlops_prd
+  schema_name: hotel_cancellation
+
+parameters:
+  learning_rate: 0.02
+  n_estimators: 500
+  num_leaves: 17
+
+num_features:
+  - number_of_adults
+  - number_of_children
+  - number_of_weekend_nights
+  - number_of_week_nights
+  - car_parking_space
+  - average_price
+  - special_requests
+  - lead_time
+  - repeated
+  - P_C
+  - P_not_C
+
+cat_features:
+  - type_of_meal
+  - room_type
+
+target: booking_status

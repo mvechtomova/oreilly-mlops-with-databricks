@@ -1,4 +1,4 @@
-# This is a Databricks asset bundle definition for course-code-hub.
+# This is a Databricks asset bundle definition for oreilly-mlops-with-databricks.
 # The Databricks extension requires databricks.yml configuration file.
 # See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
 
@@ -11,42 +11,43 @@ artifacts:
     build: uv build
     path: .
 
-variables:
-  git_sha:
-    description: git_sha
-    default: abcd
-  branch:
-    description: branch
-    default: main
-  schedule_pause_status:
-    description: schedule pause status
-    default: PAUSED
 
-include:
-  - databicks_jobs/*
+resources:
+  jobs:
+    model-training:
+      name: hotel-booking-model-training
+      tags:
+        project_name: "hotel-booking"
+
+      tasks:
+        - task_key: "preprocessing"
+          job_cluster_key: "house-price-cluster"
+          spark_python_task:
+            python_file: "scripts/01.process_data.py"
+            parameters:
+              - "--root_path"
+              - ${workspace.root_path}
+              - "--env"
+              - ${bundle.target}
+          libraries:
+           - whl: ./dist/*.whl
 
 targets:
 
   dev:
-    cluster_id: 0128-221909-4x44licl
+    cluster_id: 0415-071309-p2mj3t90
     default: true
     mode: development
     workspace:
-      host: https://dbc-4894232b-9fc5.cloud.databricks.com
+      host: https://dbc-c2e8445d-159d.cloud.databricks.com
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}
-    variables:
-      schedule_pause_status: PAUSED
 
   acc:
     workspace:
-      host: https://dbc-4894232b-9fc5.cloud.databricks.com
+      host: https://dbc-c2e8445d-159d.cloud.databricks.com
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
-    variables:
-      schedule_pause_status: PAUSED
 
   prd:
     workspace:
-      host: https://dbc-4894232b-9fc5.cloud.databricks.com
+      host: https://dbc-c2e8445d-159d.cloud.databricks.com
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
-    variables:
-      schedule_pause_status: UNPAUSED
