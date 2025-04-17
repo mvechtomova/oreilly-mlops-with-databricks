@@ -1,5 +1,13 @@
 # Databricks notebook source
-# Create Spark Session, load configuration
+
+# % pip install -e ..
+# %restart_python
+
+# from pathlib import Path
+# import sys
+
+# sys.path.append(str(Path.cwd().parent / 'src'))
+
 from datetime import datetime
 
 import pandas as pd
@@ -10,6 +18,7 @@ from sklearn.model_selection import train_test_split
 from hotel_booking.config import ProjectConfig
 
 # COMMAND ----------
+# Create Spark Session, load configuration
 spark = SparkSession.builder.getOrCreate()
 
 config = ProjectConfig.from_yaml("../project_config.yml")

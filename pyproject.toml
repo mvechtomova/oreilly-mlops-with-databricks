@@ -67,6 +67,7 @@ ignore = [
     "D213", # multi-line-summary-second-line
     "E501", # line-too-long
     "C901", # too complex
+    "ERA001", # commented out code
 ]
 
 [tool.ruff.format]
