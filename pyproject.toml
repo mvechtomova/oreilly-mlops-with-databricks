@@ -34,15 +34,12 @@ requires = [
   "setuptools>=72.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools_scm]
-requires = ["setuptools_scm[toml]>=7.0"]
-version_scheme = "post-release"
-local_scheme = "node-and-date"
-fallback_version = "0.1.0"
-
 [tool.setuptools.packages.find]
 where =["src"]
 include = ["hotel_booking*"]
+
+[tool.setuptools.dynamic]
+version = { file = "version.txt" }
 
 [tool.pytest.ini_options]
 addopts = "-s --no-header --no-summary"
@@ -62,7 +59,6 @@ select = [
     "SIM",  # flake8-simplify rules
     "ERA",  # eradicate rules
     "C",    # pylint convention rules
-    "D",    # pydocstyle rules
     "ANN"   # flake8-annotations rules
 ]
 ignore = [

@@ -17,9 +17,7 @@ debug.log
 mlruns/
 .vscode/
 .idea/
-dist/
 build/
 *.egg-info/
 pip-wheel-metadata/
 .ruff_cache
-

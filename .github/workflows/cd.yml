@@ -8,7 +8,7 @@ on:
   #     - 'main'
 
 jobs:
-  try_auth:
+  deploy:
     runs-on: ubuntu-latest
     strategy:
       matrix:

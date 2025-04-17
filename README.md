@@ -9,4 +9,3 @@ The repository contains multiple branches:
 - chapter_6: Lakehouse monitoring
 
 The main branch corresponds to the end state of the repository.
-

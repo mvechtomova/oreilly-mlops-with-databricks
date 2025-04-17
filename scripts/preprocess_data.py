@@ -1,12 +1,12 @@
 import argparse
 
+import pandas as pd
 import yaml
 from loguru import logger
 from pyspark.sql import SparkSession
-import pandas as pd
 
-from house_price.config import ProjectConfig
-from house_price.data_processor import DataProcessor
+from hotel_booking.config import ProjectConfig
+from hotel_booking.data_processor import DataProcessor
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -26,10 +26,8 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-root_path = args.root_path
-config_path = f"{root_path}/files/project_config.yml"
 
-config = ProjectConfig.from_yaml(config_path=config_path, env=args.env)
+config = ProjectConfig.from_yaml(config_path=f"{args.root_path}/files/project_config.yml", env=args.env)
 
 logger.info("Configuration loaded:")
 logger.info(yaml.dump(config, default_flow_style=False))
@@ -37,8 +35,7 @@ logger.info(yaml.dump(config, default_flow_style=False))
 spark = SparkSession.builder.getOrCreate()
 
 # Load the dataset
-
-df = pd.read_csv(f"{root_path}/filesdata/booking.csv")
+df = pd.read_csv(f"{args.root_path}/files/data/booking.csv")
 
 # Initialize DataProcessor
 data_processor = DataProcessor(df, config, spark)

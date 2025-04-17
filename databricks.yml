@@ -10,7 +10,7 @@ artifacts:
     type: whl
     build: uv build
     path: .
-
+    dynamic_version: true
 
 resources:
   jobs:
@@ -20,6 +20,7 @@ resources:
         project_name: "hotel-booking"
       tasks:
         - task_key: "preprocessing"
+          existing_cluster_id: 0415-071309-p2mj3t90
           spark_python_task:
             python_file: "scripts/preprocess_data.py"
             parameters:
@@ -33,7 +34,6 @@ resources:
 targets:
 
   dev:
-    cluster_id: 0415-071309-p2mj3t90
     default: true
     mode: development
     workspace:
@@ -49,3 +49,4 @@ targets:
     workspace:
       host: https://dbc-c2e8445d-159d.cloud.databricks.com
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
+
