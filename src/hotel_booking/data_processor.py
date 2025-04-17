@@ -3,7 +3,7 @@
 import datetime
 
 import pandas as pd
-from house_price.config import ProjectConfig
+from hotel_booking.config import ProjectConfig
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import current_timestamp, to_utc_timestamp
 from sklearn.model_selection import train_test_split
