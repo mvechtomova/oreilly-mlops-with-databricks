@@ -5,7 +5,6 @@
 
 # from pathlib import Path
 # import sys
-
 # sys.path.append(str(Path.cwd().parent / 'src'))
 
 from datetime import datetime
@@ -27,11 +26,11 @@ schema_name = config.schema_name
 
 # COMMAND ----------
 # Load and process the data
-df = pd.read_csv("data/booking.csv")
+df = pd.read_csv("../data/booking.csv")
 df.columns = df.columns.str.replace(r"[ -]", "_", regex=True)
 df["date_of_reservation"] = df["date_of_reservation"].apply(lambda x: "3/1/2018" if x == "2018-2-29" else x)
 df["date_of_reservation"] = df["date_of_reservation"].apply(lambda x: datetime.strptime(x, "%m/%d/%Y"))
-df["arrival_date"] = df["date_of_reservation"] + pd.to_timedelta(df["lead time"], unit="d")
+df["arrival_date"] = df["date_of_reservation"] + pd.to_timedelta(df["lead_time"], unit="d")
 df["booking_status"] = df["booking_status"].replace(["Canceled", "Not_Canceled"], [1, 0])
 # only keep market segment "Online"
 df = df[df["market_segment_type"] == "Online"]

@@ -29,7 +29,7 @@ class DataProcessor:
         self.df["date_of_reservation"] = self.df["date_of_reservation"].apply(
             lambda x: datetime.strptime(x, "%m/%d/%Y")
         )
-        self.df["arrival_date"] = self.df["date_of_reservation"] + pd.to_timedelta(self.df["lead time"], unit="d")
+        self.df["arrival_date"] = self.df["date_of_reservation"] + pd.to_timedelta(self.df["lead_time"], unit="d")
         self.df["booking_status"] = self.df["booking_status"].replace(["Canceled", "Not_Canceled"], [1, 0])
         # only keep market segment "Online"
         self.df = self.df[self.df["market_segment_type"] == "Online"]
