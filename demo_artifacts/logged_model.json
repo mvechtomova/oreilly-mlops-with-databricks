@@ -1,0 +1,68 @@
+{
+    "artifact_location": "dbfs:/databricks/mlflow-tracking/4496656401088623/logged_models/m-ea76efc9e9ab4e348d90abe896d2c560/artifacts",
+    "creation_timestamp": 1751235070063,
+    "experiment_id": "4496656401088623",
+    "last_updated_timestamp": 1751235071391,
+    "metrics": [
+        {
+            "_key": "mae",
+            "_value": 17.56261145502731,
+            "_timestamp": 1751235052335,
+            "_step": 0,
+            "_model_id": "m-ea76efc9e9ab4e348d90abe896d2c560",
+            "_dataset_name": null,
+            "_dataset_digest": null,
+            "_run_id": "2d4db6af15eb4b9c8551c84fd1f8b77b"
+        },
+        {
+            "_key": "mse",
+            "_value": 561.6330314709079,
+            "_timestamp": 1751235052335,
+            "_step": 0,
+            "_model_id": "m-ea76efc9e9ab4e348d90abe896d2c560",
+            "_dataset_name": null,
+            "_dataset_digest": null,
+            "_run_id": "2d4db6af15eb4b9c8551c84fd1f8b77b"
+        },
+        {
+            "_key": "r2_score",
+            "_value": 0.4827237924439015,
+            "_timestamp": 1751235052335,
+            "_step": 0,
+            "_model_id": "m-ea76efc9e9ab4e348d90abe896d2c560",
+            "_dataset_name": null,
+            "_dataset_digest": null,
+            "_run_id": "2d4db6af15eb4b9c8551c84fd1f8b77b"
+        },
+        {
+            "_key": "rmse",
+            "_value": 23.6987981018217,
+            "_timestamp": 1751235052335,
+            "_step": 0,
+            "_model_id": "m-ea76efc9e9ab4e348d90abe896d2c560",
+            "_dataset_name": null,
+            "_dataset_digest": null,
+            "_run_id": "2d4db6af15eb4b9c8551c84fd1f8b77b"
+        }
+    ],
+    "model_id": "m-ea76efc9e9ab4e348d90abe896d2c560",
+    "model_type": "",
+    "name": "lightgbm-pipeline",
+    "params": {
+        "learning_rate": "0.05",
+        "max_depth": "3",
+        "n_estimators": "50"
+    },
+    "source_run_id": "2d4db6af15eb4b9c8551c84fd1f8b77b",
+    "status": 2,
+    "status_message": "",
+    "tags": {
+        "mlflow.databricks.cluster.id": "0629-220307-ywpnnkj4-v2n",
+        "mlflow.loggedModel.artifactLocation": "dbfs:/databricks/mlflow-tracking/4496656401088623/logged_models/m-ea76efc9e9ab4e348d90abe896d2c560/artifacts",
+        "mlflow.loggedModel.name": "lightgbm-pipeline",
+        "mlflow.source.name": "/Users/mariavechtomova/Personal_projects/oreilly-mlops-with-databricks/.venv/lib/python3.12/site-packages/ipykernel_launcher.py",
+        "mlflow.source.type": "LOCAL",
+        "mlflow.artifacts.spn": "/Mlflow/Artifacts/4496656401088623/LoggedModels/m-ea76efc9e9ab4e348d90abe896d2c560/",
+        "mlflow.user": "maria@marvelousmlops.io"
+    }
+}

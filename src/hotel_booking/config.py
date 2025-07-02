@@ -15,12 +15,6 @@ class ProjectConfig(BaseModel):
     catalog_name: str
     schema_name: str
     parameters: dict[str, Any]
-    parameters_a: dict[str, Any] = None
-    parameters_b: dict[str, Any] = None
-    experiment_name_basic: str = None
-    experiment_name_custom: str = None
-    experiment_name_fe: str = None
-    pipeline_id: str = None
 
     @classmethod
     def from_yaml(cls: "ProjectConfig", config_path: str, env: str = "dev") -> "ProjectConfig":
@@ -37,8 +31,6 @@ class ProjectConfig(BaseModel):
             config_dict = yaml.safe_load(f)
         config_dict["catalog_name"] = config_dict[env]["catalog_name"]
         config_dict["schema_name"] = config_dict[env]["schema_name"]
-        if "pipeline_id" in config_dict[env]:
-            config_dict["pipeline_id"] = config_dict[env]["pipeline_id"]
         for k in ["dev", "acc", "prd"]:
             config_dict.pop(k)
         return cls(**config_dict)

@@ -11,9 +11,9 @@ prd:
   schema_name: hotel_booking
 
 parameters:
-  learning_rate: 0.02
-  n_estimators: 500
-  num_leaves: 17
+  learning_rate: 0.05
+  n_estimators: 50
+  max_depth: 3
 
 num_features:
   - number_of_adults
@@ -21,15 +21,13 @@ num_features:
   - number_of_weekend_nights
   - number_of_week_nights
   - car_parking_space
-  - average_price
   - special_requests
   - lead_time
-  - repeated
-  - P_C
-  - P_not_C
 
 cat_features:
   - type_of_meal
   - room_type
+  - arrival_month
+  - market_segment_type
 
-target: booking_status
+target: average_price

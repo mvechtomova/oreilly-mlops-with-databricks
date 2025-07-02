@@ -1,0 +1,15 @@
+{
+    "_experiment_id": "4347878583984203",
+    "_name": "/Shared/demo",
+    "_artifact_location": "dbfs:/databricks/mlflow-tracking/4347878583984203",
+    "_lifecycle_stage": "active",
+    "_tags": {
+        "mlflow.ownerId": "7047569734437579",
+        "repository_name": "mvechtomova/oreilly-mlops-with-databricks",
+        "mlflow.experiment.sourceName": "/Shared/demo",
+        "mlflow.ownerEmail": "maria@marvelousmlops.io",
+        "mlflow.experimentType": "MLFLOW_EXPERIMENT"
+    },
+    "_creation_time": 1746964121483,
+    "_last_update_time": 1751119987537
+}

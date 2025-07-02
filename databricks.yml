@@ -16,20 +16,24 @@ resources:
   jobs:
     model-training:
       name: hotel-booking-model-training
-      tags:
-        project_name: "hotel-booking"
+
       tasks:
-        - task_key: "preprocessing"
-          existing_cluster_id: 0415-071309-p2mj3t90
+        - task_key: preprocessing
           spark_python_task:
-            python_file: "scripts/preprocess_data.py"
+            python_file: scripts/preprocess_data.py
             parameters:
               - "--root_path"
               - ${workspace.root_path}
               - "--env"
               - ${bundle.target}
-          libraries:
-           - whl: ./dist/*.whl
+          environment_key: default
+
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"
+            dependencies:
+              - ./dist/*.whl
 
 targets:
 
