@@ -1,17 +1,20 @@
 # Databricks notebook source
 
 # % pip install -e ..
+# COMMAND ----------
 # %restart_python
-
+# COMMAND ----------
 # from pathlib import Path
 # import sys
 # sys.path.append(str(Path.cwd().parent / 'src'))
+
+# COMMAND ----------
+from datetime import datetime
 
 import pandas as pd
 from pyspark.sql import SparkSession
 
 from hotel_booking.config import ProjectConfig
-from datetime import datetime
 
 # COMMAND ----------
 # Create Spark Session, load configuration
@@ -29,9 +32,8 @@ df["date_of_reservation"] = df["date_of_reservation"].apply(lambda x: "3/1/2018"
 df["date_of_reservation"] = df["date_of_reservation"].apply(lambda x: datetime.strptime(x, "%m/%d/%Y"))
 df["arrival_date"] = df["date_of_reservation"] + pd.to_timedelta(df["lead_time"], unit="d")
 df["arrival_month"] = df["arrival_date"].dt.month
-# only keep market segment "Online"
-df = df[df["market_segment_type"] == "Online"]
 
+# COMMAND ----------
 spark.createDataFrame(df).write.mode("append").saveAsTable(
    f"{catalog_name}.{schema_name}.hotel_booking")
 spark.sql(

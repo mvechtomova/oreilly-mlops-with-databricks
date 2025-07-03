@@ -1,7 +1,13 @@
+import calendar
 import datetime
+import random
+from datetime import datetime, timedelta
 
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 from pyspark.sql import SparkSession
+from sdv.metadata import Metadata
+from sdv.single_table import GaussianCopulaSynthesizer
 
 from hotel_booking.config import ProjectConfig
 
@@ -13,27 +19,50 @@ class DataProcessor:
     """
 
     def __init__(self: "DataProcessor",
+                 df: pd.DataFrame,
                  config: ProjectConfig,
                  spark: SparkSession) -> None:
+        self.df = df
         self.config = config
         self.spark = spark
+        self.target_table = f"{self.config.catalog_name}.{self.config.schema_name}.hotel_booking"
 
-    def preprocess_and_save_to_catalog(df: pd.DataFrame, self: "DataProcessor") -> None:
-        """Preprocess the DataFrame stored in self.df."""
-        df.columns = df.columns.str.replace(r"[ -]", "_", regex=True)
-        # remove all self.df and replace with df
-        df["date_of_reservation"] = df["date_of_reservation"].apply(
+    def preprocess(self: "DataProcessor") -> None:
+        """Preprocess the DataFrame."""
+        self.df.columns = self.df.columns.str.replace(r"[ -]", "_", regex=True)
+        self.df["date_of_reservation"] = self.df["date_of_reservation"].apply(
             lambda x: "3/1/2018" if x == "2018-2-29" else x
         )
-        df["date_of_reservation"] = df["date_of_reservation"].apply(
+        self.df["date_of_reservation"] = self.df["date_of_reservation"].apply(
             lambda x: datetime.strptime(x, "%m/%d/%Y")
         )
-        df["arrival_date"] = df["date_of_reservation"] + pd.to_timedelta(df["lead_time"], unit="d")
-        df["arrival_month"] = df["arrival_date"].dt.month
+        self.df["arrival_date"] = self.df["date_of_reservation"] + pd.to_timedelta(self.df["lead_time"], unit="d")
+        self.df["arrival_month"] = self.df["arrival_date"].dt.month
 
-        self.spark.createDataFrame(df).write.mode("append").saveAsTable(
-            f"{self.config.catalog_name}.{self.config.schema_name}.hotel_booking")
+    def generate_synthetic_df(self: "DataProcessor", n: int = 1000, max_date: datetime = None) -> None:
+        if max_date is None:
+            max_date = self.spark.sql(
+                f"SELECT MAX(date_of_reservation) AS max_date FROM {self.target_table}"
+            ).collect()[0]["max_date"]
+        start_date_to_polulate = max_date.replace(day=1) + relativedelta(months=1)
+        year = start_date_to_polulate.year
+        month = start_date_to_polulate.month
+
+        metadata = Metadata.detect_from_dataframe(self.df)
+        synthesizer = GaussianCopulaSynthesizer(metadata)
+        synthesizer.fit(data=df)
+        days_in_month = calendar.monthrange(year, month)[1]
+        start_date = datetime(year, month, 1)
+        all_dates = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(days_in_month)]
+        self.df = synthesizer.sample(num_rows=n)
+        self.df["date_of_reservation"] = [random.choice(all_dates) for _ in range(n)]
+        self.df["arrival_date"] = pd.to_datetime(self.df["date_of_reservation"]) + pd.to_timedelta(self.df["lead_time"], unit="d")
+        self.df["arrival_month"] = pd.to_datetime(self.df["arrival_date"]).dt.month
+
+    def save_to_catalog(self: "DataProcessor") -> None:
+        """Preprocess the DataFrame stored in self.df."""
+        self.spark.createDataFrame(self.df).write.mode("append").saveAsTable(
+            f"{self.target_table}")
         self.spark.sql(
-        f"ALTER TABLE {self.config.catalog_name}.{self.config.schema_name}.hotel_booking "
-            "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
+        f"ALTER TABLE {self.target_table} SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )

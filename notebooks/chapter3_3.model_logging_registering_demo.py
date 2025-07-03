@@ -1,23 +1,24 @@
 # Databricks notebook source
 
+import json
 import os
+from datetime import datetime
+from importlib.metadata import version
 
 import mlflow
+import numpy as np
 import pandas as pd
+from delta.tables import DeltaTable
 from dotenv import load_dotenv
 from mlflow import MlflowClient
 from mlflow.models import infer_signature
+from mlflow.pyfunc import PythonModelContext
 from mlflow.utils.environment import _mlflow_conda_env
 from pyspark.sql import SparkSession
 
 from hotel_booking.config import ProjectConfig
 from hotel_booking.data.data_loader import DataLoader
 from hotel_booking.models.lightgbm_model import LightGBMModel
-from importlib.metadata import version
-import sklearn
-from delta.tables import DeltaTable
-from datetime import datetime
-from mlflow.pyfunc import PythonModelContext
 
 # COMMAND ----------
 if "DATABRICKS_RUNTIME_VERSION" not in os.environ:
@@ -84,7 +85,6 @@ testing = mlflow.data.from_spark(
 )
 mlflow.log_input(training, context="training")
 mlflow.log_input(testing, context="testing")
-mlflow.end_run()
 
 # COMMAND ----------
 model_info = mlflow.sklearn.log_model(
@@ -94,19 +94,19 @@ model_info = mlflow.sklearn.log_model(
     code_paths=code_paths,
     conda_env=conda_env
 )
+mlflow.end_run()
 
 # COMMAND ----------
 logged_model = mlflow.get_logged_model(model_info.model_id)
 model = mlflow.sklearn.load_model(f"models:/{model_info.model_id}")
 # COMMAND ----------
-import json
-
 logged_model_dict = logged_model.to_dictionary()
 logged_model_dict["metrics"] = [x.__dict__ for x in logged_model_dict["metrics"]]
 with open("../demo_artifacts/logged_model.json", "w") as json_file:
     json.dump(logged_model_dict, json_file, indent=4)
 # COMMAND ----------
 logged_model.params
+# COMMAND ----------
 logged_model.metrics
 # COMMAND ----------
 run = mlflow.get_run(run_id)
@@ -131,7 +131,7 @@ registered_model = mlflow.register_model(
 # COMMAND ----------
 client = MlflowClient()
 
-job_id = "1234567890abcdef" # Example job ID
+job_id = "1234567890abcdef" # Example job ID; will fail if the job does not exist
 client.create_registered_model(model_name, deployment_job_id=job_id)
 
 # COMMAND ----------
@@ -159,42 +159,9 @@ v = mlflow.search_model_versions(
 
 # COMMAND ----------
 # Pyfunc model wrapper
-
 class HotelBookingModelWrapper(mlflow.pyfunc.PythonModel):
 
-    def __init__(self, model: sklearn.pipeline.Pipeline):
-        self.model = model
-
-    def predict(self, context: PythonModelContext, model_input: pd.DataFrame) -> dict:
-        predictions = self.model.predict(model_input)
-        return {"Total price per night": [round(pred*1.05, 2) for pred in predictions]}
-
-# COMMAND ----------
-wrapped_model = HotelBookingModelWrapper(model)
-
-mlflow.set_experiment(experiment_name="/Shared/hotel-booking-pyfunc")
-with mlflow.start_run(run_name=f"wrapper-lightgbm-{datetime.now().strftime('%Y-%m-%d')}",
-    tags={"branch": "chapter_3",
-                            "git_sha": "1234567890abcd"}) as run:
-    run_id = run.info.run_id
-    signature = infer_signature(model_input=X_train, model_output={'Total price per night': [100.00]})
-    pyfunc_model = mlflow.pyfunc.log_model(
-        python_model=wrapped_model,
-        name="pyfunc-wrapper",
-        registered_model_name=f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_pyfunc",
-        signature=signature
-    )
-
-# COMMAND ----------
-logged_pufunc_model = mlflow.pyfunc.load_model(pyfunc_model.model_uri)
-
-# COMMAND ----------
-# Another way of doing the same thing:
-import numpy as np
-
-class HotelBookingModelWrapper(mlflow.pyfunc.PythonModel):
-
-    def load_context(self, context: PythonModelContext):
+    def load_context(self, context: PythonModelContext) -> None:
         self.model = mlflow.sklearn.load_model(
             context.artifacts["lightgbm-pipeline"]
         )
@@ -203,26 +170,35 @@ class HotelBookingModelWrapper(mlflow.pyfunc.PythonModel):
         predictions = self.model.predict(model_input)
         return {"Total price per night": [round(pred*1.05, 2) for pred in predictions]}
 
-# COMMAND ----------
 wrapped_model = HotelBookingModelWrapper()
 sklarn_model_name = f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_basic"
+registered_model_name=f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_pyfunc_context"
 
 mlflow.set_experiment(experiment_name="/Shared/hotel-booking-pyfunc")
 with mlflow.start_run(run_name=f"wrapper-context-lightgbm-{datetime.now().strftime('%Y-%m-%d')}",
     tags={"branch": "chapter_3",
                             "git_sha": "1234567890abcd"}) as run:
     run_id = run.info.run_id
-    signature = infer_signature(model_input=X_train, model_output={'Total price per night': [100.00]})
+    signature = infer_signature(model_input=X_train,
+                                model_output={'Total price per night': [100.00]})
     pyfunc_model = mlflow.pyfunc.log_model(
         python_model=wrapped_model,
         name="pyfunc-wrapper",
         artifacts={
-            "lightgbm-pipeline": f"models:/{model_name}@latest-model"},
-        registered_model_name=f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_pyfunc_context",
+            "lightgbm-pipeline": f"models:/{sklarn_model_name}@latest-model"},
+        registered_model_name=registered_model_name,
+        code_paths=code_paths,
+        conda_env=conda_env,
         signature=signature
     )
 # COMMAND ----------
 loaded_pufunc_model = mlflow.pyfunc.load_model(pyfunc_model.model_uri)
+# COMMAND ----------
+client.set_registered_model_alias(
+    name=registered_model_name,
+    alias="latest-model",
+    version=pyfunc_model.registered_model_version,
+)
 # COMMAND ----------
 unwraped_model = loaded_pufunc_model.unwrap_python_model()
 unwraped_model.predict(context=None, model_input=X_test[0:1])

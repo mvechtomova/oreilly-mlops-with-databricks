@@ -123,3 +123,5 @@ mlflow.end_run()
 # COMMAND ----------
 best_result=results.get_best_result(metric="rmse", mode="min")
 best_result.config
+
+# COMMAND ----------

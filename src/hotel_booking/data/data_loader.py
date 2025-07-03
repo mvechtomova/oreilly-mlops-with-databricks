@@ -51,10 +51,11 @@ class DataLoader:
         """
         return train_query, test_query
 
-    def load_data(self: "DataLoader", train_query: str, test_query: str) -> tuple["pyspark.sql.dataframe.DataFrame", "pyspark.sql.dataframe.DataFrame"]:
+    def load_data_pyspark(self: "DataLoader", train_query: str, test_query: str) -> tuple["pyspark.sql.dataframe.DataFrame", "pyspark.sql.dataframe.DataFrame"]:
         """Load training and testing data from Delta tables as Spark DataFrames."""
 
         train_set = self.spark.sql(train_query)
         test_set = self.spark.sql(test_query)
 
         return train_set, test_set
+

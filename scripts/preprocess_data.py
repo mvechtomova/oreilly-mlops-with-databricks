@@ -6,7 +6,7 @@ from loguru import logger
 from pyspark.sql import SparkSession
 
 from hotel_booking.config import ProjectConfig
-from hotel_booking.data_processor import DataProcessor
+from hotel_booking.data.data_processor import DataProcessor
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -38,5 +38,6 @@ spark = SparkSession.builder.getOrCreate()
 df = pd.read_csv(f"{args.root_path}/files/data/booking.csv")
 
 # Initialize DataProcessor
-data_processor = DataProcessor(project_config, spark)
-data_processor.preprocess_and_save_to_catalog(df=df)
+data_processor = DataProcessor(df=df, config=project_config, spark=spark)
+data_processor.preprocess()
+data_processor.save_to_catalog()
