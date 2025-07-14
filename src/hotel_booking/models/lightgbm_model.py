@@ -1,46 +1,20 @@
+from datetime import datetime
+
 import mlflow
 import numpy as np
 import pandas as pd
+import pyspark
 from lightgbm import LGBMRegressor
 from loguru import logger
-from sklearn.compose import ColumnTransformer
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.pipeline import Pipeline
+from mlflow.models import infer_signature
 from sklearn.base import BaseEstimator, TransformerMixin
-from hotel_booking.config import ProjectConfig
+from sklearn.compose import ColumnTransformer
+from mlflow
+from sklearn.pipeline import Pipeline
 
+from hotel_booking.config import ProjectConfig, Tags
+from mlflow import MlflowClient
 
-class CatToIntTransformer(BaseEstimator, TransformerMixin):
-    """
-    Transformer that encodes categorical columns as integer codes for LightGBM.
-    Unknown categories at transform time are encoded as -1.
-    """
-    def __init__(self, cat_features: list[str]) -> None:
-        """Initialize the transformer with categorical feature names."""
-        self.cat_features = cat_features
-        self.cat_maps_ = {}
-
-    def fit(self, X: pd.DataFrame, y=None) -> None:
-        """Fit the transformer to the DataFrame X."""
-        self.fit_transform(X)
-        return self
-
-    def fit_transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
-        """Fit and transform the DataFrame X."""
-        X = X.copy()
-        for col in self.cat_features:
-            c = pd.Categorical(X[col])
-            # Build mapping: {category: code}
-            self.cat_maps_[col] = dict(zip(c.categories, range(len(c.categories)), strict=False))
-            X[col] = X[col].map(lambda val, col=col: self.cat_maps_[col].get(val, -1)).astype("category")
-        return X
-
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Transform the DataFrame X by encoding categorical features as integers."""
-        X = X.copy()
-        for col in self.cat_features:
-            X[col] = X[col].map(lambda val, col=col: self.cat_maps_[col].get(val, -1)).astype("category")
-        return X
 
 class LightGBMModel:
     """A basic model class for house price prediction using LightGBM.
@@ -51,6 +25,9 @@ class LightGBMModel:
         """Initialize the LightGBM model."""
         self.config = config
         self.cat_features = self.config.cat_features
+        self.parameters = self.config.parameters
+        self.pipeline = None
+        self.metrics = None
 
     def train(self, X_train: pd.DataFrame, y_train: pd.Series, parameters: dict= None) -> None:
         """Prepare features and train the model.
@@ -58,10 +35,41 @@ class LightGBMModel:
         :param X_train: Training features as a DataFrame
         :param y_train: Training target as a Series
         """
-        if parameters is None:
-            parameters = self.config.parameters
-        self.parameters = parameters
 
+        class CatToIntTransformer(BaseEstimator, TransformerMixin):
+            """
+            Transformer that encodes categorical columns as integer codes for LightGBM.
+            Unknown categories at transform time are encoded as -1.
+            """
+            def __init__(self, cat_features: list[str]) -> None:
+                """Initialize the transformer with categorical feature names."""
+                self.cat_features = cat_features
+                self.cat_maps_ = {}
+
+            def fit(self, X: pd.DataFrame, y=None) -> None:
+                """Fit the transformer to the DataFrame X."""
+                self.fit_transform(X)
+                return self
+
+            def fit_transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
+                """Fit and transform the DataFrame X."""
+                X = X.copy()
+                for col in self.cat_features:
+                    c = pd.Categorical(X[col])
+                    # Build mapping: {category: code}
+                    self.cat_maps_[col] = dict(zip(c.categories, range(len(c.categories)), strict=False))
+                    X[col] = X[col].map(lambda val, col=col: self.cat_maps_[col].get(val, -1)).astype("category")
+                return X
+
+            def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+                """Transform the DataFrame X by encoding categorical features as integers."""
+                X = X.copy()
+                for col in self.cat_features:
+                    X[col] = X[col].map(lambda val, col=col: self.cat_maps_[col].get(val, -1)).astype("category")
+                return X
+
+        if parameters is not None:
+            self.parameters = parameters
         preprocessor = ColumnTransformer(
             transformers=[("cat", CatToIntTransformer(self.cat_features), self.cat_features)],
             remainder="passthrough"
@@ -72,19 +80,72 @@ class LightGBMModel:
         logger.info("🚀 Starting training...")
         self.pipeline.fit(X_train, y_train)
 
-    def compute_metrics(self, X_test: pd.DataFrame, y_test: pd.Series) -> dict:
-        """Compute regression metrics.
 
-        :param X_test: Test features
-        :param y_test: True target values
-        :return: Dictionary with mse, rmse, mae, and r2_score
-        """
-        y_pred = self.pipeline.predict(X_test)
-        mse = mean_squared_error(y_test, y_pred)
-        rmse = np.sqrt(mse)
-        return {
-            "mse": mse,
-            "rmse": rmse,
-            "mae": mean_absolute_error(y_test, y_pred),
-            "r2_score": r2_score(y_test, y_pred),
-        }
+    def log_model(self, experiment_name: str,
+                  tags: Tags,
+                  X_test: pd.DataFrame,
+                  y_test: pd.Series,
+                  train_set_spark: pyspark.sql.DataFrame,
+                  train_query: str,
+                  test_set_spark: pyspark.sql.DataFrame,
+                  test_query: str) -> None:
+        """Log the model to MLflow."""
+        tags = tags.to_dict()
+        mlflow.set_experiment(experiment_name)
+        with mlflow.start_run(run_name=f"lightgbm-training-{datetime.now().strftime('%Y-%m-%d')}",
+                      description="LightGBM model training", tags=tags):
+            mlflow.log_params(self.parameters)
+            signature = infer_signature(
+                model_input=X_test, model_output=self.pipeline.predict(X_test)
+            )
+
+            training = mlflow.data.from_spark(
+                df=train_set_spark,
+                sql=train_query
+            )
+            testing = mlflow.data.from_spark(
+                df=test_set_spark,
+                sql=test_query
+            )
+            mlflow.log_input(training, context="training")
+            mlflow.log_input(testing, context="testing")
+
+            self.model_info = mlflow.sklearn.log_model(
+                sk_model=self.pipeline,
+                name="lightgbm-pipeline",
+                signature=signature,
+                input_example=X_test[0:1]
+            )
+            eval_data = X_test.copy()
+            eval_data[self.config.target] = y_test
+
+            # This will log the evaluation metrics
+            result = mlflow.models.evaluate(
+                    self.model_info.model_uri,
+                    eval_data,
+                    targets=self.config.target,
+                    model_type="regressor",
+                    evaluators=["default"],
+                )
+            self.metrics = result.metrics
+            return self.model_info
+
+    def register_model(self: "LightGBMModel", model_name: str, tags: Tags, job_id: str = None) -> None:
+        """Register the model in MLflow Model Registry."""
+        if job_id is not None:
+            client = MlflowClient()
+            registered_model = client.create_registered_model(model_name,
+                                                              deployment_job_id=job_id,
+                                                              tags=tags.to_dict(),)
+        else:
+            registered_model = mlflow.register_model(
+                model_uri=self.model_info.model_uri,
+                name=model_name,
+                tags=tags.to_dict(),
+            )
+        client.set_registered_model_alias(
+            name=model_name,
+            alias="latest-model",
+            version=registered_model.version,
+        )
+        return registered_model.version

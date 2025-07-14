@@ -50,13 +50,14 @@ class DataProcessor:
 
         metadata = Metadata.detect_from_dataframe(self.df)
         synthesizer = GaussianCopulaSynthesizer(metadata)
-        synthesizer.fit(data=df)
+        synthesizer.fit(data=self.df)
         days_in_month = calendar.monthrange(year, month)[1]
         start_date = datetime(year, month, 1)
         all_dates = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(days_in_month)]
         self.df = synthesizer.sample(num_rows=n)
         self.df["date_of_reservation"] = [random.choice(all_dates) for _ in range(n)]
-        self.df["arrival_date"] = pd.to_datetime(self.df["date_of_reservation"]) + pd.to_timedelta(self.df["lead_time"], unit="d")
+        self.df["date_of_reservation"] = pd.to_datetime(self.df["date_of_reservation"])
+        self.df["arrival_date"] = self.df["date_of_reservation"] + pd.to_timedelta(self.df["lead_time"], unit="d")
         self.df["arrival_month"] = pd.to_datetime(self.df["arrival_date"]).dt.month
 
     def save_to_catalog(self: "DataProcessor") -> None:

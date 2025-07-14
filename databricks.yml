@@ -12,6 +12,14 @@ artifacts:
     path: .
     dynamic_version: true
 
+variables:
+  git_sha:
+    description: git_sha
+    default: abcd
+  branch:
+    description: branch
+    default: main
+
 resources:
   jobs:
     model-training:
@@ -19,6 +27,7 @@ resources:
 
       tasks:
         - task_key: preprocessing
+          environment_key: default
           spark_python_task:
             python_file: scripts/preprocess_data.py
             parameters:
@@ -26,7 +35,63 @@ resources:
               - ${workspace.root_path}
               - "--env"
               - ${bundle.target}
+        - task_key: "train_model"
           environment_key: default
+          depends_on:
+            - task_key: "preprocessing"
+          spark_python_task:
+            python_file: "scripts/train_register_model.py"
+            parameters:
+              - "--root_path"
+              - "${workspace.root_path}"
+              - "--env"
+              - "${bundle.target}"
+              - "--branch"
+              - "${var.branch}"
+              - "--git_sha"
+              - "${var.git_sha}"
+              - "--run_id"
+              - "{{job.run_id}}"
+              - "--job_d"
+              - "{{job.id}}"
+          libraries:
+              - whl: ./dist/*.whl
+        - task_key: model_updated
+          condition_task:
+            op: "EQUAL_TO"
+            left: "{{tasks.train_model.values.model_updated}}"
+            right: "1"
+          depends_on:
+            - task_key: "train_model"
+        - task_key: "approve_check"
+          environment_key: default
+          depends_on:
+            - task_key: "model_updated"
+              outcome: "true"
+          spark_python_task:
+            python_file: "scripts/approve.py"
+            parameters:
+              - "--task_name"
+              - "{{task.name}}"
+              - "--root_path"
+              - "${workspace.root_path}"
+              - "--env"
+              - "${bundle.target}"
+          libraries:
+            - whl: ./dist/*.whl
+        - task_key: "deploy_model"
+          environment_key: default
+          depends_on:
+            - task_key: "approve_check"
+          spark_python_task:
+            python_file: "scripts/deploy_model.py"
+            parameters:
+              - "--root_path"
+              - "${workspace.root_path}"
+              - "--env"
+              - "${bundle.target}"
+          libraries:
+            - whl: ./dist/*.whl
 
       environments:
         - environment_key: default

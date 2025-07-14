@@ -10,7 +10,7 @@ dependencies = [
     "numpy==1.26.4",
     "pandas==2.3.0",
     "pyarrow==17.0.0",
-    "databricks-feature-engineering==0.12.1",
+    "databricks-feature-engineering==0.13.0a1",
     "scikit-learn==1.7.0",
     "lightgbm==4.6.0",
     "scipy==1.16.0",
@@ -19,8 +19,8 @@ dependencies = [
     "loguru==0.7.3",
     "python-dotenv==1.1.1",
     "ray[tune]==2.47.1",
-    "optuna>=4.4.0",
-    "sdv>=1.24.0",
+    "optuna==4.4.0",
+    "sdv==1.24.0",
 ]
 
 [project.optional-dependencies]
@@ -29,7 +29,8 @@ dev = ["databricks-connect>=16.0, <17",
        "pip>=25.0.1, <26",
        "pre-commit>=4.1.0, <5"]
 
-ci = ["pre-commit>=4.1.0, <5"]
+ci = ["pre-commit>=4.1.0, <5",
+      "pytest>=8.3.4, <9"]
 
 [build-system]
 requires = [

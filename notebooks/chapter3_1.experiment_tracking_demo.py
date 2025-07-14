@@ -1,8 +1,9 @@
 # Databricks notebook source
 
-# % pip install -e ..
-# %restart_python
-
+# MAGIC %pip install -e ..
+# COMMAND ----------
+# MAGIC %restart_python
+# COMMAND ----------
 # from pathlib import Path
 # import sys
 # sys.path.append(str(Path.cwd().parent / 'src'))
@@ -12,15 +13,10 @@ import json
 import mlflow
 import os
 
-from dotenv import load_dotenv
+from hotel_booking.utils.common import set_mlflow_tracking_uri
 
 
-if "DATABRICKS_RUNTIME_VERSION" not in os.environ:
-    load_dotenv()
-    profile = os.environ["PROFILE"]
-    mlflow.set_tracking_uri(f"databricks://{profile}")
-    mlflow.set_registry_uri(f"databricks-uc://{profile}")
-
+set_mlflow_tracking_uri()
 mlflow.get_tracking_uri()
 # COMMAND ----------
 experiment = mlflow.set_experiment(experiment_name="/Shared/demo")

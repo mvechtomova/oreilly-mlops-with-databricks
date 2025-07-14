@@ -1,30 +1,45 @@
 from datetime import datetime, timedelta
 
-import pyspark
+import pandas as pd
 from dateutil.relativedelta import relativedelta
+from pyspark.sql import DataFrame as SparkDataFrame
 from pyspark.sql import SparkSession
 
 from hotel_booking.config import ProjectConfig
+from hotel_booking.utils.common import get_delta_table_version
 
 
 class DataLoader:
-    """A class for loading and splitting the dataset.
-    """
+    """A class for loading, splitting, and accessing datasets in both Spark and pandas formats."""
 
-    def __init__(self: "DataLoader",
-                 config: ProjectConfig,
-                 spark: SparkSession) -> None:
+    def __init__(self, config: ProjectConfig, spark: SparkSession) -> None:
+        """
+        :param config: Project configuration containing table and feature info.
+        :param spark: Active Spark session.
+        """
         self.config = config
         self.spark = spark
 
-    def define_split(
-        self: "DataLoader", test_months: int = 1, train_months: int = 12,
-        max_date: datetime = None, version: int = None) -> tuple[str, str]:
-        """Split the DataFrame into training and test sets, optionally using a specific Delta table version.
+        self.train_query: str = None
+        self.test_query: str  = None
+        self.train_set_spark: SparkDataFrame  = None
+        self.test_set_spark: SparkDataFrame  = None
+        self.train_set: pd.DataFrame  = None
+        self.test_set: pd.DataFrame  = None
+
+    def _generate_queries(
+        self,
+        test_months: int = 1,
+        train_months: int = 12,
+        max_date: datetime = None,
+        version: int = None,
+    ) -> tuple[str, str]:
+        """
+        Generates SQL queries for the training and test splits.
 
         :param test_months: Number of months for the test set.
         :param train_months: Number of months for the training set.
-        :param max_date: The maximum date to consider for splitting.
+        :param max_date: The maximum date to consider for splitting. If None, uses the max available date.
         :param version: Optional Delta table version to query.
         :return: A tuple containing the training and test SQL queries.
         """
@@ -35,27 +50,56 @@ class DataLoader:
                 f"SELECT MAX(date_of_reservation) AS max_date FROM {table_ref}"
             ).collect()[0]["max_date"]
 
-        test_set_start = datetime.strftime(max_date.replace(day=1) - relativedelta(months=test_months-1), "%Y-%m-%d")
-        test_set_end = datetime.strftime(max_date, "%Y-%m-%d")
-        train_set_start = datetime.strftime((max_date.replace(day=1) - relativedelta(months=train_months)).date(), "%Y-%m-%d")
-        train_set_end = datetime.strftime((max_date.replace(day=1) - timedelta(days=1)).date(), "%Y-%m-%d")
+        test_start = (max_date.replace(day=1) - relativedelta(months=test_months - 1)).strftime("%Y-%m-%d")
+        test_end = max_date.strftime("%Y-%m-%d")
+        train_start = (max_date.replace(day=1) - relativedelta(months=train_months)).strftime("%Y-%m-%d")
+        train_end = (max_date.replace(day=1) - timedelta(days=1)).strftime("%Y-%m-%d")
+        version = get_delta_table_version(self.spark, table_ref) is version is None else version
 
-        version_str = f"VERSION AS OF {version}" if version is not None else ""
         train_query = f"""
-            SELECT * FROM {table_ref} {version_str}
-            WHERE arrival_date BETWEEN DATE('{train_set_start}') AND DATE('{train_set_end}')
+            SELECT * FROM {table_ref} VERSION AS OF {version}
+            WHERE arrival_date BETWEEN DATE('{train_start}') AND DATE('{train_end}')
         """
+
         test_query = f"""
-            SELECT * FROM {table_ref} {version_str}
-            WHERE arrival_date BETWEEN DATE('{test_set_start}') AND DATE('{test_set_end}')
+            SELECT * FROM {table_ref} VERSION AS OF {version}
+            WHERE arrival_date BETWEEN DATE('{test_start}') AND DATE('{test_end}')
         """
+
         return train_query, test_query
 
-    def load_data_pyspark(self: "DataLoader", train_query: str, test_query: str) -> tuple["pyspark.sql.dataframe.DataFrame", "pyspark.sql.dataframe.DataFrame"]:
-        """Load training and testing data from Delta tables as Spark DataFrames."""
+    def split(
+        self,
+        test_months: int = 1,
+        train_months: int = 12,
+        max_date: datetime = None,
+        version: str = None,
+    ) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+        """
+        Splits the dataset and loads it into pandas DataFrames for training and testing.
 
-        train_set = self.spark.sql(train_query)
-        test_set = self.spark.sql(test_query)
+        Also stores Spark and SQL versions of the data internally for inspection or reuse.
 
-        return train_set, test_set
+        :param test_months: Number of months for the test set.
+        :param train_months: Number of months for the training set.
+        :param max_date: The maximum date to consider for splitting. If None, the latest date in the table is used.
+        :param version: Optional Delta table version to query.
+        :return: A tuple (X_train, y_train, X_test, y_test) with pandas DataFrames/Series.
+        """
+        self.train_query, self.test_query = self._generate_queries(
+            test_months, train_months, max_date, version
+        )
 
+        self.train_set_spark = self.spark.sql(self.train_query)
+        self.test_set_spark = self.spark.sql(self.test_query)
+
+        train_set = self.train_set_spark.toPandas()
+        test_set = self.test_set_spark.toPandas()
+
+        X_train = train_set[self.config.num_features + self.config.cat_features]
+        y_train = train_set[self.config.target]
+
+        X_test = test_set[self.config.num_features + self.config.cat_features]
+        y_test = test_set[self.config.target]
+
+        return X_train, y_train, X_test, y_test

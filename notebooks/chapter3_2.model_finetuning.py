@@ -1,47 +1,34 @@
 # Databricks notebook source
 
-import os
 from datetime import datetime
 from functools import partial
 
 import mlflow
+import numpy as np
 import pandas as pd
-from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 from ray import tune
 from ray.tune.search.optuna import OptunaSearch
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 from hotel_booking.config import ProjectConfig
 from hotel_booking.data.data_loader import DataLoader
 from hotel_booking.models.lightgbm_model import LightGBMModel
+from hotel_booking.utils.common import set_mlflow_tracking_uri
 
 # COMMAND ----------
-if "DATABRICKS_RUNTIME_VERSION" not in os.environ:
-    load_dotenv()
-    profile = os.environ["PROFILE"]
-    mlflow.set_tracking_uri(f"databricks://{profile}")
-    mlflow.set_registry_uri(f"databricks-uc://{profile}")
-
+set_mlflow_tracking_uri()
 project_config = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
 # COMMAND ----------
 spark = SparkSession.builder.getOrCreate()
 data_loader = DataLoader(spark=spark, config=project_config)
 
-train_query, valid_query = data_loader.define_split(
+X_train, y_train, X_valid, y_valid = data_loader.split(
     test_months=1,
     train_months=12,
     max_date=datetime.strptime("2018-11-30", "%Y-%m-%d")
 )
-
-train_set = spark.sql(train_query).toPandas()
-valid_set = spark.sql(valid_query).toPandas()
-
-X_train = train_set[project_config.num_features + project_config.cat_features]
-y_train = train_set[project_config.target]
-
-X_valid = valid_set[project_config.num_features + project_config.cat_features]
-y_valid = valid_set[project_config.target]
 
 # COMMAND ----------
 
@@ -58,7 +45,8 @@ def train_with_nested_mlflow(config, X_train: pd.DataFrame,
         config["learning_rate"],
     )
     with mlflow.start_run(
-        run_name=f"trial_n{n_estimators}_md{max_depth}_lr{learning_rate}", nested=True, parent_run_id=parent_run_id
+        run_name=f"trial_n{n_estimators}_md{max_depth}_lr{learning_rate}",
+        nested=True, parent_run_id=parent_run_id
     ):
         model = LightGBMModel(config=project_config)
         model.train(
@@ -70,7 +58,15 @@ def train_with_nested_mlflow(config, X_train: pd.DataFrame,
                 "learning_rate": learning_rate
             }
         )
-        metrics = model.compute_metrics(X_valid, y_valid)
+        y_pred = model.pipeline.predict(X_valid)
+        mse = mean_squared_error(y_valid, y_pred)
+        rmse = np.sqrt(mse)
+        metrics = {
+            "mse": mse,
+            "rmse": rmse,
+            "mae": mean_absolute_error(y_valid, y_pred),
+            "r2_score": r2_score(y_valid, y_pred),
+        }
         mlflow.log_params(config)
         mlflow.log_metrics(metrics)
         tune.report(metrics)

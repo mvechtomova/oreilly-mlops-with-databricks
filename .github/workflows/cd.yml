@@ -1,11 +1,11 @@
 name: CD
 
 on:
-  workflow_dispatch:
+  # workflow_dispatch:
 
-  # push:
-  #   branches:
-  #     - 'main'
+  push:
+    branches:
+        - 'main'
 
 jobs:
   deploy:
@@ -15,8 +15,8 @@ jobs:
         environment: [acc, prd]
     environment: ${{ matrix.environment }}
     permissions:
-      id-token: write
-      contents: read
+      id-token: write # to fetch openID token
+      contents: write # to push tag
     env:
       DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
     steps:
@@ -49,9 +49,9 @@ jobs:
         env:
           DATABRICKS_BUNDLE_ENV: ${{ matrix.environment }}
         run: |
+            databricks bundle deploy --var="git_sha=${{ github.sha }}"
             if [ "${{ matrix.environment }}" = "prd" ]; then
             echo "VERSION=$(cat version.txt)"
             git tag $VERSION
             git push origin $VERSION
             fi
-            databricks bundle deploy --var="git_sha=${{ github.sha }}"
