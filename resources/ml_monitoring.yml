@@ -1,0 +1,35 @@
+resources:
+  jobs:
+    house-price-monitor-update:
+      name: hotel-booking-monitor-update-workflow
+      schedule:
+        quartz_cron_expression: "0 0 9 * * ?"
+        timezone_id: "Europe/Amsterdam"
+        pause_status: ${var.schedule_pause_status}
+      tags:
+        project_name: "hotel-booking"
+      
+      job_clusters:
+        - job_cluster_key: "hotel-booking-cluster"
+          new_cluster:
+            spark_version: "16.4.x-scala2.12"
+            data_security_mode: "SINGLE_USER"
+            node_type_id: "r3.xlarge"
+            driver_node_type_id: "r3.xlarge"
+            autoscale:
+              min_workers: 1
+              max_workers: 1
+
+      tasks:
+        - task_key: "refresh_monitor_table"
+          job_cluster_key: "hotel-booking-cluster"
+          spark_python_task:
+            python_file: "scripts/refresh_monitor.py"
+            parameters:
+              - "--common"
+              - "--root_path"
+              - ${workspace.root_path}
+              - "--env"
+              - ${bundle.target}
+          libraries:
+           - whl: ./dist/*.whl

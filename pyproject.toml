@@ -2,32 +2,36 @@
 name = "hotel-booking"
 dynamic = ["version"]
 description = "Code accompanying MLOps with Databrick O'Reilly book"
-requires-python = ">=3.11, <3.12"
-dependencies = ["mlflow==2.17.0",
-                "cffi==1.17.1",
-                "cloudpickle==3.1.0",
-                "matplotlib==3.9.2",
-                "numpy==1.26.4",
-                "pandas==2.2.3",
-                "psutil==6.0.0",
-                "pyarrow==14.0.1",
-                "scikit-learn==1.5.2",
-                "lightgbm==4.5.0",
-                "scipy==1.14.1",
-                "databricks-feature-engineering==0.6",
-                "databricks-feature-lookup==1.2.0",
-                "databricks-sdk==0.32.0",
-                "pydantic==2.9.2",
-                "loguru==0.7.3"
-                ]
+requires-python = ">=3.12, <3.13"
+dependencies = [
+    "mlflow==3.1.1",
+    "cffi==1.17.1",
+    "cloudpickle==3.1.1",
+    "numpy==1.26.4",
+    "pandas==2.3.0",
+    "pyarrow==17.0.0",
+    "databricks-feature-engineering==0.13.0",
+    "databricks-feature-lookup==1.8.0",
+    "scikit-learn==1.7.0",
+    "lightgbm==4.6.0",
+    "scipy==1.16.0",
+    "databricks-sdk==0.62.0",
+    "pydantic==2.11.7",
+    "loguru==0.7.3",
+    "python-dotenv==1.1.1",
+    "ray[tune]==2.47.1",
+    "optuna==4.4.0",
+    "sdv==1.24.0",
+]
 
 [project.optional-dependencies]
-dev = ["databricks-connect>=15.4.1, <16",
+dev = ["databricks-connect>=16.0, <17",
        "ipykernel>=6.29.5, <7",
-       "pip>=24.2",
+       "pip>=25.0.1, <26",
        "pre-commit>=4.1.0, <5"]
 
-ci = ["pre-commit>=4.1.0, <5"]
+ci = ["pre-commit>=4.1.0, <5",
+      "pytest>=8.3.4, <9"]
 
 [build-system]
 requires = [

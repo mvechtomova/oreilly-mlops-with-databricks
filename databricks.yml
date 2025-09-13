@@ -10,43 +10,46 @@ artifacts:
     type: whl
     build: uv build
     path: .
-    dynamic_version: true
 
-resources:
-  jobs:
-    model-training:
-      name: hotel-booking-model-training
-      tags:
-        project_name: "hotel-booking"
-      tasks:
-        - task_key: "preprocessing"
-          existing_cluster_id: 0415-071309-p2mj3t90
-          spark_python_task:
-            python_file: "scripts/preprocess_data.py"
-            parameters:
-              - "--root_path"
-              - ${workspace.root_path}
-              - "--env"
-              - ${bundle.target}
-          libraries:
-           - whl: ./dist/*.whl
+variables:
+  git_sha:
+    description: git_sha
+    default: abcd
+  branch:
+    description: branch
+    default: main
+  schedule_pause_status:
+    description: schedule pause status
+    default: PAUSED
+
+include:
+  - resources/*
 
 targets:
-
   dev:
     default: true
     mode: development
     workspace:
-      host: https://dbc-c2e8445d-159d.cloud.databricks.com
+      host: https://dbc-f122dc18-1b68.cloud.databricks.com
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}
+    artifacts:
+      default:
+        type: whl
+        build: uv build
+        path: .
+        dynamic_version: true
 
   acc:
     workspace:
-      host: https://dbc-c2e8445d-159d.cloud.databricks.com
+      host: https://dbc-f122dc18-1b68.cloud.databricks.com
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
+    variables:
+      schedule_pause_status: PAUSED
 
   prd:
     workspace:
-      host: https://dbc-c2e8445d-159d.cloud.databricks.com
+      host: https://dbc-f122dc18-1b68.cloud.databricks.com
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
+    variables:
+      schedule_pause_status: UNPAUSED
 
