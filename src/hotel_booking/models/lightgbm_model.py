@@ -1,19 +1,17 @@
 from datetime import datetime
 
 import mlflow
-import numpy as np
 import pandas as pd
 import pyspark
 from lightgbm import LGBMRegressor
 from loguru import logger
+from mlflow import MlflowClient
 from mlflow.models import infer_signature
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
-from mlflow
 from sklearn.pipeline import Pipeline
 
 from hotel_booking.config import ProjectConfig, Tags
-from mlflow import MlflowClient
 
 
 class LightGBMModel:
@@ -80,7 +78,6 @@ class LightGBMModel:
         logger.info("🚀 Starting training...")
         self.pipeline.fit(X_train, y_train)
 
-
     def log_model(self, experiment_name: str,
                   tags: Tags,
                   X_test: pd.DataFrame,
@@ -130,15 +127,10 @@ class LightGBMModel:
             self.metrics = result.metrics
             return self.model_info
 
-    def register_model(self: "LightGBMModel", model_name: str, tags: Tags, job_id: str = None) -> None:
+    def register_model(self: "LightGBMModel", model_name: str, tags: Tags) -> None:
         """Register the model in MLflow Model Registry."""
-        if job_id is not None:
-            client = MlflowClient()
-            registered_model = client.create_registered_model(model_name,
-                                                              deployment_job_id=job_id,
-                                                              tags=tags.to_dict(),)
-        else:
-            registered_model = mlflow.register_model(
+        client = MlflowClient()
+        registered_model = mlflow.register_model(
                 model_uri=self.model_info.model_uri,
                 name=model_name,
                 tags=tags.to_dict(),

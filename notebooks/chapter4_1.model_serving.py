@@ -45,12 +45,12 @@ else:
 
 # COMMAND ----------
 # Call the endpoint
-import requests
 import pandas as pd
+import requests
+from databricks.sdk import WorkspaceClient
+from hotel_booking.utils.common import get_host_and_token
 
-context = dbutils.notebook.entry_point.getDbutils().notebook().getContext()
-host = context.apiUrl().get()
-token = context.apiToken().get()
+host, token = get_host_and_token()
 
 serving_endpoint = f"{host}/serving-endpoints/hotel-booking-pyfunc/invocations"
 
@@ -116,8 +116,7 @@ model_uri = f"models:/{model_name}@latest-model"
 mlflow.models.predict(model_uri, input_example)
 
 # COMMAND ----------
-from mlflow.models import validate_serving_input
-from mlflow.models import convert_input_example_to_serving_input
+from mlflow.models import convert_input_example_to_serving_input, validate_serving_input
 
 serving_payload = convert_input_example_to_serving_input(input_example)
 

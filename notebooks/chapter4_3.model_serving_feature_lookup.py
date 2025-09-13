@@ -92,7 +92,6 @@ training_set = fe.create_training_set(
             ],
         )
 
-
 training_df = training_set.load_df().toPandas()
 X_train = training_df[project_config.num_features + project_config.cat_features + ["repeated"]]
 y_train = training_df[project_config.target]
@@ -139,8 +138,7 @@ model_name = f"{project_config.catalog_name}.{project_config.schema_name}.hotel_
 registered_model = mlflow.register_model(
     model_uri=f"runs:/{run_id}/lightgbm-pipeline-model-fe",
     name=model_name,
-    tags=tags,
-)
+    tags=tags,)
 
 client = MlflowClient()
 client.set_registered_model_alias(
@@ -189,3 +187,41 @@ if not endpoint_exists:
     )
 else:
     workspace.serving_endpoints.update_config(name=endpoint_name, served_entities=served_entities)
+
+# COMMAND ----------
+import requests
+from databricks.sdk import WorkspaceClient
+
+w = WorkspaceClient()
+
+host = w.config.host
+token = w.tokens.create(lifetime_seconds=1200).token_value
+
+serving_endpoint = f"{host}/serving-endpoints/{endpoint_name}/invocations"
+
+payload = {
+    "dataframe_split": {
+        'columns': [
+            'Booking_ID',
+            'number_of_adults',
+            'number_of_children',
+            'number_of_weekend_nights',
+            'number_of_week_nights',
+            'car_parking_space',
+            'special_requests',
+            'type_of_meal',
+            'room_type',
+            'market_segment_type',
+            'arrival_month',
+            'reservation_date'
+        ],
+        'data': [['INN36285', 2, 0, 0, 1, 0, 0, 'Not Selected', 'Room_Type 1', 'Online', '2018-08-01 00:00:00', '2018-03-01 00:00:00']]
+    }
+}
+
+response = requests.post(
+    f"{serving_endpoint}",
+    headers={"Authorization": f"Bearer {token}"},
+    json=payload,
+)
+response.text

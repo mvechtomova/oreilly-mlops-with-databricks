@@ -10,7 +10,6 @@ artifacts:
     type: whl
     build: uv build
     path: .
-    dynamic_version: true
 
 variables:
   git_sha:
@@ -19,103 +18,38 @@ variables:
   branch:
     description: branch
     default: main
+  schedule_pause_status:
+    description: schedule pause status
+    default: PAUSED
 
-resources:
-  jobs:
-    model-training:
-      name: hotel-booking-model-training
-
-      tasks:
-        - task_key: preprocessing
-          environment_key: default
-          spark_python_task:
-            python_file: scripts/preprocess_data.py
-            parameters:
-              - "--root_path"
-              - ${workspace.root_path}
-              - "--env"
-              - ${bundle.target}
-        - task_key: "train_model"
-          environment_key: default
-          depends_on:
-            - task_key: "preprocessing"
-          spark_python_task:
-            python_file: "scripts/train_register_model.py"
-            parameters:
-              - "--root_path"
-              - "${workspace.root_path}"
-              - "--env"
-              - "${bundle.target}"
-              - "--branch"
-              - "${var.branch}"
-              - "--git_sha"
-              - "${var.git_sha}"
-              - "--run_id"
-              - "{{job.run_id}}"
-              - "--job_d"
-              - "{{job.id}}"
-          libraries:
-              - whl: ./dist/*.whl
-        - task_key: model_updated
-          condition_task:
-            op: "EQUAL_TO"
-            left: "{{tasks.train_model.values.model_updated}}"
-            right: "1"
-          depends_on:
-            - task_key: "train_model"
-        - task_key: "approve_check"
-          environment_key: default
-          depends_on:
-            - task_key: "model_updated"
-              outcome: "true"
-          spark_python_task:
-            python_file: "scripts/approve.py"
-            parameters:
-              - "--task_name"
-              - "{{task.name}}"
-              - "--root_path"
-              - "${workspace.root_path}"
-              - "--env"
-              - "${bundle.target}"
-          libraries:
-            - whl: ./dist/*.whl
-        - task_key: "deploy_model"
-          environment_key: default
-          depends_on:
-            - task_key: "approve_check"
-          spark_python_task:
-            python_file: "scripts/deploy_model.py"
-            parameters:
-              - "--root_path"
-              - "${workspace.root_path}"
-              - "--env"
-              - "${bundle.target}"
-          libraries:
-            - whl: ./dist/*.whl
-
-      environments:
-        - environment_key: default
-          spec:
-            client: "3"
-            dependencies:
-              - ./dist/*.whl
+include:
+  - resources/*
 
 targets:
-
   dev:
     default: true
     mode: development
     workspace:
-      host: https://dbc-63712503-50ce.cloud.databricks.com
+      host: https://dbc-f122dc18-1b68.cloud.databricks.com
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}
+    artifacts:
+      default:
+        type: whl
+        build: uv build
+        path: .
+        dynamic_version: true
 
   acc:
     workspace:
-      host: https://dbc-63712503-50ce.cloud.databricks.com
+      host: https://dbc-f122dc18-1b68.cloud.databricks.com
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
+    variables:
+      schedule_pause_status: PAUSED
 
   prd:
     workspace:
-      host: https://dbc-63712503-50ce.cloud.databricks.com
+      host: https://dbc-f122dc18-1b68.cloud.databricks.com
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
+    variables:
+      schedule_pause_status: UNPAUSED
 

@@ -45,7 +45,7 @@ print(experiments)
 with mlflow.start_run(
    run_name="demo-run",
    tags={"git_sha": "1234567890abcd",
-         "branch": "chapter_3"},
+         "branch": "main"},
    description="demo run",
 ) as run:
     run_id = run.info.run_id

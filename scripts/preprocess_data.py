@@ -1,5 +1,3 @@
-import argparse
-
 import pandas as pd
 import yaml
 from loguru import logger
@@ -7,17 +5,11 @@ from pyspark.sql import SparkSession
 
 from hotel_booking.config import ProjectConfig
 from hotel_booking.data.data_processor import DataProcessor
+from hotel_booking.utils.common import create_parser
 
-parser = argparse.ArgumentParser
-
-parser.add_argument("--root_path", action="store", default=None, type=str, required=True)
-parser.add_argument("--env", action="store", default="dev", type=str, required=True)
-
-
-args = parser.parse_args()
+args = create_parser()
 
 project_config = ProjectConfig.from_yaml(config_path=f"{args.root_path}/files/project_config.yml", env=args.env)
-
 logger.info("Configuration loaded:")
 logger.info(yaml.dump(project_config, default_flow_style=False))
 

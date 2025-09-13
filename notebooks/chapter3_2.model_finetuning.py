@@ -80,7 +80,7 @@ param_space = {
 
 run = mlflow.start_run(
     run_name=f"optuna-finetuning-{datetime.now().strftime('%Y-%m-%d')}",
-    tags={"git_sha": "1234567890abcd", "branch": "chapter_3"},
+    tags={"git_sha": "1234567890abcd", "branch": "main"},
     description="LightGBM hyperparameter tuning with Ray & Optuna"
 )
 
@@ -98,7 +98,7 @@ tuner = tune.Tuner(
     trainable,
     tune_config=tune.TuneConfig(
         search_alg=OptunaSearch(),
-        num_samples=50,
+        num_samples=10,
         metric="rmse",
         mode="min",
     ),

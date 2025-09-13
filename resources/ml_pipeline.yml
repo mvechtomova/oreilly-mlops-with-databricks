@@ -1,0 +1,94 @@
+resources:
+  jobs:
+    ml-pipeline:
+      name: hotel-booking-ml-pipeline
+      schedule:
+        quartz_cron_expression: "0 0 6 ? * MON"
+        timezone_id: "Europe/Amsterdam"
+        pause_status: ${var.schedule_pause_status}
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "3"
+            dependencies:
+              - ./dist/*.whl
+
+      tasks:
+        - task_key: preprocessing
+          environment_key: default
+          spark_python_task:
+            python_file: scripts/preprocess_data.py
+            parameters:
+              - "--common"
+              - "--root_path"
+              - ${workspace.root_path}
+              - "--env"
+              - ${bundle.target}
+
+        - task_key: "train_model"
+          environment_key: default
+          depends_on:
+            - task_key: "preprocessing"
+          spark_python_task:
+            python_file: "scripts/train_register_model.py"
+            parameters:
+              - "--train_deploy_model"
+              - "--root_path"
+              - "${workspace.root_path}"
+              - "--env"
+              - "${bundle.target}"
+              - "--branch"
+              - "${var.branch}"
+              - "--git_sha"
+              - "${var.git_sha}"
+              - "--run_id"
+              - "{{job.run_id}}"
+              - "--job_id"
+              - "{{job.id}}"
+
+        - task_key: model_updated
+          condition_task:
+            op: "EQUAL_TO"
+            left: "{{tasks.train_model.values.model_updated}}"
+            right: "1"
+          depends_on:
+            - task_key: "train_model"
+
+        - task_key: "approve_check"
+          environment_key: default
+          depends_on:
+            - task_key: "model_updated"
+              outcome: "true"
+          spark_python_task:
+            python_file: "scripts/approve.py"
+            parameters:
+              - "--approve_check"
+              - "--task_name"
+              - "{{task.name}}"
+              - "--root_path"
+              - "${workspace.root_path}"
+              - "--env"
+              - "${bundle.target}"
+
+        - task_key: "deploy_model"
+          environment_key: default
+          depends_on:
+            - task_key: "approve_check"
+          spark_python_task:
+            python_file: "scripts/deploy_model.py"
+            parameters:
+              - "--train_deploy_model"
+              - "--root_path"
+              - "${workspace.root_path}"
+              - "--env"
+              - "${bundle.target}"
+              - "--branch"
+              - "${var.branch}"
+              - "--git_sha"
+              - "${var.git_sha}"
+              - "--run_id"
+              - "{{job.run_id}}"
+              - "--job_id"
+              - "{{job.id}}"

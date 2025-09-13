@@ -1,12 +1,12 @@
 {
     "info": {
-        "artifact_uri": "dbfs:/databricks/mlflow-tracking/1803725985987113/6945775e7fba43c3bac9e11f156c0da7/artifacts",
-        "end_time": 1751553482211,
-        "experiment_id": "1803725985987113",
+        "artifact_uri": "dbfs:/databricks/mlflow-tracking/4432865989482688/cd69d765651a4413ab2ab49eed82fbe2/artifacts",
+        "end_time": 1753650074343,
+        "experiment_id": "4432865989482688",
         "lifecycle_stage": "active",
-        "run_id": "6945775e7fba43c3bac9e11f156c0da7",
+        "run_id": "cd69d765651a4413ab2ab49eed82fbe2",
         "run_name": "demo-run",
-        "start_time": 1751553481719,
+        "start_time": 1753650073835,
         "status": "FINISHED",
         "user_id": ""
     },
@@ -21,7 +21,7 @@
         "tags": {
             "branch": "chapter_3",
             "git_sha": "1234567890abcd",
-            "mlflow.databricks.cluster.id": "0703-141615-jkhc809f-v2n",
+            "mlflow.databricks.cluster.id": "0727-205902-pc1l9oga-v2n",
             "mlflow.databricks.cluster.info": "{\"cluster_name\":\"\",\"spark_version\":\"16.4.x-photon-scala2.12\",\"autotermination_minutes\":120}",
             "mlflow.databricks.cluster.libraries": "{\"installable\":[],\"redacted\":[]}",
             "mlflow.note.content": "demo run",
@@ -29,7 +29,7 @@
             "mlflow.runName": "demo-run",
             "mlflow.source.name": "/Users/mariavechtomova/Personal_projects/oreilly-mlops-with-databricks/.venv/lib/python3.12/site-packages/ipykernel_launcher.py",
             "mlflow.source.type": "LOCAL",
-            "mlflow.user": "vechtomova.maria@gmail.com"
+            "mlflow.user": "maria@marvelousmlops.io"
         }
     },
     "inputs": {

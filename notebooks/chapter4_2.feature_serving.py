@@ -94,16 +94,19 @@ workspace.serving_endpoints.create(
 # COMMAND ----------
 # Call the endpoint
 import requests
+from databricks.sdk import WorkspaceClient
 
-context = dbutils.notebook.entry_point.getDbutils().notebook().getContext()
-host = context.apiUrl().get()
-token = context.apiToken().get()
+w = WorkspaceClient()
+
+host = w.config.host
+token = w.tokens.create(lifetime_seconds=1200).token_value
 
 serving_endpoint = f"{host}/serving-endpoints/hotel-booking-feature-serving/invocations"
 
 response = requests.post(
     serving_endpoint,
     headers={"Authorization": f"Bearer {token}"},
-    json={"dataframe_records": [{'Booking_ID': "INN36285"}]},
+    json={"dataframe_split": {"columns": ["Booking_ID"],
+                              "data": [["INN36285"]]}},
 )
 response.text

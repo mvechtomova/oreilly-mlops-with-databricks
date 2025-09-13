@@ -1,24 +1,14 @@
-import argparse
-
+import mlflow
 import yaml
 from loguru import logger
 from pyspark.sql import SparkSession
-import mlflow
 
 from hotel_booking.config import ProjectConfig, Tags
 from hotel_booking.data.data_processor import DataLoader
 from hotel_booking.models.lightgbm_model import LightGBMModel
+from hotel_booking.utils.common import create_parser
 
-parser = argparse.ArgumentParser
-
-parser.add_argument("--root_path", action="store", default=None, type=str, required=True)
-parser.add_argument("--env", action="store", default="dev", type=str, required=True)
-parser.add_argument("--branch", action="store", default="dev", type=str, required=True)
-parser.add_argument("--git_sha", action="store", default="dev", type=str, required=True)
-parser.add_argument("--run_id", action="store", default="dev", type=str, required=True)
-parser.add_argument("--job_id", action="store", default="dev", type=str, required=True)
-
-args = parser.parse_args()
+args = create_parser()
 
 project_config = ProjectConfig.from_yaml(config_path=f"{args.root_path}/files/project_config.yml", env=args.env)
 
@@ -49,13 +39,12 @@ model_info = model.log_model(
 metrics_new = model.metrics
 
 sklearn_model_name = f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_basic"
-model_uri = f"models:/{sklearn_model_name}@latest-model"
 eval_data = X_test.copy()
 eval_data[project_config.target] = y_test
 
 result = mlflow.models.evaluate(
-        model_uri,
-        eval_data,
+        model_uri=f"models:/{sklearn_model_name}@latest-model",
+        eval_data=eval_data,
         targets=project_config.target,
         model_type="regressor",
         evaluators=["default"],

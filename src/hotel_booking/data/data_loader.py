@@ -54,7 +54,8 @@ class DataLoader:
         test_end = max_date.strftime("%Y-%m-%d")
         train_start = (max_date.replace(day=1) - relativedelta(months=train_months)).strftime("%Y-%m-%d")
         train_end = (max_date.replace(day=1) - timedelta(days=1)).strftime("%Y-%m-%d")
-        version = get_delta_table_version(self.spark, table_ref) is version is None else version
+        if version is None:
+            version = get_delta_table_version(self.spark, table_ref)
 
         train_query = f"""
             SELECT * FROM {table_ref} VERSION AS OF {version}
