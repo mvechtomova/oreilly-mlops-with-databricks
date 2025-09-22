@@ -67,7 +67,7 @@ return arrival_date.month
 $$""")
 
 # COMMAND ----------
-feature_table_name = f"{project_config.catalog}.{project_config.schema}.historical_booking_features"
+feature_table_name = f"{project_config.catalog_name}.{project_config.schema_name}.historical_booking_features"
 spark.sql(f"""
     CREATE OR REPLACE TABLE {feature_table_name}
     AS SELECT Booking_ID, repeated FROM {project_config.catalog_name}.{project_config.schema_name}.hotel_booking
@@ -224,8 +224,8 @@ payload = {
             'type_of_meal',
             'room_type',
             'market_segment_type',
-            'arrival_month',
-            'reservation_date'
+            'arrival_date',
+            'date_of_reservation'
         ],
         'data': [['INN36285', 2, 0, 0, 1, 0, 0, 'Not Selected', 'Room_Type 1', 'Online', '2018-08-01 00:00:00', '2018-03-01 00:00:00']]
     }
