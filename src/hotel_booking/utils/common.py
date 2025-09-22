@@ -20,21 +20,6 @@ def set_mlflow_tracking_uri() -> None:
         mlflow.set_tracking_uri(f"databricks://{profile}")
         mlflow.set_registry_uri(f"databricks-uc://{profile}")
 
-def get_host_and_token() -> tuple[str, str]:
-    """
-    Get the Databricks host and token from environment variables.
-
-    :return: Tuple containing the host and token.
-    """
-    if "DATABRICKS_RUNTIME_VERSION" not in os.environ:
-        load_dotenv()
-        w = WorkspaceClient(profile=os.environ["PROFILE"])
-    else:
-        w = WorkspaceClient()
-    host = w.config.host
-    token = w.tokens.create(lifetime_seconds=1200).token_value
-    return host, token
-
 def get_delta_table_version(
     spark: SparkSession, full_table_name: str
 ) -> str:

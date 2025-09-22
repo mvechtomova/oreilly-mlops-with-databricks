@@ -1,7 +1,7 @@
 # Databricks notebook source
 
+import os
 from datetime import datetime
-from functools import partial
 
 import mlflow
 import numpy as np
@@ -32,19 +32,27 @@ X_train, y_train, X_valid, y_valid = data_loader.split(
 
 # COMMAND ----------
 
+param_space = {
+    "n_estimators": tune.qrandint(50, 700, q=50),
+    "learning_rate": tune.loguniform(0.01, 0.2),
+    "max_depth": tune.choice([3, 5, 10, 15])}
+
+
+# COMMAND ----------
 def train_with_nested_mlflow(config, X_train: pd.DataFrame,
                              X_valid: pd.DataFrame,
                              y_train: pd.DataFrame,
                              y_valid: pd.DataFrame,
                              project_config: ProjectConfig,
-                             parent_run_id: str=None):
+                             experiment_id: str,
+                             parent_run_id: str):
 
     n_estimators, max_depth, learning_rate = (
         config["n_estimators"],
         config["max_depth"],
         config["learning_rate"],
     )
-    with mlflow.start_run(
+    with mlflow.start_run(experiment_id=experiment_id,
         run_name=f"trial_n{n_estimators}_md{max_depth}_lr{learning_rate}",
         nested=True, parent_run_id=parent_run_id
     ):
@@ -72,49 +80,50 @@ def train_with_nested_mlflow(config, X_train: pd.DataFrame,
         tune.report(metrics)
 
 # COMMAND ----------
-mlflow.set_experiment("/Shared/hotel-booking-finetuning")
-param_space = {
-    "n_estimators": tune.choice([50, 100, 200, 300, 400]),
-    "max_depth": tune.choice([3, 5, 10, 15]),
-    "learning_rate": tune.choice([0.01, 0.03, 0.05, 0.1, 0.15]),}
+from databricks.sdk import WorkspaceClient
+from ray.util.spark import setup_ray_cluster
 
-run = mlflow.start_run(
+w = WorkspaceClient()
+os.environ["DATABRICKS_HOST"] = w.config.host
+os.environ["DATABRICKS_TOKEN"] = w.tokens.create(lifetime_seconds=1200).token_value
+
+# for distributed, use this:
+ray_conf = setup_ray_cluster(
+  min_worker_nodes=2,
+  max_worker_nodes=8,
+)
+os.environ['RAY_ADDRESS'] = ray_conf[0]
+# COMMAND ----------
+
+mlflow.set_experiment("/Shared/hotel-booking-finetuning")
+experiment_id = mlflow.get_experiment_by_name("/Shared/hotel-booking-finetuning").experiment_id
+
+n_trials = 50
+
+with mlflow.start_run(
     run_name=f"optuna-finetuning-{datetime.now().strftime('%Y-%m-%d')}",
     tags={"git_sha": "1234567890abcd", "branch": "main"},
     description="LightGBM hyperparameter tuning with Ray & Optuna"
-)
+) as parent_run:
 
-trainable = partial(
-    train_with_nested_mlflow,
-    X_train=X_train,
-    X_valid=X_valid,
-    y_train=y_train,
-    y_valid=y_valid,
-    project_config=project_config,
-    parent_run_id=run.info.run_id
-)
-
-tuner = tune.Tuner(
-    trainable,
-    tune_config=tune.TuneConfig(
-        search_alg=OptunaSearch(),
-        num_samples=10,
-        metric="rmse",
-        mode="min",
-    ),
-    param_space=param_space,
-)
-
-# COMMAND ----------
-# For distributed runs, only on Databricks all-purpose or jobs compute
-# import ray
-# from ray.util.spark import setup_ray_cluster
-
-# _, remote_conn_str = setup_ray_cluster(num_worker_nodes=2)
-# ray.init(remote_conn_str)
-
-results = tuner.fit()
-mlflow.end_run()
+    tuner = tune.Tuner(
+        tune.with_parameters(
+                train_with_nested_mlflow,
+                X_train_in = X_train,
+                y_train_in = y_train,
+                X_valid_in = X_valid,
+                y_valid_in = y_valid,
+                project_config=project_config,
+                parent_run_id=parent_run.info.run_id,
+                experiment_id=experiment_id,
+            ),
+        tune_config=tune.TuneConfig(
+            search_alg=OptunaSearch(metric="rmse", mode="min"),
+            num_samples=n_trials,
+        ),
+        param_space=param_space,
+    )
+    results = tuner.fit()
 
 # COMMAND ----------
 best_result=results.get_best_result(metric="rmse", mode="min")

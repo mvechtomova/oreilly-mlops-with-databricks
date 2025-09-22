@@ -1,4 +1,17 @@
 # Databricks notebook source
+# MAGIC %pip install -e ..
+
+# COMMAND ----------
+
+# MAGIC %restart_python
+
+# COMMAND ----------
+
+# from pathlib import Path
+# import sys
+# sys.path.append(str(Path.cwd().parent / 'src'))
+
+# COMMAND ----------
 import mlflow
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
 from databricks.sdk import WorkspaceClient
@@ -8,7 +21,7 @@ from databricks.sdk.service.serving import (
     ServedEntityInput,
 )
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, struct
 
 from hotel_booking.config import ProjectConfig
 
@@ -27,7 +40,7 @@ model_udf = mlflow.pyfunc.spark_udf(spark, model_uri)
 
 preds_df = input_df.select(
     col("Booking_ID"),
-    model_udf(*[col(c) for c in columns]).alias("Predicted_BookingPrice")
+    model_udf(struct(*[col(c) for c in columns])).alias("Predicted_BookingPrice")
 )
 
 # COMMAND ----------

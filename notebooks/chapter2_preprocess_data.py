@@ -1,9 +1,12 @@
 # Databricks notebook source
+# MAGIC %pip install -e ..
 
-# % pip install -e ..
 # COMMAND ----------
-# %restart_python
+
+# MAGIC %restart_python
+
 # COMMAND ----------
+
 # from pathlib import Path
 # import sys
 # sys.path.append(str(Path.cwd().parent / 'src'))

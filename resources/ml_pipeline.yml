@@ -19,7 +19,7 @@ resources:
         - task_key: preprocessing
           environment_key: default
           spark_python_task:
-            python_file: scripts/preprocess_data.py
+            python_file: ../scripts/preprocess_data.py
             parameters:
               - "--common"
               - "--root_path"
@@ -32,7 +32,7 @@ resources:
           depends_on:
             - task_key: "preprocessing"
           spark_python_task:
-            python_file: "scripts/train_register_model.py"
+            python_file: "../scripts/train_register_model.py"
             parameters:
               - "--train_deploy_model"
               - "--root_path"
@@ -62,7 +62,7 @@ resources:
             - task_key: "model_updated"
               outcome: "true"
           spark_python_task:
-            python_file: "scripts/approve.py"
+            python_file: "../scripts/approve.py"
             parameters:
               - "--approve_check"
               - "--task_name"
@@ -77,7 +77,7 @@ resources:
           depends_on:
             - task_key: "approve_check"
           spark_python_task:
-            python_file: "scripts/deploy_model.py"
+            python_file: "../scripts/deploy_model.py"
             parameters:
               - "--train_deploy_model"
               - "--root_path"

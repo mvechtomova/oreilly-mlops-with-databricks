@@ -16,7 +16,7 @@ from hotel_booking.utils.common import set_mlflow_tracking_uri
 # COMMAND ----------
 set_mlflow_tracking_uri()
 project_config = ProjectConfig.from_yaml(config_path="../project_config.yml")
-tags = Tags(**{"git_sha": "1234567890abcd", "branch": "main"}).to_dict()
+tags = Tags(**{"git_sha": "1234567890abcd", "branch": "main"})
 
 # COMMAND ----------
 spark = SparkSession.builder.getOrCreate()
@@ -31,7 +31,7 @@ model.train(X_train=X_train,
 mlflow.set_experiment("/Shared/hotel-booking-training")
 run = mlflow.start_run(run_name=f"lightgbm-training-{datetime.now().strftime('%Y-%m-%d')}",
                       description="LightGBM model training",
-    tags=tags)
+    tags=tags.to_dict())
 run_id = run.info.run_id
 
 mlflow.log_params(project_config.parameters)
@@ -106,7 +106,7 @@ model_name = f"{project_config.catalog_name}.{project_config.schema_name}.hotel_
 registered_model = mlflow.register_model(
             model_uri=logged_model.model_uri,
             name=model_name,
-            tags={"git_sha": "1234567890abcd", "branch": "main"},
+            tags=tags.to_dict(),
         )
 # COMMAND ----------
 client = MlflowClient()

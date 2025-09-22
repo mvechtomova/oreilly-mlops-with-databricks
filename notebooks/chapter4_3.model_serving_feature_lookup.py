@@ -1,4 +1,17 @@
 # Databricks notebook source
+# MAGIC %pip install -e ..
+
+# COMMAND ----------
+
+# MAGIC %restart_python
+
+# COMMAND ----------
+
+# from pathlib import Path
+# import sys
+# sys.path.append(str(Path.cwd().parent / 'src'))
+
+# COMMAND ----------
 from datetime import datetime
 
 import mlflow
@@ -29,15 +42,15 @@ spark = SparkSession.builder.getOrCreate()
 fe = FeatureEngineeringClient()
 data_loader = DataLoader(spark=spark, config=project_config)
 train_query, test_query = data_loader._generate_queries()
-train_set = spark.table(train_query).drop("lead_time", "arrival_month", "repeated")
-test_set = spark.table(test_query).toPandas()
+train_set = spark.sql(train_query).drop("lead_time", "arrival_month", "repeated", "P_C", "P_not_C", "booking_status")
+test_set = spark.sql(test_query).toPandas()
 
 # COMMAND ----------
 lead_time_function = f"{project_config.catalog_name}.{project_config.schema_name}.calculate_lead_time"
 
 spark.sql(f"""
 CREATE OR REPLACE FUNCTION {lead_time_function}(arrival_date TIMESTAMP, reservation_date TIMESTAMP)
-RETURNS INT
+RETURNS BIGINT
 LANGUAGE PYTHON AS
 $$
 return (arrival_date-reservation_date).days
@@ -47,7 +60,7 @@ arrival_month_function = f"{project_config.catalog_name}.{project_config.schema_
 
 spark.sql(f"""
 CREATE OR REPLACE FUNCTION {arrival_month_function}(arrival_date TIMESTAMP)
-RETURNS INT
+RETURNS BIGINT
 LANGUAGE PYTHON AS
 $$
 return arrival_date.month
@@ -59,6 +72,12 @@ spark.sql(f"""
     CREATE OR REPLACE TABLE {feature_table_name}
     AS SELECT Booking_ID, repeated FROM {project_config.catalog_name}.{project_config.schema_name}.hotel_booking
 """)
+
+spark.sql(f"""
+    ALTER TABLE {feature_table_name}
+    ALTER COLUMN Booking_ID SET NOT NULL
+""")
+
 spark.sql(f"""
     ALTER TABLE {feature_table_name}
     ADD CONSTRAINT pk_Booking_ID PRIMARY KEY (Booking_ID)
@@ -113,7 +132,7 @@ with mlflow.start_run(run_name=f"lightgbm-training-{datetime.now().strftime('%Y-
     run_id = run.info.run_id
     mlflow.log_params(model.parameters)
     signature = infer_signature(
-        model_input=X_test, model_output=model.pipeline.predict(X_test)
+        model_input=X_train, model_output=model.pipeline.predict(X_train)
     )
     y_pred = model.pipeline.predict(X_test)
     mse = mean_squared_error(y_test, y_pred)
@@ -146,15 +165,8 @@ client.set_registered_model_alias(
     alias="latest-model",
     version=registered_model.version,
 )
-
 # COMMAND ----------
-fe.create_online_store(
-    name="hotel-booking-historical-features",
-    capacity="CU_1"
-)
-
-# COMMAND ----------
-online_store = fe.get_online_store(name="hotel-booking-historical-features")
+online_store = fe.get_online_store(name="hotel-booking-price-preds")
 
 # Publish the feature table to the online store
 fe.publish_table(

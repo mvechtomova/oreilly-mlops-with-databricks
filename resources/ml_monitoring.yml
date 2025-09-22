@@ -24,7 +24,7 @@ resources:
         - task_key: "refresh_monitor_table"
           job_cluster_key: "hotel-booking-cluster"
           spark_python_task:
-            python_file: "scripts/refresh_monitor.py"
+            python_file: "../scripts/refresh_monitor.py"
             parameters:
               - "--common"
               - "--root_path"
