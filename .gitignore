@@ -21,3 +21,4 @@ build/
 *.egg-info/
 pip-wheel-metadata/
 .ruff_cache
+CLAUDE.md

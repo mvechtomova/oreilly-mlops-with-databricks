@@ -43,7 +43,6 @@ class HotelBookingModelWrapper(mlflow.pyfunc.PythonModel):
         input_example = pd.DataFrame(
             input_example_dict["data"], columns=input_example_dict["columns"]
         )
-        input_example["Booking_ID"] = "123467"  # example booking ID
         additional_pip_deps = []
         for package in code_paths:
             whl_name = package.split("/")[-1]
@@ -77,6 +76,6 @@ class HotelBookingModelWrapper(mlflow.pyfunc.PythonModel):
         client.set_registered_model_alias(
             name=pyfunc_model_name,
             alias="latest-model",
-            version=registered_model.model_version,
+            version=registered_model.version,
         )
         return registered_model.version

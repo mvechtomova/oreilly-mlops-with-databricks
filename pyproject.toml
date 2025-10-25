@@ -10,8 +10,6 @@ dependencies = [
     "numpy==1.26.4",
     "pandas==2.3.0",
     "pyarrow==17.0.0",
-    "databricks-feature-engineering==0.13.0",
-    "databricks-feature-lookup==1.8.0",
     "scikit-learn==1.7.0",
     "lightgbm==4.6.0",
     "scipy==1.16.0",
@@ -32,6 +30,9 @@ dev = ["databricks-connect>=16.0, <17",
 
 ci = ["pre-commit>=4.1.0, <5",
       "pytest>=8.3.4, <9"]
+
+fe = ["databricks-feature-engineering==0.13.0",
+      "databricks-feature-lookup==1.8.0",]
 
 [build-system]
 requires = [

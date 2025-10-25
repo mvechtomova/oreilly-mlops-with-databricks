@@ -14,6 +14,10 @@ from mlflow import MlflowClient
 from mlflow.models import convert_input_example_to_serving_input, validate_serving_input
 
 from hotel_booking.config import ProjectConfig
+from hotel_booking.utils.common import set_mlflow_tracking_uri
+
+# COMMAND ----------
+set_mlflow_tracking_uri()
 
 project_config = ProjectConfig.from_yaml("../project_config.yml")
 
@@ -43,7 +47,7 @@ ai_gateway_cfg = AiGatewayConfig(
             enabled=True,
             catalog_name=catalog,
             schema_name=schema,
-            monitoring_table_suffix="hotel_booking_monitoring",
+            table_name_prefix="hotel_booking_monitoring",
         )
     )
 
@@ -80,7 +84,6 @@ serving_endpoint = f"{host}/serving-endpoints/hotel-booking-pyfunc/invocations"
 payload = {
     "dataframe_records": [
         {
-            "Booking_ID": "INN1234",
             "number_of_adults": 2,
             "number_of_children": 0,
             "number_of_weekend_nights": 0,
@@ -109,7 +112,6 @@ response.text
 payload = {
     "dataframe_split": {
         "columns": [
-            "Booking_ID",
             "number_of_adults",
             "number_of_children",
             "number_of_weekend_nights",
@@ -122,7 +124,7 @@ payload = {
             "arrival_month",
             "market_segment_type",
         ],
-        "data": [["INN1234", 2, 0, 0, 1, 0, 0, 103, "Not Selected", "Room_Type 1", 8, "Online"]],
+        "data": [[2, 0, 0, 1, 0, 0, 103, "Not Selected", "Room_Type 1", 8, "Online"]],
     }
 }
 

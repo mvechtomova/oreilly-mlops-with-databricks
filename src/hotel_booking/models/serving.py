@@ -15,7 +15,7 @@ def serve_model(
     endpoint_name: str,
     catalog_name: str,
     schema_name: str,
-    monitoring_table_suffix: str,
+    table_name_prefix: str,
     scale_to_zero_enabled: bool = True,
     workload_size: str = "Small",
 ) -> None:
@@ -33,7 +33,7 @@ def serve_model(
             enabled=True,
             catalog_name=catalog_name,
             schema_name=schema_name,
-            monitoring_table_suffix=monitoring_table_suffix,
+            table_name_prefix=table_name_prefix,
         )
     )
 
