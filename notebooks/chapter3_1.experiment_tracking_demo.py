@@ -20,7 +20,9 @@ set_mlflow_tracking_uri()
 mlflow.get_tracking_uri()
 # COMMAND ----------
 experiment = mlflow.set_experiment(experiment_name="/Shared/demo")
-mlflow.set_experiment_tags({"repository_name": "mvechtomova/oreilly-mlops-with-databricks"})
+mlflow.set_experiment_tags(
+    {"repository_name": "mvechtomova/oreilly-mlops-with-databricks"}
+)
 
 print(experiment)
 # COMMAND ----------
@@ -43,10 +45,9 @@ print(experiments)
 # COMMAND ----------
 # start a run
 with mlflow.start_run(
-   run_name="demo-run",
-   tags={"git_sha": "1234567890abcd",
-         "branch": "main"},
-   description="demo run",
+    run_name="demo-run",
+    tags={"git_sha": "1234567890abcd", "branch": "main"},
+    description="demo run",
 ) as run:
     run_id = run.info.run_id
     mlflow.log_params({"type": "demo"})
@@ -70,24 +71,25 @@ print(run_info_dict["data"]["params"])
 # search for runs
 
 from time import time
+
 time_hour_ago = int(time() - 3600) * 1000
 
 runs = mlflow.search_runs(
-    search_all_experiments=True, #or experiment_ids=[], or experiment_names=[]
+    search_all_experiments=True,  # or experiment_ids=[], or experiment_names=[]
     order_by=["start_time DESC"],
     filter_string="status='FINISHED' AND "
-                  f"start_time>{time_hour_ago} AND "
-                  "run_name LIKE '%demo-run%' AND "
-                  "metrics.metric3>0 AND "
-                  "tags.mlflow.source.type!='JOB'"
+    f"start_time>{time_hour_ago} AND "
+    "run_name LIKE '%demo-run%' AND "
+    "metrics.metric3>0 AND "
+    "tags.mlflow.source.type!='JOB'",
 )
 
 # COMMAND ----------
 mlflow.start_run(run_id=run_id)
 mlflow.log_metric(key="metric3", value=3.0)
 # dynamically log metric (trainings epochs)
-for i in range(0,3):
-    mlflow.log_metric(key="metric1", value=3.0+i/2, step=i)
+for i in range(0, 3):
+    mlflow.log_metric(key="metric1", value=3.0 + i / 2, step=i)
 mlflow.log_artifact("../demo_artifacts/book_cover.pdf")
 mlflow.log_text("hello, MLflow!", "hello.txt")
 mlflow.log_dict({"k": "v"}, "dict_example.json")
@@ -102,7 +104,7 @@ fig, ax = plt.subplots()
 ax.plot([0, 1], [2, 3])
 mlflow.log_figure(fig, "figure.png")
 
-for i in range(0,3):
+for i in range(0, 3):
     image = np.random.randint(0, 256, size=(100, 100, 3), dtype=np.uint8)
     mlflow.log_image(image, key="demo_image", step=i)
 
@@ -111,8 +113,7 @@ mlflow.end_run()
 # COMMAND ----------
 # load objects
 artifact_uri = runs.artifact_uri[0]
-dict_example = mlflow.artifacts.load_dict(
-    f"{artifact_uri}/dict_example.json")
+dict_example = mlflow.artifacts.load_dict(f"{artifact_uri}/dict_example.json")
 figure = mlflow.artifacts.load_image(f"{artifact_uri}/figure.png")
 text = mlflow.artifacts.load_text(f"{artifact_uri}/hello.txt")
 
@@ -121,14 +122,12 @@ text = mlflow.artifacts.load_text(f"{artifact_uri}/hello.txt")
 if not os.path.exists("../downloaded_artifacts"):
     os.mkdir("../downloaded_artifacts")
 mlflow.artifacts.download_artifacts(
-    artifact_uri=f"{artifact_uri}/demo_artifacts",
-    dst_path="../downloaded_artifacts")
+    artifact_uri=f"{artifact_uri}/demo_artifacts", dst_path="../downloaded_artifacts"
+)
 
 # COMMAND ----------
 # nested runs: useful for hyperparameter tuning
 with mlflow.start_run(run_name="top_level_run") as run:
-    for i in range(1,5):
+    for i in range(1, 5):
         with mlflow.start_run(run_name=f"subrun_{str(i)}", nested=True) as subrun:
-            mlflow.log_metrics({"m1": 5.1+i,
-                                "m2": 2*i,
-                                "m3": 3+1.5*i})
+            mlflow.log_metrics({"m1": 5.1 + i, "m2": 2 * i, "m3": 3 + 1.5 * i})

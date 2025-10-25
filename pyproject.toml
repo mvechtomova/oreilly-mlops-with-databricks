@@ -51,7 +51,7 @@ testpaths = [ "tests" ]
 pythonpath = [ "." ]
 
 [tool.ruff]
-line-length = 120
+line-length = 90
 
 select = [
     "F",    # pyflakes rules

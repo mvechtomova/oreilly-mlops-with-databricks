@@ -1,3 +1,4 @@
+# Databricks notebook source
 import os
 
 import requests
@@ -6,7 +7,7 @@ from requests.auth import HTTPBasicAuth
 
 load_dotenv()
 
-
+# COMMAND ----------
 def get_token():
     response = requests.post(
         f"https://{os.environ['DBR_HOST']}/oidc/v1/token",

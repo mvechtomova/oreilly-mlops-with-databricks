@@ -25,13 +25,14 @@ X_train, y_train, X_test, y_test = data_loader.split()
 
 # COMMAND ----------
 model = LightGBMModel(config=project_config)
-model.train(X_train=X_train,
-            y_train=y_train)
+model.train(X_train=X_train, y_train=y_train)
 
 mlflow.set_experiment("/Shared/hotel-booking-training")
-run = mlflow.start_run(run_name=f"lightgbm-training-{datetime.now().strftime('%Y-%m-%d')}",
-                      description="LightGBM model training",
-    tags=tags.to_dict())
+run = mlflow.start_run(
+    run_name=f"lightgbm-training-{datetime.now().strftime('%Y-%m-%d')}",
+    description="LightGBM model training",
+    tags=tags.to_dict(),
+)
 run_id = run.info.run_id
 
 mlflow.log_params(project_config.parameters)
@@ -43,12 +44,10 @@ signature = infer_signature(
 
 # COMMAND ----------
 training = mlflow.data.from_spark(
-    df=data_loader.train_set_spark,
-    sql=data_loader.train_query
+    df=data_loader.train_set_spark, sql=data_loader.train_query
 )
 testing = mlflow.data.from_spark(
-    df=data_loader.test_set_spark,
-    sql=data_loader.test_query
+    df=data_loader.test_set_spark, sql=data_loader.test_query
 )
 mlflow.log_input(training, context="training")
 mlflow.log_input(testing, context="testing")
@@ -58,7 +57,7 @@ model_info = mlflow.sklearn.log_model(
     sk_model=model.pipeline,
     name="lightgbm-pipeline",
     signature=signature,
-    input_example=X_test[0:1]
+    input_example=X_test[0:1],
 )
 eval_data = X_test.copy()
 eval_data[project_config.target] = y_test
@@ -70,7 +69,7 @@ result = mlflow.models.evaluate(
     targets=project_config.target,
     model_type="regressor",
     evaluators=["default"],
-        )
+)
 mlflow.end_run()
 
 # COMMAND ----------
@@ -93,25 +92,31 @@ run = mlflow.get_run(run_id)
 
 # COMMAND ----------
 inputs = run.inputs.dataset_inputs
-training_input = next((x for x in inputs if len(x.tags)>0 and x.tags[0].value == 'training'), None)
+training_input = next(
+    (x for x in inputs if len(x.tags) > 0 and x.tags[0].value == "training"), None
+)
 training_source = mlflow.data.get_source(training_input)
 training_source.load()
 # COMMAND ----------
-testing_input = next((x for x in inputs if len(x.tags)>0 and x.tags[0].value == 'testing'), None)
+testing_input = next(
+    (x for x in inputs if len(x.tags) > 0 and x.tags[0].value == "testing"), None
+)
 testing_source = mlflow.data.get_source(testing_input)
 testing_source.load()
 
 # COMMAND ----------
-model_name = f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_basic"
+model_name = (
+    f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_basic"
+)
 registered_model = mlflow.register_model(
-            model_uri=logged_model.model_uri,
-            name=model_name,
-            tags=tags.to_dict(),
-        )
+    model_uri=logged_model.model_uri,
+    name=model_name,
+    tags=tags.to_dict(),
+)
 # COMMAND ----------
 client = MlflowClient()
 
-job_id = "1234567890abcdef" # Example job ID; will fail if the job does not exist
+job_id = "1234567890abcdef"  # Example job ID; will fail if the job does not exist
 client.create_registered_model(model_name, deployment_job_id=job_id)
 
 # COMMAND ----------
@@ -127,14 +132,12 @@ model = mlflow.sklearn.load_model(f"models:/{model_name}@latest-model")
 
 # COMMAND ----------
 # only searching by name is supported
-v = mlflow.search_model_versions(
-    filter_string=f"name='{model_name}'")
+v = mlflow.search_model_versions(filter_string=f"name='{model_name}'")
 print(v[0].__dict__)
 
 # COMMAND ----------
 # not supported
-v = mlflow.search_model_versions(
-    filter_string="tags.git_sha='1234567890abcd'")
+v = mlflow.search_model_versions(filter_string="tags.git_sha='1234567890abcd'")
 
 
 # COMMAND ----------
@@ -146,13 +149,17 @@ __version__ = version("hotel_booking")
 code_paths = [f"../dist/hotel_booking-{__version__}-py3-none-any.whl"]
 
 wrapper = HotelBookingModelWrapper()
-pyfunc_model_name=f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_pyfunc"
+pyfunc_model_name = (
+    f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_pyfunc"
+)
 
-wrapper.log_register_model(wrapped_model_info=model_info,
-                           pyfunc_model_name=pyfunc_model_name,
-                           experiment_name="/Shared/hotel-booking-wrapper",
-                           tags=tags,
-                           code_paths=code_paths)
+wrapper.log_register_model(
+    wrapped_model_info=model_info,
+    pyfunc_model_name=pyfunc_model_name,
+    experiment_name="/Shared/hotel-booking-wrapper",
+    tags=tags,
+    code_paths=code_paths,
+)
 
 
 # COMMAND ----------
