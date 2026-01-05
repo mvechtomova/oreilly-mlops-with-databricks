@@ -167,3 +167,5 @@ loaded_pufunc_model = mlflow.pyfunc.load_model(wrapper.model_info.model_uri)
 # COMMAND ----------
 unwraped_model = loaded_pufunc_model.unwrap_python_model()
 unwraped_model.predict(context=None, model_input=X_test[0:1])
+
+# COMMAND ----------

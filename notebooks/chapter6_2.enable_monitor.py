@@ -1,5 +1,12 @@
 # Databricks notebook source
-from databricks.connect import DatabricksSession
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.errors import NotFound
+from databricks.sdk.service.catalog import (
+    MonitorInferenceLog,
+    MonitorInferenceLogProblemType,
+)
+from loguru import logger
+from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import (
     ArrayType,
@@ -9,24 +16,29 @@ from pyspark.sql.types import (
     StructField,
     StructType,
 )
-from databricks.sdk.service.catalog import (
-    MonitorInferenceLog,
-    MonitorInferenceLogProblemType,
-)
-
-from databricks.sdk import WorkspaceClient
 
 from hotel_booking.config import ProjectConfig
 
 # COMMAND ----------
-project_config = ProjectConfig.from_yaml(config_path="../project_config.yml")
+project_config = ProjectConfig.from_yaml(
+    config_path="../project_config.yml")
 catalog = project_config.catalog_name
 schema = project_config.schema_name
 
-spark = DatabricksSession.builder.getOrCreate()
+spark = SparkSession.builder.getOrCreate()
 # COMMAND ----------
 
-inf_table = spark.table(f"{catalog}.{schema}.hotel_booking_monitoring_payload")
+inf_table = spark.table(
+    f"{catalog}.{schema}.hotel_booking_monitoring_payload")
+
+
+# inf_table = spark.sql(f"""SELECT FROM {catalog}.{schema}.hotel_booking_monitoring_payload
+#     WHERE request_time > (
+#         SELECT MAX(request_time) AS TIMESTAMP
+#         FROM {catalog}.{schema}.model_monitoring)
+# """)
+
+
 
 # COMMAND ----------
 request_schema = StructType([
@@ -48,29 +60,29 @@ request_schema = StructType([
 
 response_schema = StructType([
     StructField("predictions", StructType([
-        StructField("Total price per night", ArrayType(DoubleType()), True)
+        StructField("Total price per night",
+                    ArrayType(DoubleType()), True)
     ]), True)
 ])
 
-#{"predictions": {"Total price per night": [93.07]}}
 # COMMAND ----------
-inf_table_parsed = inf_table.withColumn("parsed_request",
-                                        F.from_json(F.col("request"),
-                                                    request_schema))
-# COMMAND ----------
-inf_table_parsed = inf_table_parsed.withColumn("parsed_response",
-                                               F.from_json(F.col("response"),
-                                                           response_schema))
-
-inf_table_parsed = inf_table_parsed.withColumn(
-    "prediction",
-    F.col("parsed_response.predictions.`Total price per night`")[0]
+# parse and explode
+inf_table_parsed = (
+    inf_table
+    .withColumn("p_request",
+                F.from_json(F.col("request"),
+                            request_schema))
+    .withColumn("p_response",
+                F.from_json(F.col("response"),
+                            response_schema))
+    .withColumn("prediction",
+                F.col("p_response.predictions.`Total price per night`")[0])
+    .withColumn("record",
+                F.explode(F.col("p_request.dataframe_records")))
 )
 # COMMAND ----------
-df_exploded = inf_table_parsed.withColumn("record",
-                                          F.explode(F.col("parsed_request.dataframe_records")))
 
-df_final = df_exploded.select(
+df_final = inf_table_parsed.select(
     "request_time",
     "databricks_request_id",
     "execution_duration_ms",
@@ -102,10 +114,15 @@ monitoring_table = f"{catalog}.{schema}.model_monitoring"
 df_final_with_status.write.format(
     "delta").mode("append").saveAsTable(monitoring_table)
 
+# Important to update monitoring
+spark.sql(f"""ALTER TABLE {monitoring_table}
+           SET TBLPROPERTIES (delta.enableChangeDataFeed = true);""")
+
 # COMMAND ----------
 # create monitor
 
 w = WorkspaceClient()
+
 w.quality_monitors.create(
     table_name=monitoring_table,
     assets_dir=f"/Workspace/Shared/lakehouse_monitoring/{monitoring_table}",
@@ -113,13 +130,23 @@ w.quality_monitors.create(
     inference_log=MonitorInferenceLog(
         problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_REGRESSION,
         prediction_col="prediction",
-        timestamp_col="timestamp",
+        timestamp_col="request_time",
         granularities=["5 minutes"],
         model_id_col="model_name",
         label_col="average_price",
     ),
 )
 
-# Important to update monitoring
-spark.sql(f"""ALTER TABLE {monitoring_table}
-          SET TBLPROPERTIES (delta.enableChangeDataFeed = true);""")
+# try:
+#     w.quality_monitors.get(monitoring_table)
+#     w.quality_monitors.run_refresh(table_name=monitoring_table)
+#     logger.info("Lakehouse monitoring exist, refreshing. monitor")
+# except NotFound:
+#     logger.info("Creating monitor.")
+
+# hotel_booking
+# └── Tables
+#     ├── hotel_booking_monitoring_payload
+#     ├── model_monitoring
+#     ├── model_monitoring_drift_metrics
+#     └── model_monitoring_profile_metrics

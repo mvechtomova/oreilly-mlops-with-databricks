@@ -19,8 +19,6 @@ schema = project_config.schema_name
 spark = SparkSession.builder.getOrCreate()
 input_data = spark.table(f"{catalog}.{schema}.hotel_booking").toPandas()
 
-logger.info(f"Loaded records from {catalog}.{schema}.hotel_booking")
-
 # COMMAND ----------
 # Setup endpoint connection
 w = WorkspaceClient()
@@ -31,10 +29,10 @@ endpoint_name = "hotel-booking-pyfunc"
 serving_endpoint = f"{host}/serving-endpoints/{endpoint_name}/invocations"
 
 # COMMAND ----------
-# Call endpoint with random records for 10 minutes
-duration_seconds = 600
+# Call endpoint with random records for max 20 minutes
+duration_seconds = 1200
 sleep_time = 0.2
-expected_calls = 3000
+sample = 6000
 
 # Define required columns for endpoint
 required_columns = [
@@ -53,25 +51,18 @@ required_columns = [
 ]
 
 # Pre-sample records with only required columns
-sampled_records = input_data[required_columns].sample(n=expected_calls, replace=True)
+sampled_records = input_data[required_columns].sample(n=sample, replace=True)
+logger.info(f"Pre-sampled {sample} records. Starting calling the endpoint")
 
-logger.info(
-    f"Starting endpoint calls for {duration_seconds}s with {sleep_time}s sleep time"
-)
-logger.info(f"Pre-sampled {expected_calls} records")
-
+# COMMAND ----------
 start_time = time.time()
-
 for _, record in sampled_records.iterrows():
     if (time.time() - start_time) >= duration_seconds:
         break
 
-    booking_id = record["Booking_ID"]
-    features = record.drop("Booking_ID")
-
     payload = {
-        "client_request_id": booking_id,
-        "dataframe_records": [features.to_dict()]
+        "client_request_id": record["Booking_ID"],
+        "dataframe_records": [record.drop("Booking_ID").to_dict()]
     }
 
     try:
@@ -79,15 +70,12 @@ for _, record in sampled_records.iterrows():
             serving_endpoint,
             headers={"Authorization": f"Bearer {token}"},
             json=payload,
-            timeout=10,
         )
+        print(response.text)
         response.raise_for_status()
     except Exception as e:
         logger.error(f"Request failed: {e}")
-
     time.sleep(sleep_time)
-
-elapsed_time = time.time() - start_time
 logger.info("Completed endpoint calling")
 
 # COMMAND ----------
