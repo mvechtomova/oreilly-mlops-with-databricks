@@ -15,16 +15,16 @@ from hotel_booking.utils.common import set_mlflow_tracking_uri
 
 # COMMAND ----------
 set_mlflow_tracking_uri()
-project_config = ProjectConfig.from_yaml(config_path="../project_config.yml")
+cfg = ProjectConfig.from_yaml(config_path="../project_config.yml")
 tags = Tags(**{"git_sha": "1234567890abcd", "branch": "main"})
 
 # COMMAND ----------
 spark = SparkSession.builder.getOrCreate()
-data_loader = DataLoader(spark=spark, config=project_config)
+data_loader = DataLoader(spark=spark, config=cfg)
 X_train, y_train, X_test, y_test = data_loader.split()
 
 # COMMAND ----------
-model = LightGBMModel(config=project_config)
+model = LightGBMModel(config=cfg)
 model.train(X_train=X_train, y_train=y_train)
 
 mlflow.set_experiment("/Shared/hotel-booking-training")
@@ -35,7 +35,7 @@ run = mlflow.start_run(
 )
 run_id = run.info.run_id
 
-mlflow.log_params(project_config.parameters)
+mlflow.log_params(cfg.parameters)
 
 # COMMAND ----------
 signature = infer_signature(
@@ -60,13 +60,13 @@ model_info = mlflow.sklearn.log_model(
     input_example=X_test[0:1],
 )
 eval_data = X_test.copy()
-eval_data[project_config.target] = y_test
+eval_data[cfg.target] = y_test
 
 # This will log the evaluation metrics
 result = mlflow.models.evaluate(
     model_info.model_uri,
     eval_data,
-    targets=project_config.target,
+    targets=cfg.target,
     model_type="regressor",
     evaluators=["default"],
 )
@@ -106,7 +106,7 @@ testing_source.load()
 
 # COMMAND ----------
 model_name = (
-    f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_basic"
+    f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
 )
 registered_model = mlflow.register_model(
     model_uri=logged_model.model_uri,
@@ -150,7 +150,7 @@ code_paths = [f"../dist/hotel_booking-{__version__}-py3-none-any.whl"]
 
 wrapper = HotelBookingModelWrapper()
 pyfunc_model_name = (
-    f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_pyfunc"
+    f"{cfg.catalog}.{cfg.schema}.hotel_booking_pyfunc"
 )
 
 wrapper.log_register_model(

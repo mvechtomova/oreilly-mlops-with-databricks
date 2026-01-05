@@ -13,7 +13,7 @@ resources:
           spec:
             environment_version: "3"
             dependencies:
-              - ./dist/*.whl
+              - ../dist/*.whl
 
       tasks:
         - task_key: preprocessing
@@ -21,7 +21,7 @@ resources:
           spark_python_task:
             python_file: ../scripts/preprocess_data.py
             parameters:
-              - "--common"
+              - "common"
               - "--root_path"
               - ${workspace.root_path}
               - "--env"
@@ -34,7 +34,7 @@ resources:
           spark_python_task:
             python_file: "../scripts/train_register_model.py"
             parameters:
-              - "--train_deploy_model"
+              - "train_deploy_model"
               - "--root_path"
               - "${workspace.root_path}"
               - "--env"
@@ -56,30 +56,15 @@ resources:
           depends_on:
             - task_key: "train_model"
 
-        - task_key: "approve_check"
+        - task_key: "deploy_model"
           environment_key: default
           depends_on:
             - task_key: "model_updated"
               outcome: "true"
           spark_python_task:
-            python_file: "../scripts/approve.py"
-            parameters:
-              - "--approve_check"
-              - "--task_name"
-              - "{{task.name}}"
-              - "--root_path"
-              - "${workspace.root_path}"
-              - "--env"
-              - "${bundle.target}"
-
-        - task_key: "deploy_model"
-          environment_key: default
-          depends_on:
-            - task_key: "approve_check"
-          spark_python_task:
             python_file: "../scripts/deploy_model.py"
             parameters:
-              - "--train_deploy_model"
+              - "train_deploy_model"
               - "--root_path"
               - "${workspace.root_path}"
               - "--env"

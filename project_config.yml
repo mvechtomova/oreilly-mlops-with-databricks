@@ -1,14 +1,14 @@
 dev:
-  catalog_name: mlops_dev
-  schema_name: hotel_booking
+  catalog: mlops_dev
+  schema: hotel_booking
 
 acc:
-  catalog_name: mlops_acc
-  schema_name: hotel_booking
+  catalog: mlops_acc
+  schema: hotel_booking
 
 prd:
-  catalog_name: mlops_prd
-  schema_name: hotel_booking
+  catalog: mlops_prd
+  schema: hotel_booking
 
 parameters:
   learning_rate: 0.05

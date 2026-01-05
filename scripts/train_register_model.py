@@ -10,18 +10,19 @@ from hotel_booking.utils.common import create_parser
 
 args = create_parser()
 
-project_config = ProjectConfig.from_yaml(config_path=f"{args.root_path}/files/project_config.yml", env=args.env)
+cfg = ProjectConfig.from_yaml(
+    config_path=f"{args.root_path}/files/project_config.yml", env=args.env)
 
 logger.info("Configuration loaded:")
-logger.info(yaml.dump(project_config, default_flow_style=False))
+logger.info(yaml.dump(cfg, default_flow_style=False))
 
 spark = SparkSession.builder.getOrCreate()
 
 # Load the dataset
-data_loader = DataLoader(spark=spark, config=project_config)
+data_loader = DataLoader(spark=spark, config=cfg)
 X_train, y_train, X_test, y_test = data_loader.split()
 
-model = LightGBMModel(config=project_config)
+model = LightGBMModel(config=cfg)
 tags=Tags(**{"git_sha": args.git_sha, "branch": args.branch, "run_id": args.run_id})
 model.train(X_train=X_train,
             y_train=y_train)
@@ -38,14 +39,14 @@ model_info = model.log_model(
 
 metrics_new = model.metrics
 
-sklearn_model_name = f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_basic"
+sklearn_model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
 eval_data = X_test.copy()
-eval_data[project_config.target] = y_test
+eval_data[cfg.target] = y_test
 
 result = mlflow.models.evaluate(
         model_uri=f"models:/{sklearn_model_name}@latest-model",
         eval_data=eval_data,
-        targets=project_config.target,
+        targets=cfg.target,
         model_type="regressor",
         evaluators=["default"],
     )

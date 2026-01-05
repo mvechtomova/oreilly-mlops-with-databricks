@@ -18,11 +18,11 @@ from hotel_booking.utils.common import set_mlflow_tracking_uri
 
 # COMMAND ----------
 set_mlflow_tracking_uri()
-project_config = ProjectConfig.from_yaml(config_path="../project_config.yml")
+cfg = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
 # COMMAND ----------
 spark = SparkSession.builder.getOrCreate()
-data_loader = DataLoader(spark=spark, config=project_config)
+data_loader = DataLoader(spark=spark, config=cfg)
 
 X_train, y_train, X_valid, y_valid = data_loader.split(
     test_months=1,
@@ -113,7 +113,7 @@ with mlflow.start_run(
                 y_train_in = y_train,
                 X_valid_in = X_valid,
                 y_valid_in = y_valid,
-                project_config=project_config,
+                project_config=cfg,
                 parent_run_id=parent_run.info.run_id,
                 experiment_id=experiment_id,
             ),

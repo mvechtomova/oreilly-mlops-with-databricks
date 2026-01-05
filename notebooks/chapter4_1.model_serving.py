@@ -19,12 +19,12 @@ from hotel_booking.utils.common import set_mlflow_tracking_uri
 # COMMAND ----------
 set_mlflow_tracking_uri()
 
-project_config = ProjectConfig.from_yaml("../project_config.yml")
+cfg = ProjectConfig.from_yaml("../project_config.yml")
 
 # COMMAND ----------
 
-catalog = project_config.catalog_name
-schema = project_config.schema_name
+catalog = cfg.catalog
+schema = cfg.schema
 
 model_name = f"{catalog}.{schema}.hotel_booking_pyfunc"
 

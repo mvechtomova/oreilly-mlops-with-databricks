@@ -18,14 +18,18 @@ class DataProcessor:
     This class handles data preprocessing and saving to UC tables.
     """
 
-    def __init__(self: "DataProcessor",
-                 df: pd.DataFrame,
-                 config: ProjectConfig,
-                 spark: SparkSession) -> None:
+    def __init__(
+        self: "DataProcessor",
+        df: pd.DataFrame,
+        config: ProjectConfig,
+        spark: SparkSession,
+    ) -> None:
         self.df = df
-        self.config = config
+        self.cfg = config
         self.spark = spark
-        self.target_table = f"{self.config.catalog_name}.{self.config.schema_name}.hotel_booking"
+        self.target_table = (
+            f"{self.cfg.catalog}.{self.cfg.schema}.hotel_booking"
+        )
 
     def preprocess(self: "DataProcessor") -> None:
         """Preprocess the DataFrame."""
@@ -36,10 +40,14 @@ class DataProcessor:
         self.df["date_of_reservation"] = self.df["date_of_reservation"].apply(
             lambda x: datetime.strptime(x, "%m/%d/%Y")
         )
-        self.df["arrival_date"] = self.df["date_of_reservation"] + pd.to_timedelta(self.df["lead_time"], unit="d")
+        self.df["arrival_date"] = self.df["date_of_reservation"] + pd.to_timedelta(
+            self.df["lead_time"], unit="d"
+        )
         self.df["arrival_month"] = self.df["arrival_date"].dt.month
 
-    def generate_synthetic_df(self: "DataProcessor", n: int = 1000, max_date: datetime = None) -> None:
+    def generate_synthetic_df(
+        self: "DataProcessor", n: int = 1000, max_date: datetime = None
+    ) -> None:
         if max_date is None:
             max_date = self.spark.sql(
                 f"SELECT MAX(date_of_reservation) AS max_date FROM {self.target_table}"
@@ -53,17 +61,23 @@ class DataProcessor:
         synthesizer.fit(data=self.df)
         days_in_month = calendar.monthrange(year, month)[1]
         start_date = datetime(year, month, 1)
-        all_dates = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(days_in_month)]
+        all_dates = [
+            (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
+            for i in range(days_in_month)
+        ]
         self.df = synthesizer.sample(num_rows=n)
         self.df["date_of_reservation"] = [random.choice(all_dates) for _ in range(n)]
         self.df["date_of_reservation"] = pd.to_datetime(self.df["date_of_reservation"])
-        self.df["arrival_date"] = self.df["date_of_reservation"] + pd.to_timedelta(self.df["lead_time"], unit="d")
+        self.df["arrival_date"] = self.df["date_of_reservation"] + pd.to_timedelta(
+            self.df["lead_time"], unit="d"
+        )
         self.df["arrival_month"] = pd.to_datetime(self.df["arrival_date"]).dt.month
 
     def save_to_catalog(self: "DataProcessor") -> None:
         """Preprocess the DataFrame stored in self.df."""
         self.spark.createDataFrame(self.df).write.mode("append").saveAsTable(
-            f"{self.target_table}")
+            f"{self.target_table}"
+        )
         self.spark.sql(
-        f"ALTER TABLE {self.target_table} SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
+            f"ALTER TABLE {self.target_table} SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )

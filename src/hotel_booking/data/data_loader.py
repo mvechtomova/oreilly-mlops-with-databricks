@@ -17,7 +17,7 @@ class DataLoader:
         :param config: Project configuration containing table and feature info.
         :param spark: Active Spark session.
         """
-        self.config = config
+        self.cfg = config
         self.spark = spark
 
         self.train_query: str = None
@@ -43,7 +43,7 @@ class DataLoader:
         :param version: Optional Delta table version to query.
         :return: A tuple containing the training and test SQL queries.
         """
-        table_ref = f"{self.config.catalog_name}.{self.config.schema_name}.hotel_booking"
+        table_ref = f"{self.cfg.catalog}.{self.cfg.schema}.hotel_booking"
 
         if max_date is None:
             max_date = self.spark.sql(
@@ -97,10 +97,10 @@ class DataLoader:
         train_set = self.train_set_spark.toPandas()
         test_set = self.test_set_spark.toPandas()
 
-        X_train = train_set[self.config.num_features + self.config.cat_features]
-        y_train = train_set[self.config.target]
+        X_train = train_set[self.cfg.num_features + self.cfg.cat_features]
+        y_train = train_set[self.cfg.target]
 
-        X_test = test_set[self.config.num_features + self.config.cat_features]
-        y_test = test_set[self.config.target]
+        X_test = test_set[self.cfg.num_features + self.cfg.cat_features]
+        y_test = test_set[self.cfg.target]
 
         return X_train, y_train, X_test, y_test

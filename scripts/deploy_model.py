@@ -7,27 +7,30 @@ from hotel_booking.utils.common import create_parser
 
 args = create_parser()
 
-project_config = ProjectConfig.from_yaml(config_path=f"{args.root_path}/files/project_config.yml", env=args.env)
+cfg = ProjectConfig.from_yaml(
+    config_path=f"{args.root_path}/files/project_config.yml",
+    env=args.env)
 
 
 wrapped_model_version = dbutils.jobs.taskValues.get(taskKey="train_model", key="model_version")
 
 wrapped_model_info = mlflow.get_model_version(
-    name=f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_basic",
+    name=f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic",
     version=wrapped_model_version)
 
-catalog = project_config.catalog_name
-schema = project_config.schema_name
+catalog = cfg.catalog
+schema = cfg.schema
 
 model_name = f"{catalog}.{schema}.hotel_booking_pyfunc"
 wrapper = HotelBookingModelWrapper()
 
 tags = Tags(**{"git_sha": args.git_sha, "branch": args.branch, "run_id": args.run_id})
-model_version = wrapper.log_register_model(wrapped_model_info=wrapped_model_info,
-                          pyfunc_model_name=model_name,
-                          experiment_name="/Shared/hotel-booking-pyfunc",
-                          run_id=args.run_id,
-                          tags=tags)
+model_version = wrapper.log_register_model(
+    wrapped_model_info=wrapped_model_info,
+    pyfunc_model_name=model_name,
+    experiment_name="/Shared/hotel-booking-pyfunc",
+    run_id=args.run_id,
+    tags=tags)
 
 serve_model(entity_name=model_name,
             entity_version=model_version,

@@ -10,9 +10,9 @@ from pyspark.sql import SparkSession
 from hotel_booking.config import ProjectConfig
 
 # COMMAND ----------
-project_config = ProjectConfig.from_yaml(config_path="../project_config.yml")
-catalog = project_config.catalog_name
-schema = project_config.schema_name
+cfg = ProjectConfig.from_yaml(config_path="../project_config.yml")
+catalog = cfg.catalog
+schema = cfg.schema
 
 # COMMAND ----------
 # Read source table

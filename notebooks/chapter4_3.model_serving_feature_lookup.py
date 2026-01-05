@@ -39,18 +39,18 @@ from hotel_booking.utils.common import set_mlflow_tracking_uri
 
 # COMMAND ----------
 set_mlflow_tracking_uri()
-project_config = ProjectConfig.from_yaml(config_path="../project_config.yml")
+cfg = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
 # COMMAND ----------
 spark = SparkSession.builder.getOrCreate()
 fe = FeatureEngineeringClient()
-data_loader = DataLoader(spark=spark, config=project_config)
+data_loader = DataLoader(spark=spark, config=cfg)
 train_query, test_query = data_loader._generate_queries()
 train_set = spark.sql(train_query).drop("lead_time", "arrival_month", "repeated", "P_C", "P_not_C", "booking_status")
 test_set = spark.sql(test_query).toPandas()
 
 # COMMAND ----------
-lead_time_function = f"{project_config.catalog_name}.{project_config.schema_name}.calculate_lead_time"
+lead_time_function = f"{cfg.catalog}.{cfg.schema}.calculate_lead_time"
 
 spark.sql(f"""
 CREATE OR REPLACE FUNCTION {lead_time_function}(arrival_date TIMESTAMP, reservation_date TIMESTAMP)
@@ -60,7 +60,7 @@ $$
 return (arrival_date-reservation_date).days
 $$""")
 
-arrival_month_function = f"{project_config.catalog_name}.{project_config.schema_name}.get_arrival_month"
+arrival_month_function = f"{cfg.catalog}.{cfg.schema}.get_arrival_month"
 
 spark.sql(f"""
 CREATE OR REPLACE FUNCTION {arrival_month_function}(arrival_date TIMESTAMP)
@@ -71,10 +71,10 @@ return arrival_date.month
 $$""")
 
 # COMMAND ----------
-feature_table_name = f"{project_config.catalog_name}.{project_config.schema_name}.historical_booking_features"
+feature_table_name = f"{cfg.catalog}.{cfg.schema}.historical_booking_features"
 spark.sql(f"""
     CREATE OR REPLACE TABLE {feature_table_name}
-    AS SELECT Booking_ID, repeated FROM {project_config.catalog_name}.{project_config.schema_name}.hotel_booking
+    AS SELECT Booking_ID, repeated FROM {cfg.catalog}.{cfg.schema}.hotel_booking
 """)
 
 spark.sql(f"""
@@ -94,7 +94,7 @@ spark.sql(f"""
 
 training_set = fe.create_training_set(
             df=train_set,
-            label=project_config.target,
+            label=cfg.target,
             feature_lookups=[
                 FeatureLookup(
                     table_name=feature_table_name,
@@ -116,15 +116,15 @@ training_set = fe.create_training_set(
         )
 
 training_df = training_set.load_df().toPandas()
-X_train = training_df[project_config.num_features + project_config.cat_features + ["repeated"]]
-y_train = training_df[project_config.target]
-X_test = test_set[project_config.num_features + project_config.cat_features + ["repeated"]]
-y_test = test_set[project_config.target]
+X_train = training_df[cfg.num_features + cfg.cat_features + ["repeated"]]
+y_train = training_df[cfg.target]
+X_test = test_set[cfg.num_features + cfg.cat_features + ["repeated"]]
+y_test = test_set[cfg.target]
 
 # COMMAND ----------
 tags = {"branch": "chapter_4", "git_sha": "1234567890abcd"}
 
-model = LightGBMModel(config=project_config)
+model = LightGBMModel(config=cfg)
 model.train(
             X_train=X_train,
             y_train=y_train,
@@ -157,7 +157,7 @@ with mlflow.start_run(run_name=f"lightgbm-training-{datetime.now().strftime('%Y-
         signature=signature)
 
 # COMMAND ----------
-model_name = f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_model_fe"
+model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_model_fe"
 registered_model = mlflow.register_model(
     model_uri=f"runs:/{run_id}/lightgbm-pipeline-model-fe",
     name=model_name,

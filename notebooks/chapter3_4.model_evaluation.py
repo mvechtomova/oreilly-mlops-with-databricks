@@ -20,22 +20,22 @@ from hotel_booking.utils.common import set_mlflow_tracking_uri
 set_mlflow_tracking_uri()
 spark = SparkSession.builder.getOrCreate()
 
-project_config = ProjectConfig.from_yaml("../project_config.yml")
+cfg = ProjectConfig.from_yaml("../project_config.yml")
 # COMMAND ----------
 # Load and process the data
 df = pd.read_csv("../data/booking.csv")
-data_processor = DataProcessor(df=df, config=project_config, spark=spark)
+data_processor = DataProcessor(df=df, config=cfg, spark=spark)
 data_processor.preprocess()
 data_processor.generate_synthetic_df(n=1000, max_date=None)
 data_processor.save_to_catalog()
 
 # COMMAND ----------
-data_loader = DataLoader(spark=spark, config=project_config)
+data_loader = DataLoader(spark=spark, config=cfg)
 X_train, y_train, X_test, y_test = data_loader.split()
 
 # COMMAND ----------
 # retrain model
-model = LightGBMModel(config=project_config)
+model = LightGBMModel(config=cfg)
 tags=Tags(**{"git_sha": "1234567890abcd", "branch": "chapter_3"})
 model.train(X_train=X_train,
             y_train=y_train)
@@ -54,15 +54,15 @@ metrics_new = model.metrics
 # COMMAND ----------
 # eval model
 
-sklearn_model_name = f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_basic"
+sklearn_model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
 model_uri = f"models:/{sklearn_model_name}@latest-model"
 eval_data = X_test.copy()
-eval_data[project_config.target] = y_test
+eval_data[cfg.target] = y_test
 
 result = mlflow.models.evaluate(
         model_uri,
         eval_data,
-        targets=project_config.target,
+        targets=cfg.target,
         model_type="regressor",
         evaluators=["default"],
     )

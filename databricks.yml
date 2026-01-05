@@ -30,25 +30,25 @@ targets:
     default: true
     mode: development
     workspace:
-      host: https://dbc-f122dc18-1b68.cloud.databricks.com
+      host: https://adb-971256932836835.15.azuredatabricks.net
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}
-    artifacts:
-      default:
-        type: whl
-        build: uv build
-        path: .
-        dynamic_version: true
+    # artifacts:
+    #   default:
+    #     type: whl
+    #     build: uv build
+    #     path: .
+    #     dynamic_version: true
 
   acc:
     workspace:
-      host: https://dbc-f122dc18-1b68.cloud.databricks.com
+      host: https://adb-971256932836835.15.azuredatabricks.net
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
     variables:
       schedule_pause_status: PAUSED
 
   prd:
     workspace:
-      host: https://dbc-f122dc18-1b68.cloud.databricks.com
+      host: https://adb-971256932836835.15.azuredatabricks.net
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
     variables:
       schedule_pause_status: UNPAUSED

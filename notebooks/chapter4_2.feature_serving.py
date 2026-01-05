@@ -26,16 +26,16 @@ from pyspark.sql.functions import col, struct
 from hotel_booking.config import ProjectConfig
 
 # COMMAND ----------
-project_config = ProjectConfig.from_yaml("../project_config.yml")
+cfg = ProjectConfig.from_yaml("../project_config.yml")
 spark = SparkSession.builder.getOrCreate()
 fe = FeatureEngineeringClient()
 
 # COMMAND ----------
-model_name = f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_basic"
+model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
 model_uri = f"models:/{model_name}@latest-model"
-columns = project_config.cat_features + project_config.num_features
+columns = cfg.cat_features + cfg.num_features
 
-input_df = spark.table(f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking")
+input_df = spark.table(f"{cfg.catalog}.{cfg.schema}.hotel_booking")
 model_udf = mlflow.pyfunc.spark_udf(spark, model_uri)
 
 preds_df = input_df.select(
@@ -44,7 +44,7 @@ preds_df = input_df.select(
 )
 
 # COMMAND ----------
-feature_table_name = f"{project_config.catalog_name}.{project_config.schema_name}.hotel_booking_price_preds"
+feature_table_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_price_preds"
 fe.create_table(
     name=feature_table_name,
     primary_keys=["Booking_ID"],
@@ -58,7 +58,7 @@ spark.sql(f"""
         """)
 
 # COMMAND ----------
-feature_spec_name = f"{project_config.catalog_name}.{project_config.schema_name}.return_hotel_booking_prices"
+feature_spec_name = f"{cfg.catalog}.{cfg.schema}.return_hotel_booking_prices"
 features = [
             FeatureLookup(
                 table_name=feature_table_name,

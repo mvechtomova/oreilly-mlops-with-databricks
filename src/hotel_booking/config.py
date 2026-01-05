@@ -12,8 +12,8 @@ class ProjectConfig(BaseModel):
     num_features: list[str]
     cat_features: list[str]
     target: str
-    catalog_name: str
-    schema_name: str
+    catalog: str
+    schema: str
     parameters: dict[str, Any]
 
     @classmethod
@@ -29,8 +29,8 @@ class ProjectConfig(BaseModel):
 
         with open(config_path) as f:
             config_dict = yaml.safe_load(f)
-        config_dict["catalog_name"] = config_dict[env]["catalog_name"]
-        config_dict["schema_name"] = config_dict[env]["schema_name"]
+        config_dict["catalog"] = config_dict[env]["catalog"]
+        config_dict["schema"] = config_dict[env]["schema"]
         for k in ["dev", "acc", "prd"]:
             config_dict.pop(k)
         return cls(**config_dict)
