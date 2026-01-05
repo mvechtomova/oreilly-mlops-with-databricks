@@ -4,7 +4,7 @@ from loguru import logger
 from pyspark.sql import SparkSession
 
 from hotel_booking.config import ProjectConfig, Tags
-from hotel_booking.data.data_processor import DataLoader
+from hotel_booking.data.data_loader import DataLoader
 from hotel_booking.models.lightgbm_model import LightGBMModel
 from hotel_booking.utils.common import create_parser
 
@@ -43,20 +43,52 @@ sklearn_model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
 eval_data = X_test.copy()
 eval_data[cfg.target] = y_test
 
-result = mlflow.models.evaluate(
-        model_uri=f"models:/{sklearn_model_name}@latest-model",
-        eval_data=eval_data,
-        targets=cfg.target,
-        model_type="regressor",
-        evaluators=["default"],
+# Check if model with alias exists before evaluating
+try:
+    client = mlflow.MlflowClient()
+    client.get_model_version_by_alias(sklearn_model_name, "latest-model")
+    model_exists = True
+    logger.info(
+        f"Model {sklearn_model_name}@latest-model exists. "
+        "Evaluating and comparing metrics."
     )
-metrics_old = result.metrics
+except mlflow.exceptions.RestException:
+    model_exists = False
+    logger.info(
+        f"Model {sklearn_model_name}@latest-model does not exist. "
+        "Registering new model."
+    )
+    model_version = model.register_model(
+        model_name=sklearn_model_name, tags=tags
+    )
 
-if metrics_new['root_mean_squared_error'] < metrics_old['root_mean_squared_error']:
-    registered_model = model.register_model(model_name=sklearn_model_name, job_id=args.job_id, tags=tags)
-
-    dbutils.jobs.taskValues.set(key="model_version", value=registered_model.version)
+    dbutils.jobs.taskValues.set(
+        key="model_version", value=model_version
+    )
     dbutils.jobs.taskValues.set(key="model_updated", value=1)
 
-else:
-    dbutils.jobs.taskValues.set(key="model_updated", value=0)
+if model_exists:
+    result = mlflow.models.evaluate(
+            model=f"models:/{sklearn_model_name}@latest-model",
+            data=eval_data,
+            targets=cfg.target,
+            model_type="regressor",
+            evaluators=["default"],
+        )
+    metrics_old = result.metrics
+
+    if (
+        metrics_new["root_mean_squared_error"]
+        < metrics_old["root_mean_squared_error"]
+    ):
+        model_version = model.register_model(
+            model_name=sklearn_model_name, tags=tags
+        )
+
+        dbutils.jobs.taskValues.set(
+            key="model_version", value=model_version
+        )
+        dbutils.jobs.taskValues.set(key="model_updated", value=1)
+
+    else:
+        dbutils.jobs.taskValues.set(key="model_updated", value=0)

@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "Code accompanying MLOps with Databrick O'Reilly book"
 requires-python = ">=3.12, <3.13"
 dependencies = [
-    "mlflow==3.1.1",
+    "mlflow==3.8.1",
     "cffi==1.17.1",
     "cloudpickle==3.1.1",
     "numpy==1.26.4",
@@ -13,7 +13,7 @@ dependencies = [
     "scikit-learn==1.7.0",
     "lightgbm==4.6.0",
     "scipy==1.16.0",
-    "databricks-sdk==0.62.0",
+    "databricks-sdk==0.76.0",
     "pydantic==2.11.7",
     "loguru==0.7.3",
     "python-dotenv==1.1.1",
@@ -23,10 +23,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["databricks-connect>=16.0, <17",
+dev = ["databricks-connect>=17.3.2, <18",
        "ipykernel>=6.29.5, <7",
        "pip>=25.0.1, <26",
-       "pre-commit>=4.1.0, <5"]
+       "pre-commit>=4.1.0, <5",
+       "pytest>=8.3.4, <9"]
 
 ci = ["pre-commit>=4.1.0, <5",
       "pytest>=8.3.4, <9"]
@@ -54,6 +55,7 @@ pythonpath = [ "." ]
 [tool.ruff]
 line-length = 90
 
+[tool.ruff.lint]
 select = [
     "F",    # pyflakes rules
     "E",    # pycodestyle error rules
@@ -70,7 +72,6 @@ ignore = [
     "D107", # Missing docstring in `__init__`
     "D203", # incorrect-blank-line-before-class
     "D213", # multi-line-summary-second-line
-    "E501", # line-too-long
     "C901", # too complex
     "ERA001", # commented out code
 ]

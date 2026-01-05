@@ -50,8 +50,9 @@ class HotelBookingModelWrapper(mlflow.pyfunc.PythonModel):
         conda_env = _mlflow_conda_env(additional_pip_deps=additional_pip_deps)
 
         mlflow.set_experiment(experiment_name=experiment_name)
+        ts=datetime.now().strftime('%Y-%m-%d')
         with mlflow.start_run(
-            run_name=f"wrapper-lightgbm-{datetime.now().strftime('%Y-%m-%d')}",
+            run_name=f"wrapper-lightgbm-{ts}",
             tags=tags.to_dict(),
         ):
             signature = infer_signature(

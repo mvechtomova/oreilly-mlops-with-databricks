@@ -3,11 +3,13 @@
 from typing import Any
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ProjectConfig(BaseModel):
     """Project configuration parameters loaded from project_config.yml."""
+
+    model_config = ConfigDict(protected_namespaces=())
 
     num_features: list[str]
     cat_features: list[str]
