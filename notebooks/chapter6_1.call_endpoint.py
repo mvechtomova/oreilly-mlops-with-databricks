@@ -2,6 +2,7 @@
 
 import time
 
+import pandas as pd
 import requests
 from databricks.sdk import WorkspaceClient
 from loguru import logger
@@ -29,10 +30,14 @@ endpoint_name = "hotel-booking-pyfunc"
 serving_endpoint = f"{host}/serving-endpoints/{endpoint_name}/invocations"
 
 # COMMAND ----------
-# Call endpoint with random records for max 20 minutes
-duration_seconds = 1200
+# Call endpoint with random records
+# First 10 minutes: all data
+# Second 10 minutes: append Corporate segment data
+# Total duration: 1200s, time per call: 0.3s (0.2 sleep + 0.1 call)
+# Total possible calls: 1200 / 0.3 = 4000 (2000 per phase)
+duration_per_phase_seconds = 600
 sleep_time = 0.2
-sample = 6000
+sample_per_phase = 2000
 
 # Define required columns for endpoint
 required_columns = [
@@ -50,19 +55,33 @@ required_columns = [
     "market_segment_type",
 ]
 
-# Pre-sample records with only required columns
-sampled_records = input_data[required_columns].sample(n=sample, replace=True)
-logger.info(f"Pre-sampled {sample} records. Starting calling the endpoint")
+# COMMAND ----------
+# Sample data: Phase 1 (all data) + Phase 2 (Corporate segment)
+sampled_all = input_data[required_columns].sample(
+    n=sample_per_phase, replace=True
+)
+sampled_corporate = input_data[
+    input_data["market_segment_type"] == "Corporate"
+][required_columns].sample(n=sample_per_phase, replace=True)
+
+sampled_records = pd.concat([sampled_all, sampled_corporate], ignore_index=True)
+logger.info(
+    f"Sampled {len(sampled_records)} total records "
+    f"({sample_per_phase} all + {sample_per_phase} corporate)"
+)
 
 # COMMAND ----------
+# Call endpoint with sampled records for 20 minutes
 start_time = time.time()
+logger.info("Starting endpoint calls for 1200s")
+
 for _, record in sampled_records.iterrows():
-    if (time.time() - start_time) >= duration_seconds:
+    if (time.time() - start_time) >= duration_per_phase_seconds * 2:
         break
 
     payload = {
         "client_request_id": record["Booking_ID"],
-        "dataframe_records": [record.drop("Booking_ID").to_dict()]
+        "dataframe_records": [record.drop("Booking_ID").to_dict()],
     }
 
     try:
@@ -76,6 +95,7 @@ for _, record in sampled_records.iterrows():
     except Exception as e:
         logger.error(f"Request failed: {e}")
     time.sleep(sleep_time)
-logger.info("Completed endpoint calling")
+
+logger.info("Completed all endpoint calls")
 
 # COMMAND ----------

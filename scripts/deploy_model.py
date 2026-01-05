@@ -4,6 +4,7 @@ from hotel_booking.config import ProjectConfig, Tags
 from hotel_booking.models.pyfunc_model_wrapper import HotelBookingModelWrapper
 from hotel_booking.models.serving import serve_model
 from hotel_booking.utils.common import create_parser
+from loguru import logger
 
 args = create_parser()
 
@@ -14,19 +15,21 @@ cfg = ProjectConfig.from_yaml(
 with open(f"{args.root_path}/files/version.txt") as f:
     version = f.read().strip()
 
+whl_name = f"hotel_booking-{version}-py3-none-any.whl"
+
 code_paths = [
-    f"{args.root_path}/artifacts/.internal/\
-        hotel_booking-{version}-py3-none-any.whl"
+    f"{args.root_path}/artifacts/.internal/{whl_name}"
 ]
 
-wrapped_model_version = dbutils.jobs.taskValues.get(
+v = dbutils.jobs.taskValues.get(
     taskKey="train_model", key="model_version"
 )
-
+logger.info(
+    f"Retrieved wrapped model version: {v}"
+)
 
 wrapped_model_info = mlflow.models.get_model_info(
-    model_uri=f"models:/{cfg.catalog}.{cfg.schema}.\
-        hotel_booking_basic/{wrapped_model_version}"
+    model_uri=f"models:/{cfg.catalog}.{cfg.schema}.hotel_booking_basic/{v}"
 )
 
 
