@@ -1,6 +1,5 @@
 # Databricks notebook source
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.errors import NotFound
 from databricks.sdk.service.catalog import (
     MonitorInferenceLog,
     MonitorInferenceLogProblemType,
@@ -26,8 +25,8 @@ catalog = cfg.catalog
 schema = cfg.schema
 
 spark = SparkSession.builder.getOrCreate()
-# COMMAND ----------
 
+# COMMAND ----------
 inf_table = spark.table(
     f"{catalog}.{schema}.hotel_booking_monitoring_payload")
 

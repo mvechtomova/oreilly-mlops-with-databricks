@@ -12,7 +12,7 @@ resources:
       job_clusters:
         - job_cluster_key: "hotel-booking-cluster"
           new_cluster:
-            spark_version: "17.3.x-scala2.12"
+            spark_version: "17.3.x-scala2.13"
             data_security_mode: "SINGLE_USER"
             node_type_id: "Standard_DS3_v2" #"r3.xlarge"
             driver_node_type_id: "Standard_DS3_v2" #"r3.xlarge"

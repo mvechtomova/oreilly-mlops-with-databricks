@@ -319,7 +319,7 @@ class MonitoringManager:
 
         return record_count
 
-    def create_or_update_monitor(
+    def refresh_monitor(
         self,
         assets_dir: str | None = None,
         prediction_col: str = "prediction",
