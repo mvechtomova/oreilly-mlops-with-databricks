@@ -21,7 +21,6 @@ num_records = manager.update_monitoring_table()
 
 if num_records > 0:
     logger.info(f"Successfully processed {num_records} records")
-    logger.info("Triggering monitor refresh")
     manager.refresh_monitor()
     logger.info("Monitor refresh completed")
 else:

@@ -160,20 +160,17 @@ class MonitoringManager:
 
         :return: DataFrame with new payload data
         """
-        last_timestamp = self._get_last_processed_timestamp()
-
-        logger.info(f"Loading payload data from {self.payload_table}")
-        inf_table = self.spark.sql(
-            f"""
-            SELECT * FROM {self.payload_table}
-            WHERE request_time > CAST('{last_timestamp}' AS TIMESTAMP)
-        """
-        )
-
-        record_count = inf_table.count()
-        logger.info(f"Found {record_count} new records to process")
-
-        return inf_table
+        query = f"SELECT * FROM {self.payload_table}"
+        if not self.spark.catalog.tableExists(self.monitoring_table):
+            logger.info(
+                "Monitoring table does not exist. Processing all records."
+            )
+        else:
+            query += (
+                f" WHERE request_time > "
+                f"(SELECT MAX(request_time) FROM {self.monitoring_table})"
+            )
+        return self.spark.sql(query)
 
     def _parse_and_transform_payload(
         self, inf_table: DataFrame

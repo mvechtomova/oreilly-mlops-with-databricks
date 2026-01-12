@@ -20,25 +20,6 @@ schema = cfg.schema
 spark = SparkSession.builder.getOrCreate()
 input_data = spark.table(f"{catalog}.{schema}.hotel_booking").toPandas()
 
-# COMMAND ----------
-# Setup endpoint connection
-w = WorkspaceClient()
-host = w.config.host
-token = w.tokens.create(lifetime_seconds=1200).token_value
-
-endpoint_name = "hotel-booking-pyfunc"
-serving_endpoint = f"{host}/serving-endpoints/{endpoint_name}/invocations"
-
-# COMMAND ----------
-# Call endpoint with random records
-# First 10 minutes: all data
-# Second 10 minutes: append Corporate segment data
-# Total duration: 1200s, time per call: 0.3s (0.2 sleep + 0.1 call)
-# Total possible calls: 1200 / 0.3 = 4000 (2000 per phase)
-duration_per_phase_seconds = 600
-sleep_time = 0.2
-sample_per_phase = 2000
-
 # Define required columns for endpoint
 required_columns = [
     "Booking_ID",
@@ -55,8 +36,8 @@ required_columns = [
     "market_segment_type",
 ]
 
-# COMMAND ----------
-# Sample data: Phase 1 (all data) + Phase 2 (Corporate segment)
+sample_per_phase = 2000
+
 sampled_all = input_data[required_columns].sample(
     n=sample_per_phase, replace=True
 )
@@ -71,13 +52,20 @@ logger.info(
 )
 
 # COMMAND ----------
-# Call endpoint with sampled records for 20 minutes
-start_time = time.time()
-logger.info("Starting endpoint calls for 1200s")
+# Setup endpoint connection
+w = WorkspaceClient()
+host = w.config.host
+token = w.tokens.create(lifetime_seconds=2000).token_value
+
+endpoint_name = "hotel-booking-pyfunc"
+serving_endpoint = f"{host}/serving-endpoints/{endpoint_name}/invocations"
+
+# Call endpoint with selected records
+sleep_time = 0.2
+
+logger.info("Starting endpoint calls")
 
 for _, record in sampled_records.iterrows():
-    if (time.time() - start_time) >= duration_per_phase_seconds * 2:
-        break
 
     payload = {
         "client_request_id": record["Booking_ID"],
@@ -97,5 +85,3 @@ for _, record in sampled_records.iterrows():
     time.sleep(sleep_time)
 
 logger.info("Completed all endpoint calls")
-
-# COMMAND ----------
