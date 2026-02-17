@@ -1,17 +1,4 @@
 # Databricks notebook source
-# MAGIC %pip install -e ..
-
-# COMMAND ----------
-
-# MAGIC %restart_python
-
-# COMMAND ----------
-
-# from pathlib import Path
-# import sys
-# sys.path.append(str(Path.cwd().parent / 'src'))
-
-# COMMAND ----------
 from datetime import datetime
 
 import pandas as pd
