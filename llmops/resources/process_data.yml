@@ -1,0 +1,24 @@
+resources:
+  jobs:
+    data-pipeline:
+      name: arxiv-data-pipeline
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: "Europe/Amsterdam"
+        pause_status: ${var.schedule_pause_status}
+      tags:
+        project_name: "arxiv-curator"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+
+      tasks:
+        - task_key: preprocessing
+          environment_key: default
+          notebook_task:
+            notebook_path: deployment_notebooks/process_data.py
+            base_parameters:
+              env: ${bundle.target}

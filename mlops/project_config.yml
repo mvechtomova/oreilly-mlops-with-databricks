@@ -1,0 +1,35 @@
+dev:
+  catalog: mlops_dev
+  schema: hotel_booking
+
+acc:
+  catalog: mlops_acc
+  schema: hotel_booking
+
+prd:
+  catalog: mlops_prd
+  schema: hotel_booking
+
+parameters:
+  learning_rate: 0.05
+  n_estimators: 200
+  max_depth: 3
+
+num_features:
+  - number_of_adults
+  - number_of_children
+  - number_of_weekend_nights
+  - number_of_week_nights
+  - car_parking_space
+  - special_requests
+  - lead_time
+
+cat_features:
+  - type_of_meal
+  - room_type
+  - arrival_month
+  - market_segment_type
+
+target: average_price
+
+usage_policy_id: cdad6f29-a213-4525-9330-e25b90afbe7a

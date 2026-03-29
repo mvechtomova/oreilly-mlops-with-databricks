@@ -1,0 +1,24 @@
+resources:
+  jobs:
+    update-and-evaluate-traces:
+      name: arxiv-update-and-evaluate-traces
+      schedule:
+        quartz_cron_expression: "0 0 7 * * ?"
+        timezone_id: "Europe/Amsterdam"
+        pause_status: ${var.schedule_pause_status}
+      tags:
+        project_name: "arxiv-curator"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+
+      tasks:
+        - task_key: update_and_evaluate
+          environment_key: default
+          notebook_task:
+            notebook_path: deployment_notebooks/update_traces_aggregated.py
+            base_parameters:
+              env: ${bundle.target}

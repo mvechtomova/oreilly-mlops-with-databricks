@@ -1,0 +1,12 @@
+environment_version: "4"
+dependencies:
+ - mlflow==3.8.1
+ - numpy==2.4.0
+ - pandas==2.3.0
+ - pyarrow==22.0.0
+ - databricks-sdk==0.85.0
+ - scikit-learn==1.7.0
+ - lightgbm==4.6.0
+ - scipy==1.16.0
+ - pydantic==2.11.7
+

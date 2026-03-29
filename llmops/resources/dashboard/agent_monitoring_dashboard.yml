@@ -1,0 +1,6 @@
+resources:
+  dashboards:
+    agent-monitoring-dashboard:
+      display_name: "Agent Monitoring Dashboard"
+      file_path: agent_monitoring_dashboard.lvdash.json
+      warehouse_id: ${var.warehouse_id}

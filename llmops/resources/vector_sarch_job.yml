@@ -1,0 +1,23 @@
+resources:
+  jobs:
+    vector_sarch_job:
+      name: vector-sarch
+      tags:
+        project_name: "arxiv-curator"
+
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          notebook_task:
+            notebook_path: ../notebooks/chapter7_2.vector_sarch.py
+            base_parameters:
+              env: ${bundle.target}
+              git_sha: "${var.git_sha}"
+              run_id: "{{job.run_id}}"

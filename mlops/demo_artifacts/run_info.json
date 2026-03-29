@@ -1,0 +1,43 @@
+{
+    "info": {
+        "artifact_uri": "dbfs:/databricks/mlflow-tracking/3154430189072529/d9e28632b743400f829eae238001a6d2/artifacts",
+        "end_time": 1771793529783,
+        "experiment_id": "3154430189072529",
+        "lifecycle_stage": "active",
+        "run_id": "d9e28632b743400f829eae238001a6d2",
+        "run_name": "demo-run",
+        "start_time": 1771793527481,
+        "status": "FINISHED",
+        "user_id": ""
+    },
+    "data": {
+        "metrics": {
+            "metric1": 1.0,
+            "metric2": 2.0
+        },
+        "params": {
+            "type": "demo"
+        },
+        "tags": {
+            "branch": "main",
+            "git_sha": "1234567890abcd",
+            "mlflow.databricks.cluster.id": "0222-205004-5e2vqaqz-v2n",
+            "mlflow.databricks.cluster.info": "{\"cluster_name\":\"\",\"spark_version\":\"18.0.x-photon-scala2.13\",\"autotermination_minutes\":120}",
+            "mlflow.databricks.cluster.libraries": "{\"installable\":[],\"redacted\":[]}",
+            "mlflow.note.content": "demo run",
+            "mlflow.runColor": "#5387dd",
+            "mlflow.runName": "demo-run",
+            "mlflow.source.name": "/Users/mariavechtomova/Personal/oreilly-mlops-with-databricks/.venv/lib/python3.12/site-packages/ipykernel_launcher.py",
+            "mlflow.source.type": "LOCAL",
+            "mlflow.user": "maria@cauchy.io",
+            "mlflow.artifacts.spn": "/WorkspaceInternal/Mlflow/Artifacts/3154430189072529/Runs/d9e28632b743400f829eae238001a6d2/"
+        }
+    },
+    "inputs": {
+        "model_inputs": [],
+        "dataset_inputs": []
+    },
+    "outputs": {
+        "model_outputs": []
+    }
+}

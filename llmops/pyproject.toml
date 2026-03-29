@@ -1,0 +1,82 @@
+[project]
+name = "arxiv-curator"
+dynamic = ["version"]
+description = "Code accompanying MLOps with Databrick O'Reilly book"
+requires-python = ">=3.12, <3.13"
+dependencies = [
+    "cffi==1.17.1",
+    "cloudpickle==3.1.1",
+    "numpy==2.4.3",
+    "pandas==2.3.0",
+    "pyarrow==22.0.0",
+    "databricks-sdk==0.102.0",
+    "pydantic==2.11.7",
+    "loguru==0.7.3",
+    "python-dotenv==1.1.1",
+    "databricks-vectorsearch==0.66",
+    "openai==2.8.0",
+    "databricks-mcp==0.4.0",
+    "backoff==2.2.1",
+    "mlflow==3.8.1",
+    "nest-asyncio==1.6.0",
+    "arxiv==2.3.1",
+    "databricks-agents==1.8.2",
+    "psycopg==3.3.2",
+    "psycopg-pool==3.3.0",
+    "psycopg[binary]==3.3.2"
+]
+
+[project.optional-dependencies]
+dev = ["databricks-connect>=17.0, <18",
+       "ipykernel>=6.29.5, <7",
+       "pip>=25.0.1, <26",
+       "pre-commit>=4.1.0, <5"]
+
+ci = ["pre-commit>=4.1.0, <5",
+      "pytest>=8.3.4, <9"]
+
+[build-system]
+requires = [
+  "setuptools>=72.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where =["src"]
+include = ["arxiv_curator*"]
+
+[tool.setuptools.dynamic]
+version = { file = "version.txt" }
+
+[tool.pytest.ini_options]
+addopts = "-s --no-header --no-summary"
+testpaths = [ "tests" ]
+pythonpath = [ "." ]
+
+[tool.ruff]
+line-length = 90
+
+select = [
+    "F",    # pyflakes rules
+    "E",    # pycodestyle error rules
+    "W",    # pycodestyle warning rules
+    "B",    # flake8-bugbear rules
+    "I",    # isort rules
+    "UP",   # pyupgrade rules
+    "SIM",  # flake8-simplify rules
+    "ERA",  # eradicate rules
+    "C",    # pylint convention rules
+    "ANN"   # flake8-annotations rules
+]
+ignore = [
+    "D107", # Missing docstring in `__init__`
+    "D203", # incorrect-blank-line-before-class
+    "D213", # multi-line-summary-second-line
+    "C901", # too complex
+    "ERA001", # commented out code
+    "ANN204",
+    "ANN102",
+    "ANN101"
+]
+
+[tool.ruff.format]
+indent-style = "space"

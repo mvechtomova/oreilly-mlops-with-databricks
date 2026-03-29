@@ -1,0 +1,36 @@
+resources:
+  sql_warehouses:
+     hotel_booking_sql_warehouse:
+      name: hotel_booking_sql_warehouse
+      cluster_size: 2X-Small
+      enable_serverless_compute: true
+      max_num_clusters: 1
+      auto_stop_mins: 5
+      warehouse_type: PRO
+      tags:
+        custom_tags: 
+        - key: "project"
+        - value: "hotel-booking"
+  alerts:
+    my_alert:
+      display_name: hotel-booking-mae-alert
+      evaluation:
+        notification:
+          subscriptions: 
+          - user_email: "maria@cauchy.io"
+          # - destination_id: "12345"
+        comparison_operator: GREATER_THAN
+        source:
+          name: 'percentage_higher_than_30'
+        threshold:
+          value:
+            double_value: 45
+      query_text: SELECT (COUNT(CASE WHEN mean_absolute_error > 30 THEN 1 END)
+       * 100.0 / COUNT(CASE WHEN mean_absolute_error IS NOT NULL AND NOT
+        isnan(mean_absolute_error) THEN 1 END)) AS percentage_higher_than_30 
+        FROM mlops_prd.hotel_booking.model_monitoring_profile_metrics
+      schedule:
+        quartz_cron_schedule: "0 0 10 * * ?"
+        timezone_id: Europe/Amsterdam
+        pause_status: ${var.schedule_pause_status}
+      warehouse_id: ${resources.sql_warehouses.hotel_booking_sql_warehouse.id}

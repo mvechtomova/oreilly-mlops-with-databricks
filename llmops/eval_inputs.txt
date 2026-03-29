@@ -1,0 +1,10 @@
+What is so special about the last paper on RAG?
+Summarize the key findings from the last paper on reasoning.
+What problem does the last paper on multi-agent systems solve?
+Tell me about the last paper on prompt engineering.
+What are the main contributions of the last paper on LLM fine-tuning?
+Explain the methodology in the last paper on chain-of-thought prompting.
+What results did the last paper on hallucination detection achieve?
+Describe the last paper on LLM benchmarks.
+What approach does the last paper on code generation propose?
+What conclusions does the last paper on embedding models draw?

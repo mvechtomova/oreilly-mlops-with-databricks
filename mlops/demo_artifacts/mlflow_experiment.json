@@ -1,0 +1,14 @@
+{
+    "_experiment_id": "3154430189072529",
+    "_name": "/Shared/demo",
+    "_artifact_location": "dbfs:/databricks/mlflow-tracking/3154430189072529",
+    "_lifecycle_stage": "active",
+    "_tags": {
+        "mlflow.ownerId": "141803334488778",
+        "mlflow.experiment.sourceName": "/Shared/demo",
+        "mlflow.ownerEmail": "maria@cauchy.io",
+        "mlflow.experimentType": "MLFLOW_EXPERIMENT"
+    },
+    "_creation_time": 1771793454888,
+    "_last_update_time": 1771793454888
+}
