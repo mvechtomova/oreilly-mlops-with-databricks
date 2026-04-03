@@ -1,8 +1,8 @@
 # Databricks notebook source
 import mlflow
+import pandas as pd
 from loguru import logger
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import current_timestamp
 
 from arxiv_curator.config import ProjectConfig
 from arxiv_curator.evaluation import (
@@ -25,39 +25,128 @@ spark = SparkSession.builder.getOrCreate()
 catalog = cfg.catalog
 schema = cfg.schema
 
-traces_table = f"{catalog}.{schema}.arxiv_traces"
-aggregated_table = f"{catalog}.{schema}.arxiv_traces_aggregated"
+traces_table = f"{catalog}.{schema}.trace_logs_1802987720976164"
+aggregated_view = f"{catalog}.{schema}.arxiv_traces_aggregated"
 
 # COMMAND ----------
+# Get traces not yet evaluated
 
-# Create the aggregated table if it does not exist
-spark.sql(f"""
-    CREATE TABLE IF NOT EXISTS {aggregated_table} (
-        trace_id STRING,
-        request_time TIMESTAMP,
-        latency_seconds DOUBLE,
-        call_llm_exec_count LONG,
-        tool_call_count LONG,
-        total_tokens_used LONG,
-        processed_ts TIMESTAMP,
-        word_count_check STRING,
-        polite_tone STRING,
-        hook_in_post STRING
-    )
+new_traces_df = spark.sql(f"""
+    SELECT * FROM (
+        SELECT
+            t.trace_id,
+            t.request_preview,
+            element_at(
+                filter(
+                    from_json(
+                        get_json_object(t.response, '$.output'),
+                        'ARRAY<STRUCT<type:STRING, content:ARRAY<STRUCT<text:STRING>>>>'
+                    ),
+                    x -> x.type = 'message'
+                ),
+                1
+            ).content[0].text AS response_text
+        FROM {traces_table} t
+        WHERE tags['model_serving_endpoint_name']
+                = 'arxiv-agent-endpoint'
+          AND (t.assessments IS NULL OR size(t.assessments) = 0)
+    ) WHERE response_text IS NOT NULL
 """)
 
+traces_pdf = new_traces_df.toPandas()
+logger.info(f"New traces to evaluate: {len(traces_pdf)}")
+
 # COMMAND ----------
-# Get new traces not yet in the aggregated table
-new_traces_df = spark.sql(f"""
+# Build eval input
+
+eval_pdf = pd.DataFrame({
+    "trace_id": traces_pdf["trace_id"],
+    "inputs": traces_pdf["request_preview"].apply(
+        lambda x: {"query": x}
+    ),
+    "outputs": traces_pdf["response_text"],
+})
+
+# COMMAND ----------
+# Run word_count_check on all traces and log feedback
+
+wc_result = mlflow.genai.evaluate(
+    data=eval_pdf[["inputs", "outputs"]],
+    scorers=[word_count_check],
+)
+
+for trace_id, assessments in zip(
+    eval_pdf["trace_id"],
+    wc_result.result_df["assessments"],
+    strict=True,
+):
+    val = assessments[0]["feedback"]["value"]
+    mlflow.log_feedback(
+        trace_id=trace_id,
+        name="word_count_check",
+        value=val,
+    )
+
+logger.info(f"Logged word_count_check for {len(eval_pdf)} traces")
+
+# COMMAND ----------
+# Run LLM-judge scorers on a 10% sample and log feedback
+
+sample_size = max(1, int(len(eval_pdf) * 0.1))
+sampled_pdf = eval_pdf.sample(n=sample_size)
+logger.info(
+    f"Sampled {len(sampled_pdf)} traces for LLM-judge evaluation"
+)
+
+llm_result = mlflow.genai.evaluate(
+    data=sampled_pdf[["inputs", "outputs"]],
+    scorers=[polite_tone_guideline, hook_in_post_guideline],
+)
+
+for trace_id, assessments in zip(
+    sampled_pdf["trace_id"],
+    llm_result.result_df["assessments"],
+    strict=True,
+):
+    for a in assessments:
+        name = a["assessment_name"]
+        val = a["feedback"]["value"]
+        mlflow.log_feedback(
+            trace_id=trace_id,
+            name=name,
+            value=val,
+        )
+
+logger.info(f"Logged polite_tone/hook_in_post for {len(sampled_pdf)} traces")
+
+# COMMAND ----------
+# Create view matching the aggregated table schema
+# NOTE: verify assessment field name with:
+#   SELECT assessments FROM {traces_table} LIMIT 1
+
+spark.sql(f"""
+    CREATE OR REPLACE VIEW {aggregated_view} AS
     SELECT
-        trace_id,
-        request_time,
-        request_preview,
-        response_preview,
-        execution_duration_ms / 1000.0 AS latency_seconds,
-        COUNT(IF(s.name = 'call_llm', 1, NULL)) AS call_llm_exec_count,
-        COUNT(IF(s.name = 'execute_tool', 1, NULL)) AS tool_call_count,
-        SUM(
+        t.trace_id,
+        t.request_time,
+        t.request_preview,
+        element_at(
+            filter(
+                from_json(
+                    get_json_object(t.response, '$.output'),
+                    'ARRAY<STRUCT<type:STRING, content:ARRAY<STRUCT<text:STRING>>>>'
+                ),
+                x -> x.type = 'message'
+            ),
+            1
+        ).content[0].text AS response_text,
+        CAST(t.execution_duration_ms / 1000.0 AS DOUBLE)
+            AS latency_seconds,
+        COUNT(IF(s.name = 'call_llm', 1, NULL))
+            AS call_llm_exec_count,
+        COUNT(IF(s.name = 'execute_tool', 1, NULL))
+            AS tool_call_count,
+        CAST(SUM(
             IF(
                 s.name = 'call_llm',
                 CAST(
@@ -71,80 +160,49 @@ new_traces_df = spark.sql(f"""
                 ),
                 0
             )
-        ) AS total_tokens_used
-    FROM {traces_table}
+        ) AS LONG) AS total_tokens_used,
+        current_timestamp() AS processed_ts,
+        CASE
+            WHEN get(
+                filter(t.assessments, a -> a.name = 'word_count_check'),
+                0
+            ).feedback.value = 'true' THEN 1
+            WHEN get(
+                filter(t.assessments, a -> a.name = 'word_count_check'),
+                0
+            ).feedback.value IS NULL THEN NULL ELSE 0
+        END AS word_count_check,
+        CASE
+            WHEN get(
+                filter(t.assessments, a -> a.name = 'polite_tone'),
+                0
+            ).feedback.value = 'Pass' THEN 1
+            WHEN get(
+                filter(t.assessments, a -> a.name = 'polite_tone'),
+                0
+            ).feedback.value IS NULL THEN NULL ELSE 0
+        END AS polite_tone,
+        CASE
+            WHEN get(
+                filter(t.assessments, a -> a.name = 'hook_in_post'),
+                0
+            ).feedback.value = 'Pass' THEN 1
+            WHEN get(
+                filter(t.assessments, a -> a.name = 'hook_in_post'),
+                0
+            ).feedback.value IS NULL THEN NULL ELSE 0
+        END AS hook_in_post
+    FROM {traces_table} t
     LATERAL VIEW explode(spans) AS s
-    WHERE tags['model_serving_endpoint_name'] = 'arxiv-agent-endpoint'
-      AND request_time > (
-        SELECT COALESCE(MAX(request_time), CAST('1970-01-01' AS TIMESTAMP))
-        FROM {aggregated_table}
-    )
-    GROUP BY trace_id, request_time, execution_duration_ms, request_preview, response_preview
+    WHERE tags['model_serving_endpoint_name']
+            = 'arxiv-agent-endpoint'
+      AND t.assessments IS NOT NULL
+      AND size(t.assessments) > 0
+    GROUP BY t.trace_id, t.request_time,
+             t.execution_duration_ms, t.request_preview,
+             t.response, t.assessments
 """)
 
-# COMMAND ----------
-
-traces_pdf = new_traces_df.toPandas()
-logger.info(f"New traces to evaluate: {len(traces_pdf)}")
-
-eval_pdf = traces_pdf.assign(
-    inputs=traces_pdf["request_preview"].apply(lambda x: {"query": x}),
-    outputs=traces_pdf["response_preview"],
-)
-
-# COMMAND ----------
-# Run word_count_check on all traces
-
-wc_result = mlflow.genai.evaluate(
-    data=eval_pdf[["inputs", "outputs"]],
-    scorers=[word_count_check],
-)
-traces_pdf["word_count_check"] = wc_result.result_df["assessments"].apply(
-    lambda a: a[0]["feedback"]["value"]
-)
-
-# COMMAND ----------
-# Run LLM-judge scorers on a 10% sample
-
-sample_size = max(1, int(len(traces_pdf) * 0.1))
-sampled_idx = traces_pdf.sample(n=sample_size).index
-logger.info(f"Sampled {len(sampled_idx)} traces for LLM-judge evaluation")
-
-sampled_pdf = eval_pdf.loc[sampled_idx, ["inputs", "outputs"]]
-
-llm_result = mlflow.genai.evaluate(
-    data=sampled_pdf,
-    scorers=[polite_tone_guideline, hook_in_post_guideline],
-)
-
-
-def extract_score(assessments: list, name: str) -> object:
-    """Extract feedback value for a given scorer name."""
-    for a in assessments:
-        if a["assessment_name"] == name:
-            return a["feedback"]["value"]
-    return None
-
-
-traces_pdf.loc[sampled_idx, "polite_tone"] = (
-    llm_result.result_df["assessments"]
-    .apply(lambda a: extract_score(a, "polite_tone"))
-    .values
-)
-traces_pdf.loc[sampled_idx, "hook_in_post"] = (
-    llm_result.result_df["assessments"]
-    .apply(lambda a: extract_score(a, "hook_in_post"))
-    .values
-)
-
-# COMMAND ----------
-
-final_df = (
-    spark.createDataFrame(traces_pdf)
-    .withColumn("processed_ts", current_timestamp())
-)
-
-final_df.write.mode("append").saveAsTable(aggregated_table)
-logger.info(f"Written {len(traces_pdf)} rows to {aggregated_table}.")
+logger.info(f"View {aggregated_view} created")
 
 # COMMAND ----------

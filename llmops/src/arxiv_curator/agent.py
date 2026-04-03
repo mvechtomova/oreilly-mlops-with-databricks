@@ -81,6 +81,9 @@ class ArxivAgent(ResponsesAgent):
     @mlflow.trace(span_type=SpanType.TOOL)
     def execute_tool(self, tool_name: str, args: dict) -> Any:
         """Executes the specified tool with the given arguments."""
+        if tool_name not in self._tools_dict:
+            available = list(self._tools_dict.keys())
+            return f"Error: Unknown tool '{tool_name}'. Available tools: {available}"
         return self._tools_dict[tool_name].exec_fn(**args)
 
     @backoff.on_exception(backoff.expo, openai.RateLimitError)
@@ -99,6 +102,7 @@ class ArxivAgent(ResponsesAgent):
                 stream=True,
             )
             with mlflow.start_span(name="call_llm", span_type=SpanType.LLM) as span:
+                span.set_inputs({"messages": messages})
                 last_chunk: dict[str, Any] = {}
                 for chunk in stream:
                     chunk_dict = chunk.to_dict()

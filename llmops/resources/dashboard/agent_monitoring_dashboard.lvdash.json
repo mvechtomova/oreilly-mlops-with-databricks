@@ -44,10 +44,7 @@
               },
               "mark": {
                 "colors": [
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 8
-                  },
+                  "#E9750C",
                   {
                     "themeColorType": "visualizationColors",
                     "position": 2
@@ -147,8 +144,7 @@
               "mark": {
                 "colors": [
                   {
-                    "themeColorType": "visualizationColors",
-                    "position": 1
+                    "themeColorType": "selectionColor"
                   },
                   {
                     "themeColorType": "visualizationColors",
@@ -400,6 +396,209 @@
             "y": 0,
             "width": 12,
             "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "tokens-per-minute",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "04979a26",
+                  "fields": [
+                    {
+                      "name": "minutely(request_time)",
+                      "expression": "DATE_TRUNC(\"MINUTE\", `request_time`)"
+                    },
+                    {
+                      "name": "sum(total_tokens_used)",
+                      "expression": "SUM(`total_tokens_used`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Number of tokens used per minute"
+              },
+              "mark": {
+                "colors": [
+                  "#337FF9",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "minutely(request_time)",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(total_tokens_used)",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 15,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "passed-word-count-assessment",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "04979a26",
+                  "fields": [
+                    {
+                      "name": "minutely(request_time)",
+                      "expression": "DATE_TRUNC(\"MINUTE\", `request_time`)"
+                    },
+                    {
+                      "name": "avg(word_count_check)",
+                      "expression": "AVG(`word_count_check`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": "% passed word count assessment"
+              },
+              "mark": {
+                "colors": [
+                  "#F24B37",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "minutely(request_time)",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(word_count_check)",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 15,
+            "width": 6,
+            "height": 5
           }
         }
       ],
