@@ -35,7 +35,7 @@ class DataLoader:
         :param version: Optional Delta table version to query.
         :return: A tuple (X_train, y_train, X_test, y_test) with pandas DataFramess.
         """
-        self.train_query, self.test_query = self._generate_queries(
+        self.train_query, self.test_query = self.generate_queries(
             test_months, train_months, max_date, version)
 
         self.train_set_spark = self.spark.sql(self.train_query)
@@ -74,7 +74,7 @@ class DataLoader:
         test_end = max_date.strftime(fmt)
         return train_start, train_end, test_start, test_end
 
-    def _generate_queries(
+    def generate_queries(
         self, test_months: int = 1, train_months: int = 12,
         max_date: datetime = None, version: int = None,
     ) -> tuple[str, str]:

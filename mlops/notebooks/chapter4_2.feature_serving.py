@@ -1,19 +1,14 @@
 # Databricks notebook source
 
 import mlflow
-from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
-
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, struct
 
 from hotel_booking.config import ProjectConfig
 
-# COMMAND ----------
 cfg = ProjectConfig.from_yaml("../project_config.yml")
 spark = SparkSession.builder.getOrCreate()
-fe = FeatureEngineeringClient()
 
-# COMMAND ----------
 model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
 model_uri = f"models:/{model_name}@latest-model"
 columns = cfg.cat_features + cfg.num_features
@@ -27,6 +22,10 @@ preds_df = input_df.select(
 )
 
 # COMMAND ----------
+from databricks.feature_engineering import FeatureEngineeringClient
+
+fe = FeatureEngineeringClient()
+
 feature_table_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_price_preds"
 fe.create_table(
     name=feature_table_name,
@@ -41,6 +40,8 @@ spark.sql(f"""
         """)
 
 # COMMAND ----------
+from databricks.feature_engineering import FeatureLookup
+
 feature_spec_name = f"{cfg.catalog}.{cfg.schema}.return_hotel_booking_prices"
 features = [
             FeatureLookup(
@@ -49,7 +50,9 @@ features = [
                 feature_names=["Predicted_BookingPrice"],
             )
         ]
-fe.create_feature_spec(name=feature_spec_name, features=features, exclude_columns=None)
+fe.create_feature_spec(name=feature_spec_name,
+                       features=features,
+                       exclude_columns=None)
 
 # COMMAND ----------
 instance_name = "hotel-booking-price-preds"
@@ -101,28 +104,24 @@ served_entities = [
     )
 ]
 
-workspace = WorkspaceClient()
+w = WorkspaceClient()
 endpoint_name = "hotel-booking-feature-serving"
 
-workspace.serving_endpoints.create(
-        name=endpoint_name,
-        config=EndpointCoreConfigInput(
-            served_entities=served_entities,
-        ),
-        budget_policy_id=cfg.usage_policy_id
+w.serving_endpoints.create(
+    name=endpoint_name,
+    config=EndpointCoreConfigInput(
+        served_entities=served_entities),
+    budget_policy_id=cfg.usage_policy_id
     )
 
 # COMMAND ----------
 # Call the endpoint
 import requests
-from databricks.sdk import WorkspaceClient
-
-w = WorkspaceClient()
 
 host = w.config.host
 token = w.tokens.create(lifetime_seconds=1200).token_value
 
-serving_endpoint = f"{host}/serving-endpoints/hotel-booking-feature-serving/invocations"
+serving_endpoint = f"{host}/serving-endpoints/{endpoint_name}/invocations"
 
 response = requests.post(
     serving_endpoint,

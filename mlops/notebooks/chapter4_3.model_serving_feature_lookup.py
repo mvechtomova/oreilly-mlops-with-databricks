@@ -1,59 +1,32 @@
 # Databricks notebook source
-# MAGIC %pip install -e ..
-
-# COMMAND ----------
-
-# MAGIC %restart_python
-
-# COMMAND ----------
-
-# from pathlib import Path
-# import sys
-# sys.path.append(str(Path.cwd().parent / 'src'))
-
-# COMMAND ----------
 from datetime import datetime
 
-import mlflow
-import numpy as np
-from databricks.feature_engineering import (
-    FeatureEngineeringClient,
-    FeatureFunction,
-    FeatureLookup,
-)
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import (
-    EndpointCoreConfigInput,
-    EndpointTag,
-    ServedEntityInput,
-)
-from mlflow import MlflowClient
-from mlflow.models import infer_signature
 from pyspark.sql import SparkSession
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 from hotel_booking.config import ProjectConfig
 from hotel_booking.data.data_loader import DataLoader
-from hotel_booking.models.lightgbm_model import LightGBMModel
 from hotel_booking.utils.common import set_mlflow_tracking_uri
 
-# COMMAND ----------
 set_mlflow_tracking_uri()
 cfg = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
-# COMMAND ----------
 spark = SparkSession.builder.getOrCreate()
-fe = FeatureEngineeringClient()
+
 data_loader = DataLoader(spark=spark, config=cfg)
-train_query, test_query = data_loader._generate_queries()
-train_set = spark.sql(train_query).drop("lead_time", "arrival_month", "repeated", "P_C", "P_not_C", "booking_status")
+train_query, test_query = data_loader.generate_queries()
+train_set = spark.sql(train_query).drop(
+    "lead_time", "arrival_month", # computed
+    "repeated", # looked up
+    # present in the original table but not used:
+    "P_C", "P_not_C", "booking_status")
 test_set = spark.sql(test_query).toPandas()
 
 # COMMAND ----------
 lead_time_function = f"{cfg.catalog}.{cfg.schema}.calculate_lead_time"
 
 spark.sql(f"""
-CREATE OR REPLACE FUNCTION {lead_time_function}(arrival_date TIMESTAMP, reservation_date TIMESTAMP)
+CREATE OR REPLACE FUNCTION {lead_time_function}
+(arrival_date TIMESTAMP, reservation_date TIMESTAMP)
 RETURNS BIGINT
 LANGUAGE PYTHON AS
 $$
@@ -74,7 +47,8 @@ $$""")
 feature_table_name = f"{cfg.catalog}.{cfg.schema}.historical_booking_features"
 spark.sql(f"""
     CREATE OR REPLACE TABLE {feature_table_name}
-    AS SELECT Booking_ID, repeated FROM {cfg.catalog}.{cfg.schema}.hotel_booking
+    AS SELECT Booking_ID, repeated
+    FROM {cfg.catalog}.{cfg.schema}.hotel_booking
 """)
 
 spark.sql(f"""
@@ -91,6 +65,13 @@ spark.sql(f"""
     SET TBLPROPERTIES (delta.enableChangeDataFeed = true)
 """)
 # COMMAND ----------
+from databricks.feature_engineering import (
+    FeatureEngineeringClient,
+    FeatureFunction,
+    FeatureLookup,
+)
+
+fe = FeatureEngineeringClient()
 
 training_set = fe.create_training_set(
             df=train_set,
@@ -115,6 +96,7 @@ training_set = fe.create_training_set(
             ],
         )
 
+# COMMAND ----------
 training_df = training_set.load_df().toPandas()
 X_train = training_df[cfg.num_features + cfg.cat_features + ["repeated"]]
 y_train = training_df[cfg.target]
@@ -122,46 +104,62 @@ X_test = test_set[cfg.num_features + cfg.cat_features + ["repeated"]]
 y_test = test_set[cfg.target]
 
 # COMMAND ----------
-tags = {"branch": "chapter_4", "git_sha": "1234567890abcd"}
+from hotel_booking.models.lightgbm_model import LightGBMModel
+
 
 model = LightGBMModel(config=cfg)
-model.train(
-            X_train=X_train,
-            y_train=y_train,
-        )
-mlflow.set_experiment("/Shared/hotel-booking-training-fe")
-with mlflow.start_run(run_name=f"lightgbm-training-{datetime.now().strftime('%Y-%m-%d')}",
-                description="LightGBM model training",
-                tags=tags) as run:
-    run_id = run.info.run_id
-    mlflow.log_params(model.parameters)
-    signature = infer_signature(
-        model_input=X_train, model_output=model.pipeline.predict(X_train)
-    )
-    y_pred = model.pipeline.predict(X_test)
-    mse = mean_squared_error(y_test, y_pred)
-    rmse = np.sqrt(mse)
-    metrics = {
-        "mse": mse,
-        "rmse": rmse,
-        "mae": mean_absolute_error(y_test, y_pred),
-        "r2_score": r2_score(y_test, y_pred),
-    }
-    mlflow.log_metrics(metrics)
-
-    fe.log_model(
-        model=model.pipeline,
-        flavor=mlflow.sklearn,
-        artifact_path="lightgbm-pipeline-model-fe",
-        training_set=training_set,
-        signature=signature)
+model.train(X_train=X_train, y_train=y_train)
 
 # COMMAND ----------
+import mlflow
+import numpy as np
+from mlflow.models import infer_signature
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+from hotel_booking.config import Tags
+
+mlflow.set_experiment("/Shared/hotel-booking-training-fe")
+tags = Tags(**{"git_sha": "1234567890abcd", "branch": "main"})
+
+run = mlflow.start_run(
+    run_name=f"lightgbm-training-{datetime.now().strftime('%Y-%m-%d')}",
+    description="LightGBM model training",
+    tags=tags.to_dict(),
+)
+run_id = run.info.run_id
+mlflow.log_params(model.parameters)
+signature = infer_signature(
+    model_input=X_train,
+    model_output=model.pipeline.predict(X_train[0:1])
+)
+y_pred = model.pipeline.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+metrics = {
+    "mse": mse,
+    "rmse": rmse,
+    "mae": mean_absolute_error(y_test, y_pred),
+    "r2_score": r2_score(y_test, y_pred),
+}
+mlflow.log_metrics(metrics)
+
+fe.log_model(
+    model=model.pipeline,
+    flavor=mlflow.sklearn,
+    artifact_path="lightgbm-pipeline-model-fe",
+    training_set=training_set,
+    signature=signature,
+)
+
+# COMMAND ----------
+from mlflow import MlflowClient
+
 model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_model_fe"
 registered_model = mlflow.register_model(
     model_uri=f"runs:/{run_id}/lightgbm-pipeline-model-fe",
     name=model_name,
-    tags=tags,)
+    tags=tags.to_dict(),
+)
 
 client = MlflowClient()
 client.set_registered_model_alias(
@@ -180,6 +178,13 @@ fe.publish_table(
 )
 
 # COMMAND ----------
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import (
+    EndpointCoreConfigInput,
+    EndpointTag,
+    ServedEntityInput,
+)
+
 served_entities = [
     ServedEntityInput(
         entity_name=model_name,
@@ -189,20 +194,21 @@ served_entities = [
     )
 ]
 
-workspace = WorkspaceClient()
+w= WorkspaceClient()
 endpoint_name = "hotel-booking-fe"
-endpoint_exists = any(item.name ==endpoint_name for item in workspace.serving_endpoints.list())
+endpoint_exists = any(item.name ==endpoint_name for item in w.serving_endpoints.list())
 
 if not endpoint_exists:
-    workspace.serving_endpoints.create(
+    w.serving_endpoints.create(
         name=endpoint_name,
         config=EndpointCoreConfigInput(
             served_entities=served_entities,
         ),
-        tags=[EndpointTag.from_dict({"key": "project_name", "value": "hotel_booking"})]
+        budget_policy_id=cfg.usage_policy_id,
     )
 else:
-    workspace.serving_endpoints.update_config(name=endpoint_name, served_entities=served_entities)
+    w.serving_endpoints.update_config(
+        name=endpoint_name, served_entities=served_entities)
 
 # COMMAND ----------
 import requests

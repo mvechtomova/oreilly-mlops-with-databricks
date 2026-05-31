@@ -1,7 +1,6 @@
 # Databricks notebook source
 
 import mlflow
-
 from mlflow import MlflowClient
 
 from hotel_booking.config import ProjectConfig
@@ -39,6 +38,7 @@ from databricks.sdk.service.serving import (
     AiGatewayInferenceTableConfig,
     AiGatewayUsageTrackingConfig,
 )
+
 ai_gateway_cfg = AiGatewayConfig(
         inference_table_config=AiGatewayInferenceTableConfig(
             enabled=True,
@@ -51,27 +51,28 @@ ai_gateway_cfg = AiGatewayConfig(
 
 # COMMAND ----------
 from databricks.sdk import WorkspaceClient
-
 from databricks.sdk.service.serving import (
     EndpointCoreConfigInput,
     Route,
     TrafficConfig,
 )
-workspace = WorkspaceClient()
+
+w = WorkspaceClient()
 endpoint_name = "hotel-booking-pyfunc"
 endpoint_exists = any(
-    item.name == endpoint_name for item in workspace.serving_endpoints.list()
+    item.name == endpoint_name for item in w.serving_endpoints.list()
 )
 
 traffic_config=TrafficConfig(
             routes=[
-                Route(served_model_name=f"{model_name}-{model_version.version}",
-                      traffic_percentage=100)
+                Route(
+                    served_model_name=f"{model_name}-{model_version.version}",
+                    traffic_percentage=100)
             ]
         )
 
 if not endpoint_exists:
-    workspace.serving_endpoints.create(
+    w.serving_endpoints.create(
         name=endpoint_name,
         config=EndpointCoreConfigInput(
             served_entities=served_entities,
@@ -80,15 +81,12 @@ if not endpoint_exists:
         bugget_policy_id=cfg.usage_policy_id,
     )
 else:
-    workspace.serving_endpoints.update_config(
+    w.serving_endpoints.update_config(
         name=endpoint_name, served_entities=served_entities
     )
 
 # COMMAND ----------
 # Call the endpoint
-import requests
-
-w = WorkspaceClient()
 host = w.config.host
 token = w.tokens.create(lifetime_seconds=1200).token_value
 
@@ -111,6 +109,8 @@ payload = {
         }
     ]
 }
+
+import requests
 
 response = requests.post(
     serving_endpoint,

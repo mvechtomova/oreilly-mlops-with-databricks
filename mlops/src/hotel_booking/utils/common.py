@@ -45,8 +45,14 @@ def create_parser(args: Sequence[str] = None) -> argparse.Namespace:
 
     # Common arguments
     common_args = argparse.ArgumentParser(add_help=False)
-    common_args.add_argument("--root_path", type=str, required=True, help="Path of root on DAB")
-    common_args.add_argument("--env", type=str, required=True, help="Path of env file on DAB")
+    common_args.add_argument(
+        "--root_path", type=str, required=True,
+        help="Path of root on DAB",
+    )
+    common_args.add_argument(
+        "--env", type=str, required=True,
+        help="Path of env file on DAB",
+    )
 
     # Data ingestion subparser
     subparsers.add_parser("common", parents=[common_args], help="Common processor")
@@ -57,12 +63,20 @@ def create_parser(args: Sequence[str] = None) -> argparse.Namespace:
         parents=[common_args],
         help="Model training and registering",
     )
-    model_parser.add_argument("--branch", type=str, required=True, help="branch of the project")
-    model_parser.add_argument("--git_sha", type=str, required=True, help="git sha of the commit")
-    model_parser.add_argument("--run_id", type=str, required=True, help="run id of the run of the Lakeflow job")
-    model_parser.add_argument("--job_id", type=str, required=True, help="Lakeflow job id")
- 
-    approve_parser = subparsers.add_parser("approve_check", parents=[common_args], help="Approval check for the model")
-    approve_parser.add_argument("task_name", type=str, help="Name of the task to approve")
-
+    model_parser.add_argument(
+        "--branch", type=str, required=True,
+        help="branch of the project",
+    )
+    model_parser.add_argument(
+        "--git_sha", type=str, required=True,
+        help="git sha of the commit",
+    )
+    model_parser.add_argument(
+        "--run_id", type=str, required=True,
+        help="run id of the run of the Lakeflow job",
+    )
+    model_parser.add_argument(
+        "--job_id", type=str, required=True,
+        help="Lakeflow job id",
+    )
     return parser.parse_args(args)
