@@ -1,3 +1,10 @@
+---
+name: ship
+description: Commit all staged and unstaged changes on the current branch, then push to the remote. Trigger whenever the user says "ship", "ship it", asks to commit and push, push the branch, finalize a feature branch, or otherwise wants outstanding local changes committed and pushed in one step. Refuses to operate directly on main/master.
+---
+
+# ship
+
 Commit all staged and unstaged changes, then push to the remote branch.
 
 ## Steps

@@ -26,7 +26,10 @@ class ProjectConfig(BaseModel):
     usage_policy_id: str
 
     @classmethod
-    def from_yaml(cls: "ProjectConfig", config_path: str, env: str = "dev") -> "ProjectConfig":
+    def from_yaml(
+        cls: "ProjectConfig",
+        config_path: str,
+        env: str = "dev") -> "ProjectConfig":
         """Load and parse configuration settings from a YAML file.
 
         :param config_path: Path to the YAML configuration file
@@ -34,7 +37,9 @@ class ProjectConfig(BaseModel):
         :return: ProjectConfig instance initialized with parsed configuration
         """
         if env not in ["prd", "acc", "dev"]:
-            raise ValueError(f"Invalid environment: {env}. Expected 'prd', 'acc', or 'dev'")
+            raise ValueError(
+                f"Invalid environment: {env}. Expected 'prd', 'acc', or 'dev'"
+            )
 
         with open(config_path) as f:
             config_dict = yaml.safe_load(f)

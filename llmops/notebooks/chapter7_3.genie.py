@@ -17,19 +17,19 @@ from databricks.sdk.service.sql import CreateWarehouseRequestWarehouseType
 
 w = WorkspaceClient()
 
-created = w.warehouses.create(
-    name="__2XS_arxiv_warehouse",
-    cluster_size="2X-Small",
-    max_num_clusters=1,
-    auto_stop_mins=5,
-    warehouse_type=CreateWarehouseRequestWarehouseType("PRO"),
-    enable_serverless_compute=True,
-    tags=sql.EndpointTags(
-        custom_tags=[sql.EndpointTagPair(key="project", value="arxiv_curator")]
-    ),
-).result()
+# created = w.warehouses.create(
+#     name="__2XS_arxiv_warehouse",
+#     cluster_size="2X-Small",
+#     max_num_clusters=1,
+#     auto_stop_mins=5,
+#     warehouse_type=CreateWarehouseRequestWarehouseType("PRO"),
+#     enable_serverless_compute=True,
+#     tags=sql.EndpointTags(
+#         custom_tags=[sql.EndpointTagPair(key="project", value="arxiv_curator")]
+#     ),
+# ).result()
 
-warehouse_id = created.id
+warehouse_id = "1883724c3376103a" #created.id
 
 # COMMAND ----------
 import json
@@ -98,3 +98,5 @@ message = w.genie.create_message_and_wait(
     content="Return the list of authors of the last 10 papers published")
 
 message.as_dict()
+
+# COMMAND ----------

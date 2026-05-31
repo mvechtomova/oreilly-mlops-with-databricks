@@ -22,3 +22,4 @@ build/
 pip-wheel-metadata/
 .ruff_cache
 CLAUDE.md
+visuals_raw/

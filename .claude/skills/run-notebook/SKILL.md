@@ -1,3 +1,10 @@
+---
+name: run-notebook
+description: Deploy and run a Databricks notebook via Databricks Asset Bundles (DABs). Trigger whenever the user asks to run, deploy, or execute a notebook on Databricks, run a .py notebook from llmops/ or mlops/, kick off a Databricks job for a notebook, or set up a bundle job resource for an existing notebook.
+---
+
+# run-notebook
+
 Deploy and run a notebook on Databricks using Databricks Asset Bundles.
 
 The argument is the notebook path relative to the repo root (e.g. `llmops/notebooks/hello_world.py`).

@@ -35,6 +35,3 @@ registered_model = log_register_agent(
     model_name=model_name,
     evaluation_metrics=results.metrics,
 )
-
-# Set task value for downstream tasks
-dbutils.jobs.taskValues.set(key="model_version", value=registered_model.version)

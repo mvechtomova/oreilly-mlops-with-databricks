@@ -1,3 +1,10 @@
+---
+name: fix-deps
+description: Update every dependency in pyproject.toml to its latest stable version from PyPI and resync the environment with uv. Trigger whenever the user asks to fix/update/bump/refresh dependencies, sync deps to latest, upgrade pyproject.toml versions, or pin packages to the newest stable releases.
+---
+
+# fix-deps
+
 Look up the latest stable version of every dependency in `pyproject.toml` using the PyPI JSON API (`https://pypi.org/pypi/<package>/json`). Strip any extras from the package name before querying (e.g. `databricks-sdk[notebook]` → query `databricks-sdk`, keep the `[notebook]` in the final specifier).
 
 Apply these pinning rules when updating `pyproject.toml`:

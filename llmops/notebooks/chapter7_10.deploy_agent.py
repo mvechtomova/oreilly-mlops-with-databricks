@@ -33,8 +33,8 @@ agents.deploy(
         "MODEL_VERSION": model_version,
         "MODEL_SERVING_ENDPOINT_NAME": endpoint_name,
         "MLFLOW_EXPERIMENT_ID": experiment.experiment_id,
-        "LAKEBASE_SP_CLIENT_ID": f"{{{{secrets/{secret_scope}/client-id}}}}",
-        "LAKEBASE_SP_CLIENT_SECRET": f"{{{{secrets/{secret_scope}/client-secret}}}}",
+        "LAKEBASE_SP_CLIENT_ID": f"{{secrets/{secret_scope}/client-id}}",
+        "LAKEBASE_SP_CLIENT_SECRET": f"{{secrets/{secret_scope}/client-secret}}",
         "LAKEBASE_SP_HOST": workspace.config.host,
     },
 )

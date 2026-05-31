@@ -63,4 +63,4 @@ metrics_old = result.metrics
 
 # COMMAND ----------
 if metrics_new['root_mean_squared_error'] < metrics_old['root_mean_squared_error']:
-    model.register_model(model_name=sklearn_model_name, job_id=None, tags=tags)
+    model.register_model(model_name=sklearn_model_name, tags=tags)

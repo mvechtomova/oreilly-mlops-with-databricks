@@ -21,9 +21,6 @@ variables:
   schedule_pause_status:
     description: schedule pause status
     default: PAUSED
-  warehouse_id:
-    description: warehouse ID
-    default: 1883724c3376103a
 
 include:
   - resources/*.yml

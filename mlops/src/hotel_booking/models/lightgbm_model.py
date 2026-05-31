@@ -23,9 +23,9 @@ class LightGBMModel:
 
     def __init__(self, config: ProjectConfig) -> None:
         """Initialize the LightGBM model."""
-        self.config = config
-        self.cat_features = self.config.cat_features
-        self.parameters = self.config.parameters.model_dump()
+        self.cfg = config
+        self.cat_features = self.cfg.cat_features
+        self.parameters = self.cfg.parameters.model_dump()
         self.pipeline = None
         self.metrics = None
 
@@ -95,7 +95,7 @@ class LightGBMModel:
                 ("regressor", LGBMRegressor(**self.parameters)),
             ]
         )
-        logger.info("🚀 Starting training...")
+        logger.info("Starting training...")
         self.pipeline.fit(X_train, y_train)
 
     def log_model(
@@ -135,13 +135,13 @@ class LightGBMModel:
                 input_example=X_test[0:1],
             )
             eval_data = X_test.copy()
-            eval_data[self.config.target] = y_test
+            eval_data[self.cfg.target] = y_test
 
             # This will log the evaluation metrics
             result = mlflow.models.evaluate(
                 self.model_info.model_uri,
                 eval_data,
-                targets=self.config.target,
+                targets=self.cfg.target,
                 model_type="regressor",
                 evaluators=["default"],
             )

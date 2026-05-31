@@ -19,6 +19,6 @@ resources:
         - task_key: update_and_evaluate
           environment_key: default
           notebook_task:
-            notebook_path: deployment_notebooks/update_traces_aggregated.py
+            notebook_path: deployment_notebooks/production_monitoring.py
             base_parameters:
               env: ${bundle.target}

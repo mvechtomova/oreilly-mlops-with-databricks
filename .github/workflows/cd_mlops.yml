@@ -1,11 +1,11 @@
-name: CD
+name: CD MLOps
 
 on:
-  # workflow_dispatch:
-
   push:
     branches:
-        - 'main'
+      - 'main'
+    paths:
+      - 'mlops'
 
 jobs:
   deploy:
@@ -21,16 +21,16 @@ jobs:
       DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 #v4.1.0
+        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 #v6.1.0
         with:
           role-to-assume: ${{ vars.ARN_ROLE }}
           aws-region: eu-west-1
 
       - name: Fetch secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@5e19ff380d035695bdd56bbad320ca535c9063f2 #v2.0.9
+        uses: aws-actions/aws-secretsmanager-get-secrets@2cb1a461cbd4865ac4299648312e4704c646cd53 #v3.0.1
         # will parse secret called DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET
         with:
           secret-ids: |
@@ -38,20 +38,14 @@ jobs:
           parse-json-secrets: true
 
       - name: Install Databricks CLI
-        uses: databricks/setup-cli@49580195afe1ccb06d195764a1d0ae9fabfe2edd #v0.246.0
+        uses: databricks/setup-cli@2260866f83a41a2df55e1cfe7ffe038b78325bf6 #v0.295.0
         with:
-          version: 0.246.0
+          version: 0.295.0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 #v5.4.1
+        uses: astral-sh/setup-uv@0cec208311dfd045dd5311c1add060b2062131d57 #v8.0.0
 
       - name: Deploy to Databricks
         env:
           DATABRICKS_BUNDLE_ENV: ${{ matrix.environment }}
-        run: |
-            databricks bundle deploy --var="git_sha=${{ github.sha }}"
-            if [ "${{ matrix.environment }}" = "prd" ]; then
-            echo "VERSION=$(cat version.txt)"
-            git tag $VERSION
-            git push origin $VERSION
-            fi
+        run: databricks bundle deploy --var="git_sha=${{ github.sha }}"

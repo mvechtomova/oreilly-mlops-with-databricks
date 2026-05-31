@@ -2,6 +2,7 @@
 import mlflow
 import pandas as pd
 from loguru import logger
+from mlflow import MlflowClient
 from pyspark.sql import SparkSession
 
 from arxiv_curator.config import ProjectConfig
@@ -10,9 +11,7 @@ from arxiv_curator.evaluation import (
     polite_tone_guideline,
     word_count_check,
 )
-from arxiv_curator.utils.common import get_widget, set_mlflow_tracking_uri
-
-set_mlflow_tracking_uri()
+from arxiv_curator.utils.common import get_widget
 
 env = get_widget("env", "dev")
 cfg = ProjectConfig.from_yaml("../../project_config.yml", env=env)
@@ -25,7 +24,8 @@ spark = SparkSession.builder.getOrCreate()
 catalog = cfg.catalog
 schema = cfg.schema
 
-traces_table = f"{catalog}.{schema}.trace_logs_1802987720976164"
+experiment = MlflowClient().get_experiment_by_name(cfg.experiment_path)
+traces_table = f"{catalog}.{schema}.trace_logs_{experiment.experiment_id}"
 aggregated_view = f"{catalog}.{schema}.arxiv_traces_aggregated"
 
 # COMMAND ----------
@@ -95,7 +95,7 @@ logger.info(f"Logged word_count_check for {len(eval_pdf)} traces")
 sample_size = max(1, int(len(eval_pdf) * 0.1))
 sampled_pdf = eval_pdf.sample(n=sample_size)
 logger.info(
-    f"Sampled {len(sampled_pdf)} traces for LLM-judge evaluation"
+    f"Sampled {len(sampled_pdf)} traces for LLM-based evaluation"
 )
 
 llm_result = mlflow.genai.evaluate(
@@ -206,3 +206,20 @@ spark.sql(f"""
 logger.info(f"View {aggregated_view} created")
 
 # COMMAND ----------
+import mlflow
+from mlflow.genai.scorers.guardrails import ToxicLanguage, DetectPII
+
+eval_dataset = [
+    {
+        "inputs": {"query": "How do I contact support?"},
+        "outputs": "Let me forward you to the support team.",
+    },
+]
+
+results = mlflow.genai.evaluate(
+    data=eval_dataset,
+    scorers=[
+        ToxicLanguage(threshold=0.7),
+        DetectPII(),
+    ],
+)

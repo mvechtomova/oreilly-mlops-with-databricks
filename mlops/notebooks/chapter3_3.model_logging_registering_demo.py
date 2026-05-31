@@ -13,12 +13,9 @@ from hotel_booking.data.data_loader import DataLoader
 from hotel_booking.models.lightgbm_model import LightGBMModel
 from hotel_booking.utils.common import set_mlflow_tracking_uri
 
-# COMMAND ----------
 set_mlflow_tracking_uri()
 cfg = ProjectConfig.from_yaml(config_path="../project_config.yml")
-tags = Tags(**{"git_sha": "1234567890abcd", "branch": "main"})
 
-# COMMAND ----------
 spark = SparkSession.builder.getOrCreate()
 data_loader = DataLoader(spark=spark, config=cfg)
 X_train, y_train, X_test, y_test = data_loader.split()
@@ -27,14 +24,15 @@ X_train, y_train, X_test, y_test = data_loader.split()
 model = LightGBMModel(config=cfg)
 model.train(X_train=X_train, y_train=y_train)
 
+# COMMAND ----------
 mlflow.set_experiment("/Shared/hotel-booking-training")
+tags = Tags(**{"git_sha": "1234567890abcd", "branch": "main"})
 run = mlflow.start_run(
     run_name=f"lightgbm-training-{datetime.now().strftime('%Y-%m-%d')}",
     description="LightGBM model training",
     tags=tags.to_dict(),
 )
 run_id = run.info.run_id
-
 mlflow.log_params(cfg.parameters)
 
 # COMMAND ----------
@@ -93,13 +91,15 @@ run = mlflow.get_run(run_id)
 # COMMAND ----------
 inputs = run.inputs.dataset_inputs
 training_input = next(
-    (x for x in inputs if len(x.tags) > 0 and x.tags[0].value == "training"), None
+    (x for x in inputs if x.tags and x.tags[0].value == "training"),
+    None,
 )
 training_source = mlflow.data.get_source(training_input)
 training_source.load()
 # COMMAND ----------
 testing_input = next(
-    (x for x in inputs if len(x.tags) > 0 and x.tags[0].value == "testing"), None
+    (x for x in inputs if x.tags and x.tags[0].value == "testing"),
+    None,
 )
 testing_source = mlflow.data.get_source(testing_input)
 testing_source.load()
@@ -161,11 +161,8 @@ wrapper.log_register_model(
     code_paths=code_paths,
 )
 
-
 # COMMAND ----------
-loaded_pufunc_model = mlflow.pyfunc.load_model(wrapper.model_info.model_uri)
+loaded_pyfunc_model = mlflow.pyfunc.load_model(wrapper.model_info.model_uri)
 # COMMAND ----------
-unwraped_model = loaded_pufunc_model.unwrap_python_model()
-unwraped_model.predict(context=None, model_input=X_test[0:1])
-
-# COMMAND ----------
+unwrapped_model = loaded_pyfunc_model.unwrap_python_model()
+unwrapped_model.predict(context=None, model_input=X_test[0:1])

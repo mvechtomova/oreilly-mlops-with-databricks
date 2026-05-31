@@ -1,26 +1,17 @@
 # Databricks notebook source
-
 import os
 from datetime import datetime
 
-import mlflow
-import numpy as np
 import pandas as pd
 from pyspark.sql import SparkSession
-from ray import tune
-from ray.tune.search.optuna import OptunaSearch
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 from hotel_booking.config import ProjectConfig
 from hotel_booking.data.data_loader import DataLoader
-from hotel_booking.models.lightgbm_model import LightGBMModel
 from hotel_booking.utils.common import set_mlflow_tracking_uri
 
-# COMMAND ----------
 set_mlflow_tracking_uri()
 cfg = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
-# COMMAND ----------
 spark = SparkSession.builder.getOrCreate()
 data_loader = DataLoader(spark=spark, config=cfg)
 
@@ -31,6 +22,7 @@ X_train, y_train, X_valid, y_valid = data_loader.split(
 )
 
 # COMMAND ----------
+from ray import tune
 
 param_space = {
     "n_estimators": tune.qrandint(50, 700, q=50),
@@ -39,6 +31,14 @@ param_space = {
 
 
 # COMMAND ----------
+
+import mlflow
+import numpy as np
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+from hotel_booking.models.lightgbm_model import LightGBMModel
+
+
 def train_with_nested_mlflow(config, X_train: pd.DataFrame,
                              X_valid: pd.DataFrame,
                              y_train: pd.DataFrame,
@@ -81,22 +81,26 @@ def train_with_nested_mlflow(config, X_train: pd.DataFrame,
 
 # COMMAND ----------
 from databricks.sdk import WorkspaceClient
-from ray.util.spark import setup_ray_cluster
 
 w = WorkspaceClient()
 os.environ["DATABRICKS_HOST"] = w.config.host
 os.environ["DATABRICKS_TOKEN"] = w.tokens.create(lifetime_seconds=1200).token_value
 
+# COMMAND ----------
 # for distributed, use this:
+from ray.util.spark import setup_ray_cluster
+
 ray_conf = setup_ray_cluster(
   min_worker_nodes=2,
   max_worker_nodes=8,
 )
 os.environ['RAY_ADDRESS'] = ray_conf[0]
 # COMMAND ----------
+from ray.tune.search.optuna import OptunaSearch
 
 mlflow.set_experiment("/Shared/hotel-booking-finetuning")
-experiment_id = mlflow.get_experiment_by_name("/Shared/hotel-booking-finetuning").experiment_id
+experiment_id = mlflow.get_experiment_by_name(
+    "/Shared/hotel-booking-finetuning").experiment_id
 
 n_trials = 50
 
@@ -126,7 +130,6 @@ with mlflow.start_run(
     results = tuner.fit()
 
 # COMMAND ----------
-best_result=results.get_best_result(metric="rmse", mode="min")
+best_result = results.get_best_result(
+    metric="rmse", mode="min")
 best_result.config
-
-# COMMAND ----------

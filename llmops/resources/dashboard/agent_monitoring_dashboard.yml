@@ -1,6 +1,18 @@
 resources:
+  sql_warehouses:
+     arxiv_monitoring_warehouse:
+      name: arxiv_monitoring_warehouse
+      cluster_size: 2X-Small
+      enable_serverless_compute: true
+      max_num_clusters: 1
+      auto_stop_mins: 5
+      warehouse_type: PRO
+      tags:
+        custom_tags: 
+        - key: "project"
+        - value: arxiv-curator"
   dashboards:
     agent-monitoring-dashboard:
       display_name: "Agent Monitoring Dashboard"
       file_path: agent_monitoring_dashboard.lvdash.json
-      warehouse_id: ${var.warehouse_id}
+      warehouse_id: ${resources.sql_warehouses.arxiv_monitoring_warehouse.id}
