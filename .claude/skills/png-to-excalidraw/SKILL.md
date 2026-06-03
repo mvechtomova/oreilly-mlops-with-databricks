@@ -111,15 +111,16 @@ Named palette — use the **role**, not raw hex, when reasoning about which colo
 | `border-light`   | `#ebeae8` | Subtle dividers, nested borders                            |
 | `accent`         | `#f24b37` | **Orange** — card borders of the first/primary section (e.g. MLOps), highlights, icon backgrounds |
 | `accent-hover`   | `#e04530` | Secondary accent — use sparingly for variation             |
-| `link`           | `#337FF9` | **Blue** — card borders of the second section (e.g. LLMOps), link text (NOT arrows — see arrow rule) |
 
-**Color-code cards by section using orange and blue.** This is the preferred look: cards in the first/primary section get the orange `accent` stroke; cards in the second section get the blue `link` stroke. Card fill stays `surface` (white). Only fall back to the neutral `border` stroke when a diagram has no section grouping. Keep titles, sub-text, and section containers neutral so the orange/blue card borders carry the visual distinction.
+**Do not use blue.** The palette is orange-first, then dark greys and black. Blue (`#337FF9`) is retired — never use it as a second section color or anywhere else.
+
+**Color-code cards using orange as the primary accent.** Cards get the orange `accent` stroke; card fill stays `surface` (white). When a diagram has two distinct sections and you need a second stroke to tell them apart, use a neutral dark grey (`text-secondary` `#6b6b6b`) for the second section, not blue. When there is no section grouping, use the neutral `border` stroke. Keep titles, sub-text, and section containers neutral so the orange (and, where needed, dark-grey) card borders carry the visual distinction.
 
 Default role-to-element mapping:
 
 - **Canvas background** → `bg`
 - **Component card, primary section** → fill `surface`, stroke `accent` (orange `#f24b37`)
-- **Component card, secondary section** → fill `surface`, stroke `link` (blue `#337FF9`)
+- **Component card, secondary section** → fill `surface`, stroke `text-secondary` (dark grey `#6b6b6b`)
 - **Component card, no sections** → fill `surface`, stroke `border`
 - **Section / group container behind cards** → stroke `text-tertiary` (`#9a9a9a`) or `border`, transparent or `surface-alt` fill
 - **Card title** → `text`
@@ -141,6 +142,8 @@ Arrows are **never** colored (no orange, no blue). Use only black `text` (`#1a1a
 - `endArrowhead`: `"triangle"` (the filled head used in both Figure5.1 and Figure6.2) — always use `triangle`, never `arrow`
 - `fillStyle`: `"solid"`, `strokeStyle`: `"solid"`
 
+**Many-to-one (converging) arrows must NOT share an endpoint.** When several arrows point at the same target box (e.g. three workspaces → one metastore), giving them all the identical end coordinate stacks the arrowheads so they read as a single merged arrow. Instead, spread the entry points along the target's near edge — at least ~16px apart — so each arrowhead lands on its own spot. Compute distinct endpoints: for `n` arrows entering a box of height `h` at center `cy`, target `cy + (i - (n-1)/2) * gap` for `i` in `0..n-1` (e.g. `gap = 18`). The arrows still fan in toward the box but stay visually separate. Verify after writing that no two arrows in a converging group share the same `(x+dx, y+dy)`.
+
 ### 7. Write and report
 
 Write the JSON file to `visuals/<basename>.excalidraw.json`. Report:
@@ -150,7 +153,7 @@ Write the JSON file to `visuals/<basename>.excalidraw.json`. Report:
 
 ## Element template (rectangle with centered text)
 
-`strokeColor` below is the orange `accent` (`#f24b37`) for a primary-section card; use the blue `link` (`#337FF9`) for second-section cards, or neutral `border` (`#e0dfdd`) when there are no sections.
+`strokeColor` below is the orange `accent` (`#f24b37`) for a primary-section card; use dark grey `text-secondary` (`#6b6b6b`) for second-section cards, or neutral `border` (`#e0dfdd`) when there are no sections. Never blue.
 
 ```json
 {
@@ -223,7 +226,7 @@ Before placing text, decide for each card whether its contents are **stacked-cen
 - **Label-outside-box** (most common for API / cheatsheet diagrams like MLflow `log_*` ↔ `load_*`): the bordered/colored rectangle wraps **only** the code or value on the right; the label (title + sub-text) is free text sitting to the **left** of the rectangle with no border around it. This is the default when the source shows a side-by-side label↔code pairing — do not put a border around the label.
 
 For label-outside-box rows:
-- **No rectangle around the label.** Only the code area gets a bordered rectangle (`strokeColor` = section accent: orange for primary, blue for secondary).
+- **No rectangle around the label.** Only the code area gets a bordered rectangle (`strokeColor` = section accent: orange for primary, dark grey for secondary).
 - **Three unbound text elements** per row plus one rectangle: title, description, code, code_box.
 - Label (left, no border):
   - Title: `textAlign: "left"`, `verticalAlign: "top"`, `fontSize: 15`, color `text`.
@@ -252,6 +255,10 @@ Common mistakes (don't do these):
 - Setting `text.x = box.x` with no inset. The first glyph sits on the stroke. Inset by ~14px on each side.
 - Padding the code snippet with extra information not present in the source (e.g. expanding `mlflow.get_run()` into `run = mlflow.get_run(...); run.data.params; run.info...`).
 
+### Bound text height must be the natural text height, not the container height
+
+When you bind a centered label to its box (`containerId` set), do **not** set the text element's `height`/`y` to the box's full height/top. Excalidraw reserves internal padding (~5px each side); if the bound text's `height` is ≥ the container's available height, it stops vertical-centering and **top-aligns** the label, so it renders stuck to the top of the box. Set the bound text's `height` to the natural one-line height (`round(fontSize * lineHeight)`, e.g. ~19 for `fontSize: 16`) and its `y` to `box.y + (box.height - text_height) / 2`. With a correctly sized height, `verticalAlign: "middle"` then centers it. This bit us on the principal boxes in Figure5.6 (`Hotel_booking team`, `dev/acc/prd SPN`).
+
 ### Line spacing across cards with different item counts
 
 When card body text is **bound to its container** (`containerId` set, rectangle's `boundElements` includes the text), Excalidraw stretches `lineHeight` to fill the container's height. With a 140px-tall card and `fontSize: 16`:
@@ -274,7 +281,7 @@ Do this for every card whose line count differs from the dominant one.
 
 Tell the user to drag the file into `excalidraw.com` and check:
 - Warm stone (`#f6f5f3`) background, rounded corners, no leftover default Excalidraw stroke (`#1971c2`) or black.
-- Card borders are color-coded by section: orange (`#f24b37`) for the primary section, blue (`#337FF9`) for the second.
+- Card borders are color-coded by section: orange (`#f24b37`) for the primary section, dark grey (`#6b6b6b`) for the second. No blue anywhere.
 - Selecting a shape shows **Architect** sloppiness and **Normal** font in the right panel.
 - Text centered horizontally and vertically in every card, with even line spacing across cards (2-line cards unbound — see line-spacing rule above).
 - No two boxes overlap or sit closer than ~20px on either axis — check this programmatically before reporting (loop over box bounding boxes), don't eyeball it. Stacked boxes with different heights are the usual offender.
