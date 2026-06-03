@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 from datetime import datetime
 
 from pyspark.sql import SparkSession
@@ -170,7 +171,6 @@ client.set_registered_model_alias(
 # COMMAND ----------
 online_store = fe.get_online_store(name="hotel-booking-price-preds")
 
-# Publish the feature table to the online store
 fe.publish_table(
     online_store=online_store,
     source_table_name=feature_table_name,
@@ -202,6 +202,7 @@ if not endpoint_exists:
     w.serving_endpoints.create(
         name=endpoint_name,
         config=EndpointCoreConfigInput(
+            name=endpoint_name,
             served_entities=served_entities,
         ),
         budget_policy_id=cfg.usage_policy_id,

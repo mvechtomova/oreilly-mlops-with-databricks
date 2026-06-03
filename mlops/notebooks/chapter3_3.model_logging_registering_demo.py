@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 
 import json
 from datetime import datetime
@@ -33,7 +34,7 @@ run = mlflow.start_run(
     tags=tags.to_dict(),
 )
 run_id = run.info.run_id
-mlflow.log_params(cfg.parameters)
+mlflow.log_params(cfg.parameters.model_dump())
 
 # COMMAND ----------
 signature = infer_signature(
@@ -114,10 +115,10 @@ registered_model = mlflow.register_model(
     tags=tags.to_dict(),
 )
 # COMMAND ----------
-client = MlflowClient()
+# client = MlflowClient()
 
-job_id = "1234567890abcdef"  # Example job ID; will fail if the job does not exist
-client.create_registered_model(model_name, deployment_job_id=job_id)
+# job_id = "1234567890abcdef"  # Example job ID; will fail if the job does not exist
+# client.create_registered_model(model_name, deployment_job_id=job_id)
 
 # COMMAND ----------
 # latest alias is reserved, so we cannot use it
@@ -137,16 +138,17 @@ print(v[0].__dict__)
 
 # COMMAND ----------
 # not supported
-v = mlflow.search_model_versions(filter_string="tags.git_sha='1234567890abcd'")
+# v = mlflow.search_model_versions(filter_string="tags.git_sha='1234567890abcd'")
 
 
 # COMMAND ----------
 # Pyfunc model wrapper
 from importlib.metadata import version
+
 from hotel_booking.models.pyfunc_model_wrapper import HotelBookingModelWrapper
 
 __version__ = version("hotel_booking")
-code_paths = [f"../dist/hotel_booking-{__version__}-py3-none-any.whl"]
+code_paths = [f"hotel_booking-{__version__}-py3-none-any.whl"]
 
 wrapper = HotelBookingModelWrapper()
 pyfunc_model_name = (

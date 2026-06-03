@@ -71,7 +71,7 @@ class LightGBMModel:
                 return X
 
             def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-                """Transform the DataFrame X by encoding categorical features as integers."""
+                """Encode categorical features as integer codes on the DataFrame X."""
                 X = X.copy()
                 for col in self.cat_features:
                     X[col] = (

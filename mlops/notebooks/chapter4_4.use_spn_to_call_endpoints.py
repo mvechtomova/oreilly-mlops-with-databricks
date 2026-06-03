@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 import os
 
 import requests

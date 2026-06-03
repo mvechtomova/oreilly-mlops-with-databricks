@@ -1,13 +1,14 @@
 # Databricks notebook source
 import json
-import mlflow
 import os
+
+import mlflow
 
 from hotel_booking.utils.common import set_mlflow_tracking_uri
 
-
 set_mlflow_tracking_uri()
 mlflow.get_tracking_uri()
+
 # COMMAND ----------
 experiment = mlflow.set_experiment(experiment_name="/Shared/demo")
 mlflow.set_experiment_tags(
@@ -59,10 +60,9 @@ print(run_info_dict["data"]["params"])
 
 # COMMAND ----------
 # search for runs
-
 from time import time
 
-time_hour_ago = int(time() - 3600) * 1000
+time_hour_ago = int((time() - 3600) * 1000)
 
 runs = mlflow.search_runs(
     search_all_experiments=True,  # or experiment_ids=[], or experiment_names=[]
@@ -70,8 +70,7 @@ runs = mlflow.search_runs(
     filter_string="status='FINISHED' AND "
     f"start_time>{time_hour_ago} AND "
     "run_name LIKE '%demo-run%' AND "
-    "metrics.metric3>0 AND "
-    "tags.mlflow.source.type!='JOB'",
+    "metrics.metric3>0"
 )
 
 # COMMAND ----------
@@ -112,7 +111,8 @@ text = mlflow.artifacts.load_text(f"{artifact_uri}/hello.txt")
 if not os.path.exists("../downloaded_artifacts"):
     os.mkdir("../downloaded_artifacts")
 mlflow.artifacts.download_artifacts(
-    artifact_uri=f"{artifact_uri}/demo_artifacts", dst_path="../downloaded_artifacts"
+    artifact_uri=f"{artifact_uri}/demo_artifacts",
+    dst_path="../downloaded_artifacts"
 )
 
 # COMMAND ----------

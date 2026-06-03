@@ -111,7 +111,7 @@ Named palette — use the **role**, not raw hex, when reasoning about which colo
 | `border-light`   | `#ebeae8` | Subtle dividers, nested borders                            |
 | `accent`         | `#f24b37` | **Orange** — card borders of the first/primary section (e.g. MLOps), highlights, icon backgrounds |
 | `accent-hover`   | `#e04530` | Secondary accent — use sparingly for variation             |
-| `link`           | `#337FF9` | **Blue** — card borders of the second section (e.g. LLMOps), arrows, connectors, link text |
+| `link`           | `#337FF9` | **Blue** — card borders of the second section (e.g. LLMOps), link text (NOT arrows — see arrow rule) |
 
 **Color-code cards by section using orange and blue.** This is the preferred look: cards in the first/primary section get the orange `accent` stroke; cards in the second section get the blue `link` stroke. Card fill stays `surface` (white). Only fall back to the neutral `border` stroke when a diagram has no section grouping. Keep titles, sub-text, and section containers neutral so the orange/blue card borders carry the visual distinction.
 
@@ -125,8 +125,21 @@ Default role-to-element mapping:
 - **Card title** → `text`
 - **Sub-text inside a card** (e.g. tool lists) → `text-secondary`
 - **Icon / accent shape / category marker** → fill `accent`; text on top → `surface` if the icon is large enough, otherwise `text`
-- **Arrow / connector** → stroke `link`
+- **Arrow / connector** → stroke `text` (black `#1a1a1a`) or `text-tertiary` (grey `#9a9a9a`) — see the arrow rule below
 - **Tertiary metadata** → `text-tertiary`
+
+### Arrows: always black or grey, straight, matching Figure5.1 / Figure6.2
+
+Arrows are **never** colored (no orange, no blue). Use only black `text` (`#1a1a1a`) or grey `text-tertiary` (`#9a9a9a`) for the stroke. Match the exact arrow shape used in [visuals/Figure5.1.excalidraw.json](../../../visuals/Figure5.1.excalidraw.json) and [visuals/Figure6.2.excalidraw.json](../../../visuals/Figure6.2.excalidraw.json):
+
+- `strokeColor`: `#1a1a1a` (black) or `#9a9a9a` (grey)
+- `strokeWidth`: `1.5`
+- `roughness`: `0`
+- `roundness`: `null` — **straight** lines, not curved
+- `points`: exactly two points `[[0, 0], [dx, dy]]` (a single straight segment)
+- `startArrowhead`: `null`
+- `endArrowhead`: `"triangle"` (the filled head used in both Figure5.1 and Figure6.2) — always use `triangle`, never `arrow`
+- `fillStyle`: `"solid"`, `strokeStyle`: `"solid"`
 
 ### 7. Write and report
 

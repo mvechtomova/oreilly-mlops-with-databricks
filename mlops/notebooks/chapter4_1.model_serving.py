@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 
 import mlflow
 from mlflow import MlflowClient
@@ -75,10 +76,11 @@ if not endpoint_exists:
     w.serving_endpoints.create(
         name=endpoint_name,
         config=EndpointCoreConfigInput(
+            name=endpoint_name,
             served_entities=served_entities,
             traffic_config=traffic_config),
         ai_gateway=ai_gateway_cfg,
-        bugget_policy_id=cfg.usage_policy_id,
+        budget_policy_id=cfg.usage_policy_id,
     )
 else:
     w.serving_endpoints.update_config(
@@ -156,7 +158,7 @@ input_example = pd.DataFrame(
     data=payload["dataframe_split"]["data"],
     columns=payload["dataframe_split"]["columns"]
 )
-model_uri = f"models:/{model_name}@latest-model"
+model_uri = f"models:/{catalog}.{schema}.{model_name}@latest-model"
 mlflow.models.predict(model_uri, input_example)
 
 # COMMAND ----------

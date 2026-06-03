@@ -1,9 +1,5 @@
 # Databricks notebook source
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.catalog import (
-    MonitorInferenceLog,
-    MonitorInferenceLogProblemType,
-)
+# ruff: noqa
 from loguru import logger
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
@@ -119,29 +115,46 @@ spark.sql(f"""ALTER TABLE {monitoring_table}
 
 # COMMAND ----------
 # create monitor
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.dataquality import (
+    AggregationGranularity,
+    DataProfilingConfig,
+    InferenceLogConfig,
+    InferenceProblemType,
+    Monitor,
+)
 
 w = WorkspaceClient()
 
-w.quality_monitors.create(
-    table_name=monitoring_table,
-    assets_dir=f"/Workspace/Shared/lakehouse_monitoring/{monitoring_table}",
-    output_schema_name=f"{catalog}.{schema}",
-    inference_log=MonitorInferenceLog(
-        problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_REGRESSION,
-        prediction_col="prediction",
-        timestamp_col="request_time",
-        granularities=["5 minutes"],
-        model_id_col="model_name",
-        label_col="average_price",
+# The new data_quality API references the schema and table by id,
+# so look them up first.
+output_schema = w.schemas.get(full_name=f"{catalog}.{schema}")
+monitored_table = w.tables.get(full_name=monitoring_table)
+
+w.data_quality.create_monitor(
+    monitor=Monitor(
+        object_type="table",
+        object_id=monitored_table.table_id,
+        data_profiling_config=DataProfilingConfig(
+            output_schema_id=output_schema.schema_id,
+            assets_dir=(
+                f"/Workspace/Shared/lakehouse_monitoring/{monitoring_table}"
+            ),
+            inference_log=InferenceLogConfig(
+                problem_type=(
+                    InferenceProblemType.INFERENCE_PROBLEM_TYPE_REGRESSION
+                ),
+                prediction_column="prediction",
+                timestamp_column="request_time",
+                granularities=[
+                    AggregationGranularity.AGGREGATION_GRANULARITY_5_MINUTES
+                ],
+                model_id_column="model_name",
+                label_column="average_price",
+            ),
+        ),
     ),
 )
-
-# try:
-#     w.quality_monitors.get(monitoring_table)
-#     w.quality_monitors.run_refresh(table_name=monitoring_table)
-#     logger.info("Lakehouse monitoring exist, refreshing. monitor")
-# except NotFound:
-#     logger.info("Creating monitor.")
 
 # hotel_booking
 # └── Tables

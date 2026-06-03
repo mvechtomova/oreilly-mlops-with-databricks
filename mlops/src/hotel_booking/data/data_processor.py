@@ -79,5 +79,6 @@ class DataProcessor:
             f"{self.target_table}"
         )
         self.spark.sql(
-            f"ALTER TABLE {self.target_table} SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
+            f"ALTER TABLE {self.target_table} "
+            "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )

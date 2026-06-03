@@ -84,17 +84,18 @@ from databricks.sdk import WorkspaceClient
 
 w = WorkspaceClient()
 os.environ["DATABRICKS_HOST"] = w.config.host
-os.environ["DATABRICKS_TOKEN"] = w.tokens.create(lifetime_seconds=1200).token_value
+os.environ["DATABRICKS_TOKEN"] = w.tokens.create(
+    lifetime_seconds=1200).token_value
 
 # COMMAND ----------
 # for distributed, use this:
-from ray.util.spark import setup_ray_cluster
+# from ray.util.spark import setup_ray_cluster
 
-ray_conf = setup_ray_cluster(
-  min_worker_nodes=2,
-  max_worker_nodes=8,
-)
-os.environ['RAY_ADDRESS'] = ray_conf[0]
+# ray_conf = setup_ray_cluster(
+#   min_worker_nodes=2,
+#   max_worker_nodes=8,
+# )
+# os.environ['RAY_ADDRESS'] = ray_conf[0]
 # COMMAND ----------
 from ray.tune.search.optuna import OptunaSearch
 
@@ -102,7 +103,7 @@ mlflow.set_experiment("/Shared/hotel-booking-finetuning")
 experiment_id = mlflow.get_experiment_by_name(
     "/Shared/hotel-booking-finetuning").experiment_id
 
-n_trials = 50
+n_trials = 5
 
 with mlflow.start_run(
     run_name=f"optuna-finetuning-{datetime.now().strftime('%Y-%m-%d')}",
@@ -113,10 +114,10 @@ with mlflow.start_run(
     tuner = tune.Tuner(
         tune.with_parameters(
                 train_with_nested_mlflow,
-                X_train_in = X_train,
-                y_train_in = y_train,
-                X_valid_in = X_valid,
-                y_valid_in = y_valid,
+                X_train = X_train,
+                y_train = y_train,
+                X_valid = X_valid,
+                y_valid = y_valid,
                 project_config=cfg,
                 parent_run_id=parent_run.info.run_id,
                 experiment_id=experiment_id,

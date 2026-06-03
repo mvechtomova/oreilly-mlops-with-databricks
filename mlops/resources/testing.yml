@@ -1,0 +1,341 @@
+resources:
+  jobs:
+    test-chapter2-preprocess-data:
+      name: test-chapter2-preprocess-data
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/chapter2_preprocess_data.py
+
+    test-chapter3-1-experiment-tracking-demo:
+      name: test-chapter3-1-experiment-tracking-demo
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/chapter3_1.experiment_tracking_demo.py
+
+    test-chapter3-2-model-finetuning:
+      name: test-chapter3-2-model-finetuning
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/chapter3_2.model_finetuning.py
+
+    test-chapter3-3-model-logging-registering-demo:
+      name: test-chapter3-3-model-logging-registering-demo
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/chapter3_3.model_logging_registering_demo.py
+
+    test-chapter3-4-model-evaluation:
+      name: test-chapter3-4-model-evaluation
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/chapter3_4.model_evaluation.py
+
+    test-chapter4-1-model-serving:
+      name: test-chapter4-1-model-serving
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/chapter4_1.model_serving.py
+
+    test-chapter4-2-feature-serving:
+      name: test-chapter4-2-feature-serving
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/chapter4_2.feature_serving.py
+
+    test-chapter4-3-model-serving-feature-lookup:
+      name: test-chapter4-3-model-serving-feature-lookup
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/chapter4_3.model_serving_feature_lookup.py
+
+    test-chapter6-1-call-endpoint:
+      name: test-chapter6-1-call-endpoint
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/chapter6_1.call_endpoint.py
+
+    test-chapter6-2-enable-monitor:
+      name: test-chapter6-2-enable-monitor
+      tags:
+        project_name: "hotel-booking"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: run_notebook
+          environment_key: default
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/chapter6_2.enable_monitor.py
+
+    test-all-notebooks-sequential:
+      name: test-all-notebooks-sequential
+      tags:
+        project_name: "hotel-booking"
+      # Positional start index (1-10). Notebooks before this index are skipped.
+      # Default 1 runs the full chain. Override at run time, e.g.:
+      #   databricks bundle run test-all-notebooks-sequential --params start_from=6
+      parameters:
+        - name: start_from
+          default: "1"
+      tasks:
+        # idx 1 - chapter2_preprocess_data
+        - task_key: gate_chapter2_preprocess_data
+          condition_task:
+            left: "{{job.parameters.start_from}}"
+            op: LESS_THAN_OR_EQUAL
+            right: "1"
+        - task_key: chapter2_preprocess_data
+          max_retries: 0
+          run_if: NONE_FAILED
+          depends_on:
+            - task_key: gate_chapter2_preprocess_data
+              outcome: "true"
+          run_job_task:
+            job_id: ${resources.jobs.test-chapter2-preprocess-data.id}
+
+        # idx 2 - chapter3_1_experiment_tracking_demo
+        - task_key: gate_chapter3_1_experiment_tracking_demo
+          condition_task:
+            left: "{{job.parameters.start_from}}"
+            op: LESS_THAN_OR_EQUAL
+            right: "2"
+        - task_key: chapter3_1_experiment_tracking_demo
+          max_retries: 0
+          run_if: NONE_FAILED
+          depends_on:
+            - task_key: gate_chapter3_1_experiment_tracking_demo
+              outcome: "true"
+            - task_key: chapter2_preprocess_data
+          run_job_task:
+            job_id: ${resources.jobs.test-chapter3-1-experiment-tracking-demo.id}
+
+        # idx 3 - chapter3_2_model_finetuning
+        - task_key: gate_chapter3_2_model_finetuning
+          condition_task:
+            left: "{{job.parameters.start_from}}"
+            op: LESS_THAN_OR_EQUAL
+            right: "3"
+        - task_key: chapter3_2_model_finetuning
+          max_retries: 0
+          run_if: NONE_FAILED
+          depends_on:
+            - task_key: gate_chapter3_2_model_finetuning
+              outcome: "true"
+            - task_key: chapter3_1_experiment_tracking_demo
+          run_job_task:
+            job_id: ${resources.jobs.test-chapter3-2-model-finetuning.id}
+
+        # idx 4 - chapter3_3_model_logging_registering_demo
+        - task_key: gate_chapter3_3_model_logging_registering_demo
+          condition_task:
+            left: "{{job.parameters.start_from}}"
+            op: LESS_THAN_OR_EQUAL
+            right: "4"
+        - task_key: chapter3_3_model_logging_registering_demo
+          max_retries: 0
+          run_if: NONE_FAILED
+          depends_on:
+            - task_key: gate_chapter3_3_model_logging_registering_demo
+              outcome: "true"
+            - task_key: chapter3_2_model_finetuning
+          run_job_task:
+            job_id: ${resources.jobs.test-chapter3-3-model-logging-registering-demo.id}
+
+        # idx 5 - chapter3_4_model_evaluation
+        - task_key: gate_chapter3_4_model_evaluation
+          condition_task:
+            left: "{{job.parameters.start_from}}"
+            op: LESS_THAN_OR_EQUAL
+            right: "5"
+        - task_key: chapter3_4_model_evaluation
+          max_retries: 0
+          run_if: NONE_FAILED
+          depends_on:
+            - task_key: gate_chapter3_4_model_evaluation
+              outcome: "true"
+            - task_key: chapter3_3_model_logging_registering_demo
+          run_job_task:
+            job_id: ${resources.jobs.test-chapter3-4-model-evaluation.id}
+
+        # idx 6 - chapter4_1_model_serving
+        - task_key: gate_chapter4_1_model_serving
+          condition_task:
+            left: "{{job.parameters.start_from}}"
+            op: LESS_THAN_OR_EQUAL
+            right: "6"
+        - task_key: chapter4_1_model_serving
+          max_retries: 0
+          run_if: NONE_FAILED
+          depends_on:
+            - task_key: gate_chapter4_1_model_serving
+              outcome: "true"
+            - task_key: chapter3_4_model_evaluation
+          run_job_task:
+            job_id: ${resources.jobs.test-chapter4-1-model-serving.id}
+
+        # idx 7 - chapter4_2_feature_serving
+        - task_key: gate_chapter4_2_feature_serving
+          condition_task:
+            left: "{{job.parameters.start_from}}"
+            op: LESS_THAN_OR_EQUAL
+            right: "7"
+        - task_key: chapter4_2_feature_serving
+          max_retries: 0
+          run_if: NONE_FAILED
+          depends_on:
+            - task_key: gate_chapter4_2_feature_serving
+              outcome: "true"
+            - task_key: chapter4_1_model_serving
+          run_job_task:
+            job_id: ${resources.jobs.test-chapter4-2-feature-serving.id}
+
+        # idx 8 - chapter4_3_model_serving_feature_lookup
+        - task_key: gate_chapter4_3_model_serving_feature_lookup
+          condition_task:
+            left: "{{job.parameters.start_from}}"
+            op: LESS_THAN_OR_EQUAL
+            right: "8"
+        - task_key: chapter4_3_model_serving_feature_lookup
+          max_retries: 0
+          run_if: NONE_FAILED
+          depends_on:
+            - task_key: gate_chapter4_3_model_serving_feature_lookup
+              outcome: "true"
+            - task_key: chapter4_2_feature_serving
+          run_job_task:
+            job_id: ${resources.jobs.test-chapter4-3-model-serving-feature-lookup.id}
+
+        # idx 9 - chapter6_1_call_endpoint
+        - task_key: gate_chapter6_1_call_endpoint
+          condition_task:
+            left: "{{job.parameters.start_from}}"
+            op: LESS_THAN_OR_EQUAL
+            right: "9"
+        - task_key: chapter6_1_call_endpoint
+          max_retries: 0
+          run_if: NONE_FAILED
+          depends_on:
+            - task_key: gate_chapter6_1_call_endpoint
+              outcome: "true"
+            - task_key: chapter4_3_model_serving_feature_lookup
+          run_job_task:
+            job_id: ${resources.jobs.test-chapter6-1-call-endpoint.id}
+
+        # idx 10 - chapter6_2_enable_monitor
+        - task_key: gate_chapter6_2_enable_monitor
+          condition_task:
+            left: "{{job.parameters.start_from}}"
+            op: LESS_THAN_OR_EQUAL
+            right: "10"
+        - task_key: chapter6_2_enable_monitor
+          max_retries: 0
+          run_if: NONE_FAILED
+          depends_on:
+            - task_key: gate_chapter6_2_enable_monitor
+              outcome: "true"
+            - task_key: chapter6_1_call_endpoint
+          run_job_task:
+            job_id: ${resources.jobs.test-chapter6-2-enable-monitor.id}

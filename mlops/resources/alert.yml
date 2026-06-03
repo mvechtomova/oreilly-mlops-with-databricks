@@ -8,9 +8,9 @@ resources:
       auto_stop_mins: 5
       warehouse_type: PRO
       tags:
-        custom_tags: 
-        - key: "project"
-        - value: "hotel-booking"
+        custom_tags:
+          - key: "project"
+            value: "hotel-booking"
   alerts:
     my_alert:
       display_name: hotel-booking-mae-alert

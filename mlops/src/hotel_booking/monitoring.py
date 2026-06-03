@@ -2,11 +2,15 @@
 
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors import NotFound
-from databricks.sdk.service.catalog import (
-    MonitorInferenceLog,
-    MonitorInferenceLogProblemType,
+from databricks.sdk.service.dataquality import (
+    AggregationGranularity,
+    DataProfilingConfig,
+    InferenceLogConfig,
+    InferenceProblemType,
+    Monitor,
+    Refresh,
+    RefreshTrigger,
 )
-from delta.tables import DeltaTable
 from loguru import logger
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
@@ -33,7 +37,7 @@ class MonitoringManager:
         monitoring_table: str = "model_monitoring",
         ground_truth_table: str = "hotel_booking",
         workspace_client: WorkspaceClient | None = None,
-    ):
+    ) -> None:
         """Initialize the monitoring table updater.
 
         :param spark: SparkSession instance
@@ -49,12 +53,8 @@ class MonitoringManager:
         self.schema = config.schema
         self.payload_table = f"{self.catalog}.{self.schema}.{payload_table}"
         self.monitoring_table_name = monitoring_table
-        self.monitoring_table = (
-            f"{self.catalog}.{self.schema}.{monitoring_table}"
-        )
-        self.ground_truth_table = (
-            f"{self.catalog}.{self.schema}.{ground_truth_table}"
-        )
+        self.monitoring_table = f"{self.catalog}.{self.schema}.{monitoring_table}"
+        self.ground_truth_table = f"{self.catalog}.{self.schema}.{ground_truth_table}"
         self.w = workspace_client or WorkspaceClient()
 
         self.request_schema = self._get_request_schema()
@@ -70,12 +70,8 @@ class MonitoringManager:
                     ArrayType(
                         StructType(
                             [
-                                StructField(
-                                    "number_of_adults", IntegerType(), True
-                                ),
-                                StructField(
-                                    "number_of_children", IntegerType(), True
-                                ),
+                                StructField("number_of_adults", IntegerType(), True),
+                                StructField("number_of_children", IntegerType(), True),
                                 StructField(
                                     "number_of_weekend_nights",
                                     IntegerType(),
@@ -86,23 +82,13 @@ class MonitoringManager:
                                     IntegerType(),
                                     True,
                                 ),
-                                StructField(
-                                    "car_parking_space", IntegerType(), True
-                                ),
-                                StructField(
-                                    "special_requests", IntegerType(), True
-                                ),
+                                StructField("car_parking_space", IntegerType(), True),
+                                StructField("special_requests", IntegerType(), True),
                                 StructField("lead_time", IntegerType(), True),
-                                StructField(
-                                    "type_of_meal", StringType(), True
-                                ),
+                                StructField("type_of_meal", StringType(), True),
                                 StructField("room_type", StringType(), True),
-                                StructField(
-                                    "arrival_month", IntegerType(), True
-                                ),
-                                StructField(
-                                    "market_segment_type", StringType(), True
-                                ),
+                                StructField("arrival_month", IntegerType(), True),
+                                StructField("market_segment_type", StringType(), True),
                             ]
                         )
                     ),
@@ -139,9 +125,7 @@ class MonitoringManager:
         """
         query = f"SELECT * FROM {self.payload_table}"
         if not self.spark.catalog.tableExists(self.monitoring_table):
-            logger.info(
-                "Monitoring table does not exist. Processing all records."
-            )
+            logger.info("Monitoring table does not exist. Processing all records.")
         else:
             query += (
                 f" WHERE request_time > "
@@ -149,9 +133,7 @@ class MonitoringManager:
             )
         return self.spark.sql(query)
 
-    def _parse_and_transform_payload(
-        self, inf_table: DataFrame
-    ) -> DataFrame:
+    def _parse_and_transform_payload(self, inf_table: DataFrame) -> DataFrame:
         """Parse JSON fields and transform payload data.
 
         :param inf_table: Raw payload DataFrame
@@ -172,9 +154,7 @@ class MonitoringManager:
                 "prediction",
                 F.col("p_response.predictions.`Total price per night`")[0],
             )
-            .withColumn(
-                "record", F.explode(F.col("p_request.dataframe_records"))
-            )
+            .withColumn("record", F.explode(F.col("p_request.dataframe_records")))
         )
 
         df_final = inf_table_parsed.select(
@@ -184,12 +164,8 @@ class MonitoringManager:
             F.col("client_request_id").alias("Booking_ID"),
             F.col("record.number_of_adults").alias("number_of_adults"),
             F.col("record.number_of_children").alias("number_of_children"),
-            F.col("record.number_of_weekend_nights").alias(
-                "number_of_weekend_nights"
-            ),
-            F.col("record.number_of_week_nights").alias(
-                "number_of_week_nights"
-            ),
+            F.col("record.number_of_weekend_nights").alias("number_of_weekend_nights"),
+            F.col("record.number_of_week_nights").alias("number_of_week_nights"),
             F.col("record.car_parking_space").alias("car_parking_space"),
             F.col("record.special_requests").alias("special_requests"),
             F.col("record.lead_time").alias("lead_time"),
@@ -238,9 +214,7 @@ class MonitoringManager:
         df_final = self._join_with_ground_truth(df_transformed)
 
         logger.info("Appending data to monitoring table")
-        df_final.write.format("delta").mode("append").saveAsTable(
-            self.monitoring_table
-        )
+        df_final.write.format("delta").mode("append").saveAsTable(self.monitoring_table)
 
         record_count = df_final.count()
         logger.info(f"Successfully processed {record_count} records")
@@ -254,9 +228,9 @@ class MonitoringManager:
         timestamp_col: str = "request_time",
         model_id_col: str = "model_name",
         label_col: str = "average_price",
-        granularities: list[str] | None = None,
+        granularities: list[AggregationGranularity] | None = None,
     ) -> None:
-        """Create or update a Lakehouse Monitor.
+        """Create or refresh a Lakehouse Monitor.
 
         :param assets_dir: Directory to store monitor assets
         :param prediction_col: Name of the prediction column
@@ -269,30 +243,52 @@ class MonitoringManager:
             assets_dir
             or f"/Workspace/Shared/lakehouse_monitoring/{self.monitoring_table}"
         )
-        granularities = granularities or ["5 minutes"]
+        granularities = granularities or [
+            AggregationGranularity.AGGREGATION_GRANULARITY_5_MINUTES
+        ]
+
+        # The data_quality API references the schema and table by id,
+        # so look them up first.
+        output_schema = self.w.schemas.get(full_name=f"{self.catalog}.{self.schema}")
+        monitored_table = self.w.tables.get(full_name=self.monitoring_table)
 
         try:
-            self.w.quality_monitors.get(self.monitoring_table)
+            self.w.data_quality.get_monitor(
+                object_type="table", object_id=monitored_table.table_id
+            )
             logger.info(f"Monitor already exists for {self.monitoring_table}")
-            self.w.quality_monitors.run_refresh(table_name=self.monitoring_table)
+            self.w.data_quality.create_refresh(
+                object_type="table",
+                object_id=monitored_table.table_id,
+                refresh=Refresh(
+                    object_type="table",
+                    object_id=monitored_table.table_id,
+                    trigger=RefreshTrigger.MONITOR_REFRESH_TRIGGER_MANUAL,
+                ),
+            )
             logger.info(f"Monitor refresh triggered for {self.monitoring_table}")
 
         except NotFound:
             logger.info(f"Creating new monitor for {self.monitoring_table}")
 
-            self.w.quality_monitors.create(
-                table_name=self.monitoring_table,
-                assets_dir=assets_dir,
-                output_schema_name=f"{self.catalog}.{self.schema}",
-                inference_log=MonitorInferenceLog(
-                    problem_type=(
-                        MonitorInferenceLogProblemType.PROBLEM_TYPE_REGRESSION
+            self.w.data_quality.create_monitor(
+                monitor=Monitor(
+                    object_type="table",
+                    object_id=monitored_table.table_id,
+                    data_profiling_config=DataProfilingConfig(
+                        output_schema_id=output_schema.schema_id,
+                        assets_dir=assets_dir,
+                        inference_log=InferenceLogConfig(
+                            problem_type=(
+                                InferenceProblemType.INFERENCE_PROBLEM_TYPE_REGRESSION
+                            ),
+                            prediction_column=prediction_col,
+                            timestamp_column=timestamp_col,
+                            granularities=granularities,
+                            model_id_column=model_id_col,
+                            label_column=label_col,
+                        ),
                     ),
-                    prediction_col=prediction_col,
-                    timestamp_col=timestamp_col,
-                    granularities=granularities,
-                    model_id_col=model_id_col,
-                    label_col=label_col,
                 ),
             )
             logger.info(f"Monitor created successfully for {self.monitoring_table}")

@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 
 import mlflow
 from pyspark.sql import SparkSession
@@ -18,7 +19,8 @@ model_udf = mlflow.pyfunc.spark_udf(spark, model_uri)
 
 preds_df = input_df.select(
     col("Booking_ID"),
-    model_udf(struct(*[col(c) for c in columns])).alias("Predicted_BookingPrice")
+    model_udf(struct(*[col(c) for c in columns])).alias(
+        "Predicted_BookingPrice")
 )
 
 # COMMAND ----------
@@ -50,38 +52,37 @@ features = [
                 feature_names=["Predicted_BookingPrice"],
             )
         ]
-fe.create_feature_spec(name=feature_spec_name,
-                       features=features,
-                       exclude_columns=None)
+# create_feature_spec fails if the spec already exists
+try:
+    fe.create_feature_spec(name=feature_spec_name,
+                           features=features,
+                           exclude_columns=None)
+except Exception as e:
+    print(f"Feature spec {feature_spec_name} may already exist: {e}")
 
 # COMMAND ----------
 instance_name = "hotel-booking-price-preds"
 
-fe.create_online_store(
-    name=instance_name,
-    capacity="CU_1",
-    usage_policy_id=cfg.usage_policy_id
-)
+# create_online_store fails if the store already exists
+try:
+    fe.create_online_store(
+        name=instance_name,
+        capacity="CU_1",
+        usage_policy_id=cfg.usage_policy_id
+    )
+except Exception as e:
+    print(f"Online store {instance_name} may already exist: {e}")
 
 # COMMAND ----------
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.database import DatabaseInstance
+import time
 
-# Initialize the Workspace client
-w = WorkspaceClient()
-
-# Stop a database instance
-
-w.database.update_database_instance(
-    name=instance_name,
-    database_instance=DatabaseInstance(
-    name=instance_name,
-    stopped=True
-    ),
-)
-
-# COMMAND ----------
+# The online store must be in the AVAILABLE state before publishing
 online_store = fe.get_online_store(name=instance_name)
+
+while online_store.state.value != "AVAILABLE":
+    print(f"Online store state: {online_store.state.value}, waiting...")
+    time.sleep(30)
+    online_store = fe.get_online_store(name=instance_name)
 
 # Publish the feature table to the online store
 fe.publish_table(
@@ -91,6 +92,7 @@ fe.publish_table(
 )
 
 # COMMAND ----------
+from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import (
     EndpointCoreConfigInput,
     ServedEntityInput,
@@ -110,6 +112,7 @@ endpoint_name = "hotel-booking-feature-serving"
 w.serving_endpoints.create(
     name=endpoint_name,
     config=EndpointCoreConfigInput(
+        name=endpoint_name,
         served_entities=served_entities),
     budget_policy_id=cfg.usage_policy_id
     )

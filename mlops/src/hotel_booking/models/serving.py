@@ -46,6 +46,7 @@ def serve_model(
         workspace.serving_endpoints.create(
             name=endpoint_name,
             config=EndpointCoreConfigInput(
+                name=endpoint_name,
                 served_entities=served_entities,
             ),
             ai_gateway=ai_gateway_cfg,
