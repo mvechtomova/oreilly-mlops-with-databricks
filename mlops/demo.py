@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 from pyspark.sql import SparkSession
 
 spark = SparkSession.builder.getOrCreate()

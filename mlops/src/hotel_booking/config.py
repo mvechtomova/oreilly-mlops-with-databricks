@@ -27,9 +27,8 @@ class ProjectConfig(BaseModel):
 
     @classmethod
     def from_yaml(
-        cls: "ProjectConfig",
-        config_path: str,
-        env: str = "dev") -> "ProjectConfig":
+        cls: "ProjectConfig", config_path: str, env: str = "dev"
+    ) -> "ProjectConfig":
         """Load and parse configuration settings from a YAML file.
 
         :param config_path: Path to the YAML configuration file

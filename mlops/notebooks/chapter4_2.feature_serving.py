@@ -19,8 +19,7 @@ model_udf = mlflow.pyfunc.spark_udf(spark, model_uri)
 
 preds_df = input_df.select(
     col("Booking_ID"),
-    model_udf(struct(*[col(c) for c in columns])).alias(
-        "Predicted_BookingPrice")
+    model_udf(struct(*[col(c) for c in columns])).alias("Predicted_BookingPrice"),
 )
 
 # COMMAND ----------
@@ -33,7 +32,7 @@ fe.create_table(
     name=feature_table_name,
     primary_keys=["Booking_ID"],
     df=preds_df,
-    description="Hotel Booking Prices predictions feature table"
+    description="Hotel Booking Prices predictions feature table",
 )
 
 spark.sql(f"""
@@ -46,17 +45,17 @@ from databricks.feature_engineering import FeatureLookup
 
 feature_spec_name = f"{cfg.catalog}.{cfg.schema}.return_hotel_booking_prices"
 features = [
-            FeatureLookup(
-                table_name=feature_table_name,
-                lookup_key="Booking_ID",
-                feature_names=["Predicted_BookingPrice"],
-            )
-        ]
+    FeatureLookup(
+        table_name=feature_table_name,
+        lookup_key="Booking_ID",
+        feature_names=["Predicted_BookingPrice"],
+    )
+]
 # create_feature_spec fails if the spec already exists
 try:
-    fe.create_feature_spec(name=feature_spec_name,
-                           features=features,
-                           exclude_columns=None)
+    fe.create_feature_spec(
+        name=feature_spec_name, features=features, exclude_columns=None
+    )
 except Exception as e:
     print(f"Feature spec {feature_spec_name} may already exist: {e}")
 
@@ -66,9 +65,7 @@ instance_name = "hotel-booking-price-preds"
 # create_online_store fails if the store already exists
 try:
     fe.create_online_store(
-        name=instance_name,
-        capacity="CU_1",
-        usage_policy_id=cfg.usage_policy_id
+        name=instance_name, capacity="CU_1", usage_policy_id=cfg.usage_policy_id
     )
 except Exception as e:
     print(f"Online store {instance_name} may already exist: {e}")
@@ -88,7 +85,7 @@ while online_store.state.value != "AVAILABLE":
 fe.publish_table(
     online_store=online_store,
     source_table_name=feature_table_name,
-    online_table_name=f"{feature_table_name}_online"
+    online_table_name=f"{feature_table_name}_online",
 )
 
 # COMMAND ----------
@@ -111,11 +108,9 @@ endpoint_name = "hotel-booking-feature-serving"
 
 w.serving_endpoints.create(
     name=endpoint_name,
-    config=EndpointCoreConfigInput(
-        name=endpoint_name,
-        served_entities=served_entities),
-    budget_policy_id=cfg.usage_policy_id
-    )
+    config=EndpointCoreConfigInput(name=endpoint_name, served_entities=served_entities),
+    budget_policy_id=cfg.usage_policy_id,
+)
 
 # COMMAND ----------
 # Call the endpoint
@@ -129,7 +124,6 @@ serving_endpoint = f"{host}/serving-endpoints/{endpoint_name}/invocations"
 response = requests.post(
     serving_endpoint,
     headers={"Authorization": f"Bearer {token}"},
-    json={"dataframe_split": {"columns": ["Booking_ID"],
-                              "data": [["INN36285"]]}},
+    json={"dataframe_split": {"columns": ["Booking_ID"], "data": [["INN36285"]]}},
 )
 response.text

@@ -39,12 +39,10 @@ required_columns = [
 
 sample_per_phase = 2000
 
-sampled_all = input_data[required_columns].sample(
-    n=sample_per_phase, replace=True
-)
-sampled_corporate = input_data[
-    input_data["market_segment_type"] == "Corporate"
-][required_columns].sample(n=sample_per_phase, replace=True)
+sampled_all = input_data[required_columns].sample(n=sample_per_phase, replace=True)
+sampled_corporate = input_data[input_data["market_segment_type"] == "Corporate"][
+    required_columns
+].sample(n=sample_per_phase, replace=True)
 
 sampled_records = pd.concat([sampled_all, sampled_corporate], ignore_index=True)
 logger.info(
@@ -67,7 +65,6 @@ sleep_time = 0.2
 logger.info("Starting endpoint calls")
 
 for _, record in sampled_records.iterrows():
-
     payload = {
         "client_request_id": record["Booking_ID"],
         "dataframe_records": [record.drop("Booking_ID").to_dict()],

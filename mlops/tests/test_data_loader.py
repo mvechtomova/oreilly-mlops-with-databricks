@@ -41,14 +41,10 @@ def test_generate_queries_embeds_version_and_window(mocker, cfg) -> None:
 def test_generate_queries_honors_explicit_max_date_and_version(mocker, cfg) -> None:
     # When max_date and version are passed, Spark must not be queried for them.
     spark = mocker.Mock()
-    version_spy = mocker.patch(
-        "hotel_booking.data.data_loader.get_delta_table_version"
-    )
+    version_spy = mocker.patch("hotel_booking.data.data_loader.get_delta_table_version")
 
     loader = DataLoader(config=cfg, spark=spark)
-    train_q, _ = loader.generate_queries(
-        max_date=datetime(2024, 6, 30), version=3
-    )
+    train_q, _ = loader.generate_queries(max_date=datetime(2024, 6, 30), version=3)
 
     spark.sql.assert_not_called()
     version_spy.assert_not_called()

@@ -49,12 +49,14 @@ class LightGBMModel:
                 self.cat_features = cat_features
                 self.cat_maps_ = {}
 
-            def fit(self, X: pd.DataFrame, y=None) -> None:
+            def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
                 """Fit the transformer to the DataFrame X."""
                 self.fit_transform(X)
                 return self
 
-            def fit_transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
+            def fit_transform(
+                self, X: pd.DataFrame, y: pd.Series | None = None
+            ) -> pd.DataFrame:
                 """Fit and transform the DataFrame X."""
                 X = X.copy()
                 for col in self.cat_features:
@@ -112,7 +114,7 @@ class LightGBMModel:
         """Log the model to MLflow."""
         tags = tags.to_dict()
         mlflow.set_experiment(experiment_name)
-        ts = datetime.now().strftime('%Y-%m-%d')
+        ts = datetime.now().strftime("%Y-%m-%d")
         with mlflow.start_run(
             run_name=f"lightgbm-training-{ts}",
             description="LightGBM model training",

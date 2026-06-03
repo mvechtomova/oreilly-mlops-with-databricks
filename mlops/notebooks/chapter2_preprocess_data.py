@@ -41,6 +41,6 @@ dst_table = f"{catalog}.{schema}.hotel_booking"
 spark.createDataFrame(df).write.mode("overwrite").saveAsTable(f"{dst_table}")
 
 spark.sql(
-  f"""ALTER TABLE {dst_table}
+    f"""ALTER TABLE {dst_table}
    SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"""
 )

@@ -1,3 +1,4 @@
+# ruff: noqa: F821
 import mlflow
 import yaml
 from loguru import logger
@@ -11,7 +12,8 @@ from hotel_booking.utils.common import create_parser
 args = create_parser()
 
 cfg = ProjectConfig.from_yaml(
-    config_path=f"{args.root_path}/files/project_config.yml", env=args.env)
+    config_path=f"{args.root_path}/files/project_config.yml", env=args.env
+)
 
 logger.info("Configuration loaded:")
 logger.info(yaml.dump(cfg, default_flow_style=False))
@@ -23,9 +25,8 @@ data_loader = DataLoader(spark=spark, config=cfg)
 X_train, y_train, X_test, y_test = data_loader.split()
 
 model = LightGBMModel(config=cfg)
-tags=Tags(**{"git_sha": args.git_sha, "branch": args.branch, "run_id": args.run_id})
-model.train(X_train=X_train,
-            y_train=y_train)
+tags = Tags(**{"git_sha": args.git_sha, "branch": args.branch, "run_id": args.run_id})
+model.train(X_train=X_train, y_train=y_train)
 model_info = model.log_model(
     experiment_name="/Shared/hotel-booking-training",
     tags=tags,
@@ -34,8 +35,8 @@ model_info = model.log_model(
     train_set_spark=data_loader.train_set_spark,
     train_query=data_loader.train_query,
     test_set_spark=data_loader.test_set_spark,
-    test_query=data_loader.test_query
-    )
+    test_query=data_loader.test_query,
+)
 
 metrics_new = model.metrics
 
@@ -55,39 +56,27 @@ try:
 except mlflow.exceptions.RestException:
     model_exists = False
     logger.info(
-        f"Model {sklearn_model_name}@latest-model does not exist. "
-        "Registering new model."
+        f"Model {sklearn_model_name}@latest-model does not exist. Registering new model."
     )
-    model_version = model.register_model(
-        model_name=sklearn_model_name, tags=tags
-    )
+    model_version = model.register_model(model_name=sklearn_model_name, tags=tags)
 
-    dbutils.jobs.taskValues.set(
-        key="model_version", value=model_version
-    )
+    dbutils.jobs.taskValues.set(key="model_version", value=model_version)
     dbutils.jobs.taskValues.set(key="model_updated", value=1)
 
 if model_exists:
     result = mlflow.models.evaluate(
-            model=f"models:/{sklearn_model_name}@latest-model",
-            data=eval_data,
-            targets=cfg.target,
-            model_type="regressor",
-            evaluators=["default"],
-        )
+        model=f"models:/{sklearn_model_name}@latest-model",
+        data=eval_data,
+        targets=cfg.target,
+        model_type="regressor",
+        evaluators=["default"],
+    )
     metrics_old = result.metrics
 
-    if (
-        metrics_new["root_mean_squared_error"]
-        < metrics_old["root_mean_squared_error"]
-    ):
-        model_version = model.register_model(
-            model_name=sklearn_model_name, tags=tags
-        )
+    if metrics_new["root_mean_squared_error"] < metrics_old["root_mean_squared_error"]:
+        model_version = model.register_model(model_name=sklearn_model_name, tags=tags)
 
-        dbutils.jobs.taskValues.set(
-            key="model_version", value=model_version
-        )
+        dbutils.jobs.taskValues.set(key="model_version", value=model_version)
         dbutils.jobs.taskValues.set(key="model_updated", value=1)
 
     else:

@@ -1,6 +1,5 @@
 # Databricks notebook source
 # ruff: noqa
-from loguru import logger
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import (
@@ -12,68 +11,60 @@ from pyspark.sql.types import (
     StructType,
 )
 
-from hotel_booking.config import ProjectConfig
-
-# COMMAND ----------
-cfg = ProjectConfig.from_yaml(
-    config_path="../project_config.yml")
-catalog = cfg.catalog
-schema = cfg.schema
-
 spark = SparkSession.builder.getOrCreate()
 
-# COMMAND ----------
-inf_table = spark.table(
-    f"{catalog}.{schema}.hotel_booking_monitoring_payload")
+request_schema = StructType(
+    [
+        StructField(
+            "dataframe_records",
+            ArrayType(
+                StructType(
+                    [
+                        StructField("number_of_adults", IntegerType(), True),
+                        StructField("number_of_children", IntegerType(), True),
+                        StructField("number_of_weekend_nights", IntegerType(), True),
+                        StructField("number_of_week_nights", IntegerType(), True),
+                        StructField("car_parking_space", IntegerType(), True),
+                        StructField("special_requests", IntegerType(), True),
+                        StructField("lead_time", IntegerType(), True),
+                        StructField("type_of_meal", StringType(), True),
+                        StructField("room_type", StringType(), True),
+                        StructField("arrival_month", IntegerType(), True),
+                        StructField("market_segment_type", StringType(), True),
+                    ]
+                )
+            ),
+            True,
+        )
+    ]
+)
 
-
-# inf_table = spark.sql(f"""SELECT FROM {catalog}.{schema}.hotel_booking_monitoring_payload
-#     WHERE request_time > (
-#         SELECT MAX(request_time) AS TIMESTAMP
-#         FROM {catalog}.{schema}.model_monitoring)
-# """)
-
-
-
-# COMMAND ----------
-request_schema = StructType([
-    StructField("dataframe_records", ArrayType(StructType([
-        StructField("number_of_adults", IntegerType(), True),
-        StructField("number_of_children", IntegerType(), True),
-        StructField("number_of_weekend_nights", IntegerType(), True),
-        StructField("number_of_week_nights", IntegerType(), True),
-        StructField("car_parking_space", IntegerType(), True),
-        StructField("special_requests", IntegerType(), True),
-        StructField("lead_time", IntegerType(), True),
-        StructField("type_of_meal", StringType(), True),
-        StructField("room_type", StringType(), True),
-        StructField("arrival_month", IntegerType(), True),
-        StructField("market_segment_type", StringType(), True),
-    ])), True)
-])
-
-
-response_schema = StructType([
-    StructField("predictions", StructType([
-        StructField("Total price per night",
-                    ArrayType(DoubleType()), True)
-    ]), True)
-])
+response_schema = StructType(
+    [
+        StructField(
+            "predictions",
+            StructType(
+                [StructField("Total price per night", ArrayType(DoubleType()), True)]
+            ),
+            True,
+        )
+    ]
+)
 
 # COMMAND ----------
 # parse and explode
+from hotel_booking.config import ProjectConfig
+
+cfg = ProjectConfig.from_yaml(config_path="../project_config.yml")
+catalog = cfg.catalog
+schema = cfg.schema
+inf_table = spark.table(f"{catalog}.{schema}.hotel_booking_monitoring_payload")
+
 inf_table_parsed = (
-    inf_table
-    .withColumn("p_request",
-                F.from_json(F.col("request"),
-                            request_schema))
-    .withColumn("p_response",
-                F.from_json(F.col("response"),
-                            response_schema))
-    .withColumn("prediction",
-                F.col("p_response.predictions.`Total price per night`")[0])
-    .withColumn("record",
-                F.explode(F.col("p_request.dataframe_records")))
+    inf_table.withColumn("p_request", F.from_json(F.col("request"), request_schema))
+    .withColumn("p_response", F.from_json(F.col("response"), response_schema))
+    .withColumn("prediction", F.col("p_response.predictions.`Total price per night`")[0])
+    .withColumn("record", F.explode(F.col("p_request.dataframe_records")))
 )
 # COMMAND ----------
 
@@ -94,20 +85,18 @@ df_final = inf_table_parsed.select(
     F.col("record.arrival_month").alias("arrival_month"),
     F.col("record.market_segment_type").alias("market_segment_type"),
     "prediction",
-    F.lit("hotel-booking-pyfunc").alias("model_name")
+    F.lit("hotel-booking-pyfunc").alias("model_name"),
 )
 
-# COMMAND ----------
 ground_truth_set = spark.table(f"{catalog}.{schema}.hotel_booking")
 
 df_final_with_status = df_final.join(
-    ground_truth_set.select("Booking_ID", "average_price"),
-    on="Booking_ID", how="left")
+    ground_truth_set.select("Booking_ID", "average_price"), on="Booking_ID", how="left"
+)
 # COMMAND ----------
 monitoring_table = f"{catalog}.{schema}.model_monitoring"
 
-df_final_with_status.write.format(
-    "delta").mode("append").saveAsTable(monitoring_table)
+df_final_with_status.write.format("delta").mode("append").saveAsTable(monitoring_table)
 
 # Important to update monitoring
 spark.sql(f"""ALTER TABLE {monitoring_table}
@@ -126,8 +115,6 @@ from databricks.sdk.service.dataquality import (
 
 w = WorkspaceClient()
 
-# The new data_quality API references the schema and table by id,
-# so look them up first.
 output_schema = w.schemas.get(full_name=f"{catalog}.{schema}")
 monitored_table = w.tables.get(full_name=monitoring_table)
 
@@ -137,22 +124,32 @@ w.data_quality.create_monitor(
         object_id=monitored_table.table_id,
         data_profiling_config=DataProfilingConfig(
             output_schema_id=output_schema.schema_id,
-            assets_dir=(
-                f"/Workspace/Shared/lakehouse_monitoring/{monitoring_table}"
-            ),
+            assets_dir=(f"/Workspace/Shared/lakehouse_monitoring/{monitoring_table}"),
             inference_log=InferenceLogConfig(
-                problem_type=(
-                    InferenceProblemType.INFERENCE_PROBLEM_TYPE_REGRESSION
-                ),
+                problem_type=(InferenceProblemType.INFERENCE_PROBLEM_TYPE_REGRESSION),
                 prediction_column="prediction",
                 timestamp_column="request_time",
-                granularities=[
-                    AggregationGranularity.AGGREGATION_GRANULARITY_5_MINUTES
-                ],
+                granularities=[AggregationGranularity.AGGREGATION_GRANULARITY_5_MINUTES],
                 model_id_column="model_name",
                 label_column="average_price",
             ),
         ),
+    ),
+)
+
+# COMMAND ----------
+from databricks.sdk.service.dataquality import (
+    Refresh,
+    RefreshTrigger,
+)
+
+w.data_quality.create_refresh(
+    object_type="table",
+    object_id=monitored_table.table_id,
+    refresh=Refresh(
+        object_type="table",
+        object_id=monitored_table.table_id,
+        trigger=RefreshTrigger.MONITOR_REFRESH_TRIGGER_MANUAL,
     ),
 )
 

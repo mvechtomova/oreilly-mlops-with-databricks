@@ -27,9 +27,7 @@ def test_get_delta_table_version_reads_history(mocker) -> None:
 
 def test_set_mlflow_tracking_uri_noop_inside_databricks(mocker) -> None:
     # On a Databricks runtime the function must not reconfigure MLflow.
-    mocker.patch.dict(
-        "os.environ", {"DATABRICKS_RUNTIME_VERSION": "17.3"}, clear=False
-    )
+    mocker.patch.dict("os.environ", {"DATABRICKS_RUNTIME_VERSION": "17.3"}, clear=False)
     set_uri = mocker.patch("hotel_booking.utils.common.mlflow.set_tracking_uri")
     set_mlflow_tracking_uri()
     set_uri.assert_not_called()

@@ -16,10 +16,14 @@ spark = SparkSession.builder.getOrCreate()
 data_loader = DataLoader(spark=spark, config=cfg)
 train_query, test_query = data_loader.generate_queries()
 train_set = spark.sql(train_query).drop(
-    "lead_time", "arrival_month", # computed
-    "repeated", # looked up
+    "lead_time",
+    "arrival_month",  # computed
+    "repeated",  # looked up
     # present in the original table but not used:
-    "P_C", "P_not_C", "booking_status")
+    "P_C",
+    "P_not_C",
+    "booking_status",
+)
 test_set = spark.sql(test_query).toPandas()
 
 # COMMAND ----------
@@ -75,27 +79,29 @@ from databricks.feature_engineering import (
 fe = FeatureEngineeringClient()
 
 training_set = fe.create_training_set(
-            df=train_set,
-            label=cfg.target,
-            feature_lookups=[
-                FeatureLookup(
-                    table_name=feature_table_name,
-                    feature_names=["repeated"],
-                    lookup_key="Booking_ID",
-                ),
-                FeatureFunction(
-                    udf_name=lead_time_function,
-                    output_name="lead_time",
-                    input_bindings={"arrival_date": "arrival_date",
-                                    "reservation_date": "date_of_reservation"},
-                ),
-                FeatureFunction(
-                    udf_name=arrival_month_function,
-                    output_name="arrival_month",
-                    input_bindings={"arrival_date": "arrival_date"},
-                ),
-            ],
-        )
+    df=train_set,
+    label=cfg.target,
+    feature_lookups=[
+        FeatureLookup(
+            table_name=feature_table_name,
+            feature_names=["repeated"],
+            lookup_key="Booking_ID",
+        ),
+        FeatureFunction(
+            udf_name=lead_time_function,
+            output_name="lead_time",
+            input_bindings={
+                "arrival_date": "arrival_date",
+                "reservation_date": "date_of_reservation",
+            },
+        ),
+        FeatureFunction(
+            udf_name=arrival_month_function,
+            output_name="arrival_month",
+            input_bindings={"arrival_date": "arrival_date"},
+        ),
+    ],
+)
 
 # COMMAND ----------
 training_df = training_set.load_df().toPandas()
@@ -130,8 +136,7 @@ run = mlflow.start_run(
 run_id = run.info.run_id
 mlflow.log_params(model.parameters)
 signature = infer_signature(
-    model_input=X_train,
-    model_output=model.pipeline.predict(X_train[0:1])
+    model_input=X_train, model_output=model.pipeline.predict(X_train[0:1])
 )
 y_pred = model.pipeline.predict(X_test)
 mse = mean_squared_error(y_test, y_pred)
@@ -174,7 +179,7 @@ online_store = fe.get_online_store(name="hotel-booking-price-preds")
 fe.publish_table(
     online_store=online_store,
     source_table_name=feature_table_name,
-    online_table_name=f"{feature_table_name}_online"
+    online_table_name=f"{feature_table_name}_online",
 )
 
 # COMMAND ----------
@@ -194,9 +199,9 @@ served_entities = [
     )
 ]
 
-w= WorkspaceClient()
+w = WorkspaceClient()
 endpoint_name = "hotel-booking-fe"
-endpoint_exists = any(item.name ==endpoint_name for item in w.serving_endpoints.list())
+endpoint_exists = any(item.name == endpoint_name for item in w.serving_endpoints.list())
 
 if not endpoint_exists:
     w.serving_endpoints.create(
@@ -208,8 +213,7 @@ if not endpoint_exists:
         budget_policy_id=cfg.usage_policy_id,
     )
 else:
-    w.serving_endpoints.update_config(
-        name=endpoint_name, served_entities=served_entities)
+    w.serving_endpoints.update_config(name=endpoint_name, served_entities=served_entities)
 
 # COMMAND ----------
 import requests
@@ -224,21 +228,36 @@ serving_endpoint = f"{host}/serving-endpoints/{endpoint_name}/invocations"
 
 payload = {
     "dataframe_split": {
-        'columns': [
-            'Booking_ID',
-            'number_of_adults',
-            'number_of_children',
-            'number_of_weekend_nights',
-            'number_of_week_nights',
-            'car_parking_space',
-            'special_requests',
-            'type_of_meal',
-            'room_type',
-            'market_segment_type',
-            'arrival_date',
-            'date_of_reservation'
+        "columns": [
+            "Booking_ID",
+            "number_of_adults",
+            "number_of_children",
+            "number_of_weekend_nights",
+            "number_of_week_nights",
+            "car_parking_space",
+            "special_requests",
+            "type_of_meal",
+            "room_type",
+            "market_segment_type",
+            "arrival_date",
+            "date_of_reservation",
         ],
-        'data': [['INN36285', 2, 0, 0, 1, 0, 0, 'Not Selected', 'Room_Type 1', 'Online', '2018-08-01 00:00:00', '2018-03-01 00:00:00']]
+        "data": [
+            [
+                "INN36285",
+                2,
+                0,
+                0,
+                1,
+                0,
+                0,
+                "Not Selected",
+                "Room_Type 1",
+                "Online",
+                "2018-08-01 00:00:00",
+                "2018-03-01 00:00:00",
+            ]
+        ],
     }
 }
 

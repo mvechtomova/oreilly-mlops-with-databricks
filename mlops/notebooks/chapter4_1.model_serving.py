@@ -18,8 +18,8 @@ model_name = "hotel_booking_pyfunc"
 
 client = MlflowClient()
 model_version = client.get_model_version_by_alias(
-    alias="latest-model",
-    name=f"{catalog}.{schema}.{model_name}")
+    alias="latest-model", name=f"{catalog}.{schema}.{model_name}"
+)
 
 # COMMAND ----------
 from databricks.sdk.service.serving import ServedEntityInput
@@ -41,14 +41,14 @@ from databricks.sdk.service.serving import (
 )
 
 ai_gateway_cfg = AiGatewayConfig(
-        inference_table_config=AiGatewayInferenceTableConfig(
-            enabled=True,
-            catalog_name=catalog,
-            schema_name=schema,
-            table_name_prefix="hotel_booking_monitoring",
-        ),
-        usage_tracking_config=AiGatewayUsageTrackingConfig(enabled=True)
-    )
+    inference_table_config=AiGatewayInferenceTableConfig(
+        enabled=True,
+        catalog_name=catalog,
+        schema_name=schema,
+        table_name_prefix="hotel_booking_monitoring",
+    ),
+    usage_tracking_config=AiGatewayUsageTrackingConfig(enabled=True),
+)
 
 # COMMAND ----------
 from databricks.sdk import WorkspaceClient
@@ -60,17 +60,16 @@ from databricks.sdk.service.serving import (
 
 w = WorkspaceClient()
 endpoint_name = "hotel-booking-pyfunc"
-endpoint_exists = any(
-    item.name == endpoint_name for item in w.serving_endpoints.list()
-)
+endpoint_exists = any(item.name == endpoint_name for item in w.serving_endpoints.list())
 
-traffic_config=TrafficConfig(
-            routes=[
-                Route(
-                    served_model_name=f"{model_name}-{model_version.version}",
-                    traffic_percentage=100)
-            ]
+traffic_config = TrafficConfig(
+    routes=[
+        Route(
+            served_model_name=f"{model_name}-{model_version.version}",
+            traffic_percentage=100,
         )
+    ]
+)
 
 if not endpoint_exists:
     w.serving_endpoints.create(
@@ -78,14 +77,13 @@ if not endpoint_exists:
         config=EndpointCoreConfigInput(
             name=endpoint_name,
             served_entities=served_entities,
-            traffic_config=traffic_config),
+            traffic_config=traffic_config,
+        ),
         ai_gateway=ai_gateway_cfg,
         budget_policy_id=cfg.usage_policy_id,
     )
 else:
-    w.serving_endpoints.update_config(
-        name=endpoint_name, served_entities=served_entities
-    )
+    w.serving_endpoints.update_config(name=endpoint_name, served_entities=served_entities)
 
 # COMMAND ----------
 # Call the endpoint
@@ -155,8 +153,7 @@ response.text
 import pandas as pd
 
 input_example = pd.DataFrame(
-    data=payload["dataframe_split"]["data"],
-    columns=payload["dataframe_split"]["columns"]
+    data=payload["dataframe_split"]["data"], columns=payload["dataframe_split"]["columns"]
 )
 model_uri = f"models:/{catalog}.{schema}.{model_name}@latest-model"
 mlflow.models.predict(model_uri, input_example)

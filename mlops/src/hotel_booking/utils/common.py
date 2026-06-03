@@ -1,11 +1,11 @@
+import argparse
 import os
+from collections.abc import Sequence
 
 import mlflow
 from delta.tables import DeltaTable
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession
-import argparse
-from collections.abc import Sequence
 
 
 def set_mlflow_tracking_uri() -> None:
@@ -19,9 +19,8 @@ def set_mlflow_tracking_uri() -> None:
         mlflow.set_tracking_uri(f"databricks://{profile}")
         mlflow.set_registry_uri(f"databricks-uc://{profile}")
 
-def get_delta_table_version(
-    spark: SparkSession, full_table_name: str
-) -> str:
+
+def get_delta_table_version(spark: SparkSession, full_table_name: str) -> str:
     """
     Get the latest version of a Delta table.
 
@@ -31,6 +30,7 @@ def get_delta_table_version(
     """
     delta_table = DeltaTable.forName(spark, full_table_name)
     return str(delta_table.history().select("version").first()[0])
+
 
 def create_parser(args: Sequence[str] = None) -> argparse.Namespace:
     """Create and configure an argument parser for MLOps on Databricks.
@@ -46,11 +46,15 @@ def create_parser(args: Sequence[str] = None) -> argparse.Namespace:
     # Common arguments
     common_args = argparse.ArgumentParser(add_help=False)
     common_args.add_argument(
-        "--root_path", type=str, required=True,
+        "--root_path",
+        type=str,
+        required=True,
         help="Path of root on DAB",
     )
     common_args.add_argument(
-        "--env", type=str, required=True,
+        "--env",
+        type=str,
+        required=True,
         help="Path of env file on DAB",
     )
 
@@ -64,19 +68,27 @@ def create_parser(args: Sequence[str] = None) -> argparse.Namespace:
         help="Model training and registering",
     )
     model_parser.add_argument(
-        "--branch", type=str, required=True,
+        "--branch",
+        type=str,
+        required=True,
         help="branch of the project",
     )
     model_parser.add_argument(
-        "--git_sha", type=str, required=True,
+        "--git_sha",
+        type=str,
+        required=True,
         help="git sha of the commit",
     )
     model_parser.add_argument(
-        "--run_id", type=str, required=True,
+        "--run_id",
+        type=str,
+        required=True,
         help="run id of the run of the Lakeflow job",
     )
     model_parser.add_argument(
-        "--job_id", type=str, required=True,
+        "--job_id",
+        type=str,
+        required=True,
         help="Lakeflow job id",
     )
     return parser.parse_args(args)

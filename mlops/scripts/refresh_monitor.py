@@ -8,8 +8,7 @@ from hotel_booking.utils.common import create_parser
 args = create_parser()
 
 cfg = ProjectConfig.from_yaml(
-    config_path=f"{args.root_path}/files/project_config.yml",
-    env=args.env
+    config_path=f"{args.root_path}/files/project_config.yml", env=args.env
 )
 
 spark = SparkSession.builder.getOrCreate()

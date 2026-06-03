@@ -36,7 +36,8 @@ class DataLoader:
         :return: A tuple (X_train, y_train, X_test, y_test) with pandas DataFramess.
         """
         self.train_query, self.test_query = self.generate_queries(
-            test_months, train_months, max_date, version)
+            test_months, train_months, max_date, version
+        )
 
         self.train_set_spark = self.spark.sql(self.train_query)
         self.test_set_spark = self.spark.sql(self.test_query)
@@ -75,8 +76,11 @@ class DataLoader:
         return train_start, train_end, test_start, test_end
 
     def generate_queries(
-        self, test_months: int = 1, train_months: int = 12,
-        max_date: datetime = None, version: int = None,
+        self,
+        test_months: int = 1,
+        train_months: int = 12,
+        max_date: datetime = None,
+        version: int = None,
     ) -> tuple[str, str]:
         """
         Generates SQL queries for the training and test splits.
@@ -98,7 +102,8 @@ class DataLoader:
             version = get_delta_table_version(self.spark, table_ref)
 
         train_start, train_end, test_start, test_end = self._get_start_end_dates(
-            max_date, test_months, train_months)
+            max_date, test_months, train_months
+        )
 
         train_query = f"""
             SELECT * FROM {table_ref} VERSION AS OF {version}

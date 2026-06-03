@@ -1,5 +1,4 @@
 import calendar
-import datetime
 import random
 from datetime import datetime, timedelta
 
@@ -27,9 +26,7 @@ class DataProcessor:
         self.df = df
         self.cfg = config
         self.spark = spark
-        self.target_table = (
-            f"{self.cfg.catalog}.{self.cfg.schema}.hotel_booking"
-        )
+        self.target_table = f"{self.cfg.catalog}.{self.cfg.schema}.hotel_booking"
 
     def preprocess(self: "DataProcessor") -> None:
         """Preprocess the DataFrame."""

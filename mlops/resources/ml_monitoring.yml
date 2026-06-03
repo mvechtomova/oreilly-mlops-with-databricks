@@ -8,7 +8,7 @@ resources:
         pause_status: ${var.schedule_pause_status}
       tags:
         project_name: "hotel-booking"
-      
+
       job_clusters:
         - job_cluster_key: "hotel-booking-cluster"
           new_cluster:

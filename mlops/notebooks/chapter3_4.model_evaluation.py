@@ -30,9 +30,8 @@ X_train, y_train, X_test, y_test = data_loader.split()
 # COMMAND ----------
 # retrain model
 model = LightGBMModel(config=cfg)
-tags=Tags(**{"git_sha": "1234567890abcd", "branch": "chapter_3"})
-model.train(X_train=X_train,
-            y_train=y_train)
+tags = Tags(**{"git_sha": "1234567890abcd", "branch": "chapter_3"})
+model.train(X_train=X_train, y_train=y_train)
 model_info = model.log_model(
     experiment_name="/Shared/hotel-booking-training",
     tags=tags,
@@ -41,8 +40,8 @@ model_info = model.log_model(
     train_set_spark=data_loader.train_set_spark,
     train_query=data_loader.train_query,
     test_set_spark=data_loader.test_set_spark,
-    test_query=data_loader.test_query
-    )
+    test_query=data_loader.test_query,
+)
 
 metrics_new = model.metrics
 # COMMAND ----------
@@ -54,14 +53,14 @@ eval_data = X_test.copy()
 eval_data[cfg.target] = y_test
 
 result = mlflow.models.evaluate(
-        model_uri,
-        eval_data,
-        targets=cfg.target,
-        model_type="regressor",
-        evaluators=["default"],
-    )
+    model_uri,
+    eval_data,
+    targets=cfg.target,
+    model_type="regressor",
+    evaluators=["default"],
+)
 metrics_old = result.metrics
 
 # COMMAND ----------
-if metrics_new['root_mean_squared_error'] < metrics_old['root_mean_squared_error']:
+if metrics_new["root_mean_squared_error"] < metrics_old["root_mean_squared_error"]:
     model.register_model(model_name=sklearn_model_name, tags=tags)

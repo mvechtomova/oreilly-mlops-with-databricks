@@ -22,6 +22,9 @@ variables:
     description: schedule pause status
     default: PAUSED
 
+sync:
+  include:
+    - dist/*
 include:
   - resources/*
 
@@ -52,4 +55,3 @@ targets:
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
     variables:
       schedule_pause_status: UNPAUSED
-

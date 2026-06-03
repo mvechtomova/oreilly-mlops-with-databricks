@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 import json
 import os
 
@@ -70,7 +71,7 @@ runs = mlflow.search_runs(
     filter_string="status='FINISHED' AND "
     f"start_time>{time_hour_ago} AND "
     "run_name LIKE '%demo-run%' AND "
-    "metrics.metric3>0"
+    "metrics.metric3>0",
 )
 
 # COMMAND ----------
@@ -111,8 +112,7 @@ text = mlflow.artifacts.load_text(f"{artifact_uri}/hello.txt")
 if not os.path.exists("../downloaded_artifacts"):
     os.mkdir("../downloaded_artifacts")
 mlflow.artifacts.download_artifacts(
-    artifact_uri=f"{artifact_uri}/demo_artifacts",
-    dst_path="../downloaded_artifacts"
+    artifact_uri=f"{artifact_uri}/demo_artifacts", dst_path="../downloaded_artifacts"
 )
 
 # COMMAND ----------
