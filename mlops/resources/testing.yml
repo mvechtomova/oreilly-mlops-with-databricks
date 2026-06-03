@@ -194,7 +194,7 @@ resources:
             - task_key: gate_chapter2_preprocess_data
               outcome: "true"
           run_job_task:
-            job_id: ${resources.jobs.test-chapter2-preprocess-data.id}
+            job_id: "${resources.jobs.test-chapter2-preprocess-data.id}"
 
         # idx 2 - chapter3_1_experiment_tracking_demo
         - task_key: gate_chapter3_1_experiment_tracking_demo
@@ -210,7 +210,7 @@ resources:
               outcome: "true"
             - task_key: chapter2_preprocess_data
           run_job_task:
-            job_id: ${resources.jobs.test-chapter3-1-experiment-tracking-demo.id}
+            job_id: "${resources.jobs.test-chapter3-1-experiment-tracking-demo.id}"
 
         # idx 3 - chapter3_2_model_finetuning
         - task_key: gate_chapter3_2_model_finetuning
@@ -226,7 +226,7 @@ resources:
               outcome: "true"
             - task_key: chapter3_1_experiment_tracking_demo
           run_job_task:
-            job_id: ${resources.jobs.test-chapter3-2-model-finetuning.id}
+            job_id: "${resources.jobs.test-chapter3-2-model-finetuning.id}"
 
         # idx 4 - chapter3_3_model_logging_registering_demo
         - task_key: gate_chapter3_3_model_logging_registering_demo
@@ -242,7 +242,7 @@ resources:
               outcome: "true"
             - task_key: chapter3_2_model_finetuning
           run_job_task:
-            job_id: ${resources.jobs.test-chapter3-3-model-logging-registering-demo.id}
+            job_id: "${resources.jobs.test-chapter3-3-model-logging-registering-demo.id}"
 
         # idx 5 - chapter3_4_model_evaluation
         - task_key: gate_chapter3_4_model_evaluation
@@ -258,7 +258,7 @@ resources:
               outcome: "true"
             - task_key: chapter3_3_model_logging_registering_demo
           run_job_task:
-            job_id: ${resources.jobs.test-chapter3-4-model-evaluation.id}
+            job_id: "${resources.jobs.test-chapter3-4-model-evaluation.id}"
 
         # idx 6 - chapter4_1_model_serving
         - task_key: gate_chapter4_1_model_serving
@@ -274,7 +274,7 @@ resources:
               outcome: "true"
             - task_key: chapter3_4_model_evaluation
           run_job_task:
-            job_id: ${resources.jobs.test-chapter4-1-model-serving.id}
+            job_id: "${resources.jobs.test-chapter4-1-model-serving.id}"
 
         # idx 7 - chapter4_2_feature_serving
         - task_key: gate_chapter4_2_feature_serving
@@ -290,7 +290,7 @@ resources:
               outcome: "true"
             - task_key: chapter4_1_model_serving
           run_job_task:
-            job_id: ${resources.jobs.test-chapter4-2-feature-serving.id}
+            job_id: "${resources.jobs.test-chapter4-2-feature-serving.id}"
 
         # idx 8 - chapter4_3_model_serving_feature_lookup
         - task_key: gate_chapter4_3_model_serving_feature_lookup
@@ -306,7 +306,7 @@ resources:
               outcome: "true"
             - task_key: chapter4_2_feature_serving
           run_job_task:
-            job_id: ${resources.jobs.test-chapter4-3-model-serving-feature-lookup.id}
+            job_id: "${resources.jobs.test-chapter4-3-model-serving-feature-lookup.id}"
 
         # idx 9 - chapter6_1_call_endpoint
         - task_key: gate_chapter6_1_call_endpoint
@@ -322,7 +322,7 @@ resources:
               outcome: "true"
             - task_key: chapter4_3_model_serving_feature_lookup
           run_job_task:
-            job_id: ${resources.jobs.test-chapter6-1-call-endpoint.id}
+            job_id: "${resources.jobs.test-chapter6-1-call-endpoint.id}"
 
         # idx 10 - chapter6_2_enable_monitor
         - task_key: gate_chapter6_2_enable_monitor
@@ -338,4 +338,4 @@ resources:
               outcome: "true"
             - task_key: chapter6_1_call_endpoint
           run_job_task:
-            job_id: ${resources.jobs.test-chapter6-2-enable-monitor.id}
+            job_id: "${resources.jobs.test-chapter6-2-enable-monitor.id}"

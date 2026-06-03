@@ -44,24 +44,14 @@ sklearn_model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
 eval_data = X_test.copy()
 eval_data[cfg.target] = y_test
 
-# Check if model with alias exists before evaluating
+# Register by default; only an existing model we don't beat stops us.
+should_register = True
 try:
-    client = mlflow.MlflowClient()
-    client.get_model_version_by_alias(sklearn_model_name, "latest-model")
+    mlflow.MlflowClient().get_model_version_by_alias(sklearn_model_name, "latest-model")
     model_exists = True
-    logger.info(
-        f"Model {sklearn_model_name}@latest-model exists. "
-        "Evaluating and comparing metrics."
-    )
 except mlflow.exceptions.RestException:
     model_exists = False
-    logger.info(
-        f"Model {sklearn_model_name}@latest-model does not exist. Registering new model."
-    )
-    model_version = model.register_model(model_name=sklearn_model_name, tags=tags)
-
-    dbutils.jobs.taskValues.set(key="model_version", value=model_version)
-    dbutils.jobs.taskValues.set(key="model_updated", value=1)
+    logger.info(f"No {sklearn_model_name}@latest-model yet. Registering new model.")
 
 if model_exists:
     result = mlflow.models.evaluate(
@@ -71,13 +61,17 @@ if model_exists:
         model_type="regressor",
         evaluators=["default"],
     )
-    metrics_old = result.metrics
+    rmse_old = result.metrics["root_mean_squared_error"]
+    rmse_new = metrics_new["root_mean_squared_error"]
+    should_register = rmse_new < rmse_old
+    logger.info(
+        f"Current RMSE {rmse_old:.4f}, new RMSE {rmse_new:.4f} -> "
+        + ("registering new model" if should_register else "keeping current model")
+    )
 
-    if metrics_new["root_mean_squared_error"] < metrics_old["root_mean_squared_error"]:
-        model_version = model.register_model(model_name=sklearn_model_name, tags=tags)
-
-        dbutils.jobs.taskValues.set(key="model_version", value=model_version)
-        dbutils.jobs.taskValues.set(key="model_updated", value=1)
-
-    else:
-        dbutils.jobs.taskValues.set(key="model_updated", value=0)
+if should_register:
+    model_version = model.register_model(model_name=sklearn_model_name, tags=tags)
+    dbutils.jobs.taskValues.set(key="model_version", value=model_version)
+    dbutils.jobs.taskValues.set(key="model_updated", value=1)
+else:
+    dbutils.jobs.taskValues.set(key="model_updated", value=0)

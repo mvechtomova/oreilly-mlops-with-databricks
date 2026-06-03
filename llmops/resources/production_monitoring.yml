@@ -5,7 +5,7 @@ resources:
       schedule:
         quartz_cron_expression: "0 0 7 * * ?"
         timezone_id: "Europe/Amsterdam"
-        pause_status: ${var.schedule_pause_status}
+        pause_status: "${var.schedule_pause_status}"
       tags:
         project_name: "arxiv-curator"
       environments:
@@ -21,4 +21,4 @@ resources:
           notebook_task:
             notebook_path: deployment_notebooks/production_monitoring.py
             base_parameters:
-              env: ${bundle.target}
+              env: "${bundle.target}"

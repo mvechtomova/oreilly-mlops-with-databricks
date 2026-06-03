@@ -18,6 +18,6 @@ resources:
           notebook_task:
             notebook_path: ../notebooks/chapter7_2.vector_sarch.py
             base_parameters:
-              env: ${bundle.target}
+              env: "${bundle.target}"
               git_sha: "${var.git_sha}"
               run_id: "{{job.run_id}}"

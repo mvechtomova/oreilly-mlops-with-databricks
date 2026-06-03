@@ -15,4 +15,4 @@ resources:
     agent-monitoring-dashboard:
       display_name: "Agent Monitoring Dashboard"
       file_path: agent_monitoring_dashboard.lvdash.json
-      warehouse_id: ${resources.sql_warehouses.arxiv_monitoring_warehouse.id}
+      warehouse_id: "${resources.sql_warehouses.arxiv_monitoring_warehouse.id}"

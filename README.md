@@ -14,7 +14,7 @@ This repository is organised into two self-contained projects, one per part of t
 
 ### [mlops/](mlops/)
 
-Covers **Chapters 2-6** of the book. Demonstrates a complete ML lifecycle for a hotel booking price prediction use case, built on LightGBM, MLflow, Unity Catalog, and Databricks Asset Bundles.
+Covers **Chapters 2-6** of the book. Demonstrates a complete ML lifecycle for a hotel booking price prediction use case, built on LightGBM, MLflow, Unity Catalog, and Declarative Automation Bundles.
 
 | Chapter | Topic |
 |---------|-------|
@@ -22,7 +22,16 @@ Covers **Chapters 2-6** of the book. Demonstrates a complete ML lifecycle for a 
 | 3 | Experiment tracking in MLflow, model training, logging, and registration in Unity Catalog |
 | 4 | Model serving, feature serving, and endpoint authentication |
 | 5 | CI/CD with Databricks Asset Bundles |
-| 6 | Lakehouse monitoring |
+| 6 | Data Quality monitoring |
+
+**Bundle resources** ([mlops/resources/](mlops/resources/)) — Declarative Automation Bundle definitions:
+
+```text
+resources/
+├── ml_pipeline.yml     # Lakeflow job: preprocess, train + register, deploy
+├── ml_monitoring.yml   # Lakeflow job: refresh the monitoring table
+└── alert.yml           # SQL alert on a monitoring metric
+```
 
 ---
 
@@ -33,6 +42,24 @@ Covers **Chapter 7** of the book. Demonstrates LLMOps patterns on Databricks, in
 | Chapter | Topic |
 |---------|-------|
 | 7 | LLMOps — vector search, Genie, MLflow tracing, agent evaluation, and agent deployment |
+
+**Bundle resources** ([llmops/resources/](llmops/resources/)) — Declarative Automation Bundle definitions:
+
+```text
+resources/
+├── process_data.yml            # Lakeflow job: process arxiv documents
+├── vector_sarch_job.yml        # Lakeflow job: build the vector search index
+├── register_deploy_agent.yml   # Lakeflow job: register & deploy the agent
+├── production_monitoring.yml   # Lakeflow job: agent production monitoring
+├── dashboard/                  # Lakeview monitoring dashboard
+│   ├── agent_monitoring_dashboard.yml
+│   └── agent_monitoring_dashboard.lvdash.json
+└── deployment_notebooks/       # notebooks executed by the jobs above
+    ├── process_data.py
+    ├── log_register_agent.py
+    ├── deploy_agent.py
+    └── production_monitoring.py
+```
 
 ---
 

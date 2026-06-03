@@ -17,7 +17,7 @@ resources:
           notebook_task:
             notebook_path: deployment_notebooks/log_register_agent.py
             base_parameters:
-              env: ${bundle.target}
+              env: "${bundle.target}"
               git_sha: "${var.git_sha}"
               run_id: "{{job.run_id}}"
 
@@ -38,7 +38,7 @@ resources:
           notebook_task:
             notebook_path: deployment_notebooks/deploy_agent.py
             base_parameters:
-              env: ${bundle.target}
+              env: "${bundle.target}"
               git_sha: "${var.git_sha}"
 
     register_deploy_agent:
@@ -49,10 +49,10 @@ resources:
       tasks:
         - task_key: run_log_register_agent
           run_job_task:
-            job_id: ${resources.jobs.log_register_agent_job.id}
+            job_id: "${resources.jobs.log_register_agent_job.id}"
 
         - task_key: run_deploy_agent
           depends_on:
             - task_key: run_log_register_agent
           run_job_task:
-            job_id: ${resources.jobs.deploy_agent_job.id}
+            job_id: "${resources.jobs.deploy_agent_job.id}"

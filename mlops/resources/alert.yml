@@ -32,5 +32,5 @@ resources:
       schedule:
         quartz_cron_schedule: "0 0 10 * * ?"
         timezone_id: Europe/Amsterdam
-        pause_status: ${var.schedule_pause_status}
-      warehouse_id: ${resources.sql_warehouses.hotel_booking_sql_warehouse.id}
+        pause_status: "${var.schedule_pause_status}"
+      warehouse_id: "${resources.sql_warehouses.hotel_booking_sql_warehouse.id}"

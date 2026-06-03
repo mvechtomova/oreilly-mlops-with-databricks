@@ -3,7 +3,6 @@ from databricks.sdk.service.serving import (
     AiGatewayConfig,
     AiGatewayInferenceTableConfig,
     EndpointCoreConfigInput,
-    EndpointTag,
     ServedEntityInput,
 )
 
@@ -11,7 +10,7 @@ from databricks.sdk.service.serving import (
 def serve_model(
     entity_name: str,
     entity_version: str,
-    tags: dict,
+    budget_policy_id: str,
     endpoint_name: str,
     catalog_name: str,
     schema_name: str,
@@ -50,7 +49,7 @@ def serve_model(
                 served_entities=served_entities,
             ),
             ai_gateway=ai_gateway_cfg,
-            tags=[EndpointTag.from_dict(tags)],
+            budget_policy_id=budget_policy_id,
         )
     else:
         workspace.serving_endpoints.update_config(

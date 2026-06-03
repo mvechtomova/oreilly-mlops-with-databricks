@@ -29,7 +29,7 @@ def run_serve_model(mocker):
         serve_model(
             entity_name="mlops_dev.hotel_booking.model",
             entity_version="1",
-            tags={"key": "project", "value": "hotel-booking"},
+            budget_policy_id="budget-123",
             endpoint_name="hotel-booking-endpoint",
             catalog_name="mlops_dev",
             schema_name="hotel_booking",
@@ -44,6 +44,11 @@ def test_creates_endpoint_when_absent(run_serve_model) -> None:
     workspace = run_serve_model(existing_names=["some-other-endpoint"])
     workspace.serving_endpoints.create.assert_called_once()
     workspace.serving_endpoints.update_config.assert_not_called()
+    # the budget policy is attached at creation (serverless cost attribution)
+    assert (
+        workspace.serving_endpoints.create.call_args.kwargs["budget_policy_id"]
+        == "budget-123"
+    )
 
 
 def test_updates_endpoint_when_present(run_serve_model) -> None:

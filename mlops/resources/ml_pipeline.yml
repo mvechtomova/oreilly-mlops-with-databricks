@@ -5,7 +5,7 @@ resources:
       schedule:
         quartz_cron_expression: "0 0 6 ? * MON"
         timezone_id: "Europe/Amsterdam"
-        pause_status: ${var.schedule_pause_status}
+        pause_status: "${var.schedule_pause_status}"
       tags:
         project_name: "hotel-booking"
       environments:
@@ -23,9 +23,9 @@ resources:
             parameters:
               - "common"
               - "--root_path"
-              - ${workspace.root_path}
+              - "${workspace.root_path}"
               - "--env"
-              - ${bundle.target}
+              - "${bundle.target}"
 
         - task_key: "train_model"
           environment_key: default

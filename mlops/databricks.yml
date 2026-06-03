@@ -25,6 +25,7 @@ variables:
 sync:
   include:
     - dist/*
+
 include:
   - resources/*
 
@@ -34,24 +35,18 @@ targets:
     mode: development
     workspace:
       host: https://adb-971256932836835.15.azuredatabricks.net
-      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}
-    # artifacts:
-    #   default:
-    #     type: whl
-    #     build: uv build
-    #     path: .
-    #     dynamic_version: true
+      root_path: "/Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}"
 
   acc:
     workspace:
       host: https://adb-971256932836835.15.azuredatabricks.net
-      root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
+      root_path: "/Shared/.bundle/${bundle.target}/${bundle.name}"
     variables:
       schedule_pause_status: PAUSED
 
   prd:
     workspace:
       host: https://adb-971256932836835.15.azuredatabricks.net
-      root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
+      root_path: "/Shared/.bundle/${bundle.target}/${bundle.name}"
     variables:
       schedule_pause_status: UNPAUSED
