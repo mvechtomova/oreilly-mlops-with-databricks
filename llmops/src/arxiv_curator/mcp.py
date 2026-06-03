@@ -17,10 +17,11 @@ class ToolInfo(BaseModel):
     spec: dict
     exec_fn: Callable
 
+
 def create_managed_exec_fn(
     server_url: str, tool_name: str, w: WorkspaceClient
 ) -> Callable:
-    def exec_fn(**kwargs):
+    def exec_fn(**kwargs: object) -> str:
         client = DatabricksMCPClient(server_url=server_url, workspace_client=w)
         response = client.call_tool(tool_name, kwargs)
         return "".join([c.text for c in response.content])

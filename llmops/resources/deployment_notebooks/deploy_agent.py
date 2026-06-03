@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 from databricks import agents
 from databricks.sdk import WorkspaceClient
 from mlflow import MlflowClient
@@ -10,12 +11,12 @@ git_sha = get_widget("git_sha", "local")
 env = get_widget("env", "dev")
 secret_scope = "arxiv-agent-scope"
 
-cfg = ProjectConfig.from_yaml("../../project_config.yml",
-                              env=env)
+cfg = ProjectConfig.from_yaml("../../project_config.yml", env=env)
 
 model_name = f"{cfg.catalog}.{cfg.schema}.arxiv_agent"
-model_version = MlflowClient().get_model_version_by_alias(
-    model_name, "latest-model").version
+model_version = (
+    MlflowClient().get_model_version_by_alias(model_name, "latest-model").version
+)
 endpoint_name = "arxiv-agent-endpoint"
 workspace = WorkspaceClient()
 

@@ -9,9 +9,9 @@ polite_tone_guideline = Guidelines(
     guidelines=[
         "The response must use a polite and professional tone throughout",
         "The response should be friendly and helpful without being condescending",
-        "The response must avoid any dismissive or rude language"
+        "The response must avoid any dismissive or rude language",
     ],
-    model="databricks:/databricks-gpt-oss-120b"
+    model="databricks:/databricks-gpt-oss-120b",
 )
 
 hook_in_post_guideline = Guidelines(
@@ -19,9 +19,9 @@ hook_in_post_guideline = Guidelines(
     guidelines=[
         "The response must start with an engaging hook that captures attention",
         "The opening should make the reader want to continue reading",
-        "The response should have a compelling introduction before diving into details"
+        "The response should have a compelling introduction before diving into details",
     ],
-    model="databricks:/databricks-gpt-oss-120b"
+    model="databricks:/databricks-gpt-oss-120b",
 )
 
 
@@ -53,10 +53,7 @@ def evaluate_agent(
     )
 
     with open(eval_inputs_path) as f:
-        eval_data = [
-            {"inputs": {"question": line.strip()}}
-            for line in f if line.strip()
-        ]
+        eval_data = [{"inputs": {"question": line.strip()}} for line in f if line.strip()]
 
     def predict_fn(question: str) -> str:
         request = {"input": [{"role": "user", "content": question}]}

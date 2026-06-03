@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 
 # Project
 #  └── Branches (main, development, staging, etc.)
@@ -92,8 +93,7 @@ test_messages = [
 with psycopg.connect(conn_string) as conn:
     for msg in test_messages:
         conn.execute(
-            "INSERT INTO session_messages (session_id, message_data) "
-            "VALUES (%s, %s)",
+            "INSERT INTO session_messages (session_id, message_data) VALUES (%s, %s)",
             (test_session_id, json.dumps(msg)),
         )
 

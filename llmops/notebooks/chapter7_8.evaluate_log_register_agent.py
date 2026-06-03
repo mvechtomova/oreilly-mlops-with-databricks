@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 import random
 from datetime import datetime
 
@@ -39,8 +40,7 @@ agent = ArxivAgent(
 # COMMAND ----------
 # Load evaluation inputs
 with open("../eval_inputs.txt") as f:
-    eval_data = [{"inputs": {
-        "question": line.strip()}} for line in f if line.strip()]
+    eval_data = [{"inputs": {"question": line.strip()}} for line in f if line.strip()]
 
 
 def predict_fn(question: str) -> str:
@@ -55,9 +55,7 @@ def predict_fn(question: str) -> str:
 results = mlflow.genai.evaluate(
     predict_fn=predict_fn,
     data=eval_data,
-    scorers=[word_count_check,
-             polite_tone_guideline,
-             hook_in_post_guideline]
+    scorers=[word_count_check, polite_tone_guideline, hook_in_post_guideline],
 )
 
 # COMMAND ----------
@@ -65,8 +63,7 @@ results = mlflow.genai.evaluate(
 resources = [
     DatabricksServingEndpoint(endpoint_name=cfg.llm_endpoint),
     DatabricksGenieSpace(genie_space_id=cfg.genie_space_id),
-    DatabricksVectorSearchIndex(
-        index_name=f"{cfg.catalog}.{cfg.schema}.arxiv_index"),
+    DatabricksVectorSearchIndex(index_name=f"{cfg.catalog}.{cfg.schema}.arxiv_index"),
     DatabricksTable(table_name=f"{cfg.catalog}.{cfg.schema}.arxiv_papers"),
     DatabricksSQLWarehouse(warehouse_id=cfg.warehouse_id),
     DatabricksServingEndpoint(endpoint_name="databricks-bge-large-en"),
@@ -79,8 +76,7 @@ request_id = f"req-{timestamp}-{random.randint(100000, 999999)}"
 
 test_request = {
     "input": [
-        {"role": "user",
-         "content": "What are recent papers about LLMs and reasoning?"}
+        {"role": "user", "content": "What are recent papers about LLMs and reasoning?"}
     ],
     "custom_inputs": {
         "session_id": session_id,
@@ -89,21 +85,20 @@ test_request = {
 }
 
 model_config = {
-        "catalog": cfg.catalog,
-        "schema": cfg.schema,
-        "genie_space_id": cfg.genie_space_id,
-        "system_prompt": cfg.system_prompt,
-        "llm_endpoint": cfg.llm_endpoint,
-        "lakebase_project_id": cfg.lakebase_project_id,
-    }
+    "catalog": cfg.catalog,
+    "schema": cfg.schema,
+    "genie_space_id": cfg.genie_space_id,
+    "system_prompt": cfg.system_prompt,
+    "llm_endpoint": cfg.llm_endpoint,
+    "lakebase_project_id": cfg.lakebase_project_id,
+}
 
 git_sha = "abc"
 run_id = "unset"
 
-ts = ts = datetime.now().strftime('%Y-%m-%d')
+ts = ts = datetime.now().strftime("%Y-%m-%d")
 with mlflow.start_run(
-    run_name=f"arxiv-agent-{ts}",
-    tags={"git_sha": git_sha, "run_id": run_id}
+    run_name=f"arxiv-agent-{ts}", tags={"git_sha": git_sha, "run_id": run_id}
 ) as run:
     model_info = mlflow.pyfunc.log_model(
         name="agent",
@@ -122,7 +117,7 @@ registered_model = mlflow.register_model(
     model_uri=model_info.model_uri,
     name=model_name,
     tags={"git_sha": git_sha, "run_id": run_id},
-    env_pack="databricks_model_serving"
+    env_pack="databricks_model_serving",
 )
 
 # COMMAND ----------

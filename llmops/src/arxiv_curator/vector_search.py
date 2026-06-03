@@ -29,8 +29,8 @@ class VectorSearchManager:
         self.config = config
         self.endpoint_name = endpoint_name
         self.embedding_model = embedding_model
-        self.catalog_name = config.catalog_name
-        self.schema_name = config.schema_name
+        self.catalog_name = config.catalog
+        self.schema_name = config.schema
 
         self.client = VectorSearchClient()
         self.index_name = f"{self.catalog_name}.{self.schema_name}.arxiv_index"
@@ -40,11 +40,7 @@ class VectorSearchManager:
         Create vector search endpoint if it doesn't already exist.
         Uses STANDARD endpoint type.
         """
-        endpoint_exists = any(
-            item.name == self.endpoint_name for item in self.client.list_endpoints()
-        )
-
-        if not endpoint_exists:
+        if not self.client.endpoint_exists(self.endpoint_name):
             logger.info(f"Creating vector search endpoint: {self.endpoint_name}")
             self.client.create_endpoint_and_wait(
                 name=self.endpoint_name, endpoint_type="STANDARD"
@@ -53,7 +49,7 @@ class VectorSearchManager:
         else:
             logger.info(f"Vector search endpoint already exists: {self.endpoint_name}")
 
-    def create_or_get_index(self) -> Any:
+    def create_or_get_index(self) -> Any:  # noqa: ANN401
         """
         Create delta sync index if it doesn't exist, or get existing index.
         The index is created on the arxiv_chunks table with automatic
@@ -64,12 +60,9 @@ class VectorSearchManager:
         """
         self.create_endpoint_if_not_exists()
 
-        index_exists = any(
-            item.name == self.index_name
-            for item in self.client.list_indexes(self.endpoint_name)
-        )
-
-        if not index_exists:
+        if not self.client.index_exists(
+            endpoint_name=self.endpoint_name, index_name=self.index_name
+        ):
             logger.info(f"Creating vector search index: {self.index_name}")
             source_table = f"{self.catalog_name}.{self.schema_name}.arxiv_chunks"
 

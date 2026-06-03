@@ -8,7 +8,7 @@ resources:
       auto_stop_mins: 5
       warehouse_type: PRO
       tags:
-        custom_tags: 
+        custom_tags:
         - key: "project"
         - value: arxiv-curator"
   dashboards:

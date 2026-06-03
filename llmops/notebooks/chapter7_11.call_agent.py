@@ -1,9 +1,10 @@
 # Databricks notebook source
+# ruff: noqa
 import random
 from datetime import datetime
+
 from databricks.sdk import WorkspaceClient
 from openai import OpenAI
-
 
 workspace = WorkspaceClient()
 host = workspace.config.host
@@ -25,10 +26,12 @@ response = client.responses.create(
     input=[
         {"role": "user", "content": "What are recent papers about LLMs and reasoning?"}
     ],
-    extra_body={"custom_inputs": {
-        "session_id": session_id,
-        "request_id": request_id,
-    }}
+    extra_body={
+        "custom_inputs": {
+            "session_id": session_id,
+            "request_id": request_id,
+        }
+    },
 )
 
 print(response)

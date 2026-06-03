@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 import mlflow
 from mlflow.genai.scorers import Guidelines
 
@@ -16,7 +17,7 @@ escalation_guidelines = Guidelines(
         "When a user indicates previous attempts failed, the response must "
         "acknowledge their efforts and either escalate or offer a new approach"
     ],
-    model="databricks:/databricks-gpt-oss-120b"
+    model="databricks:/databricks-gpt-oss-120b",
 )
 
 data = [
@@ -63,14 +64,14 @@ mlflow.genai.evaluate(data=data, scorers=[escalation_judge])
 
 # COMMAND ----------
 experiment_id = mlflow.search_experiments(
-    filter_string="name='/Shared/make-judge-example'")[0].experiment_id
+    filter_string="name='/Shared/make-judge-example'"
+)[0].experiment_id
 
 from mlflow.genai.judges.optimizers import SIMBAAlignmentOptimizer
 
 # Retrieve traces with both judge and human assessments
 traces_for_alignment = mlflow.search_traces(
-    experiment_ids=[experiment_id],
-    return_type="list"
+    experiment_ids=[experiment_id], return_type="list"
 )
 
 # Filter for traces with both judge and human feedback
@@ -82,9 +83,7 @@ for trace in traces_for_alignment:
     if has_judge and has_human:
         valid_traces.append(trace)
 
-optimizer = SIMBAAlignmentOptimizer(
-    model="databricks:/databricks-gpt-oss-120b"
-)
+optimizer = SIMBAAlignmentOptimizer(model="databricks:/databricks-gpt-oss-120b")
 
 # Align the judge based on human feedback
 aligned_judge = escalation_judge.align(optimizer, valid_traces)

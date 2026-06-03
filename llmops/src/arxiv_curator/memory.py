@@ -24,7 +24,8 @@ class LakebaseMemory:
         """Build connection string for Lakebase.
 
         Supports two authentication modes:
-        - SPN (production): Needs LAKEBASE_SP_CLIENT_ID, LAKEBASE_SP_CLIENT_SECRET, LAKEBASE_SP_HOST
+        - SPN (production): Needs LAKEBASE_SP_CLIENT_ID,
+          LAKEBASE_SP_CLIENT_SECRET, LAKEBASE_SP_HOST
         - User (local testing): Uses default WorkspaceClient auth
         """
         # Use dedicated Lakebase SPN env vars to avoid overriding
@@ -98,9 +99,7 @@ class LakebaseMemory:
             logger.warning(f"Failed to load session messages: {e}")
             return []
 
-    def save_messages(
-        self, session_id: str, messages: list[dict[str, Any]]
-    ) -> None:
+    def save_messages(self, session_id: str, messages: list[dict[str, Any]]) -> None:
         """Append messages to a session."""
         try:
             with self._get_pool().connection() as conn:

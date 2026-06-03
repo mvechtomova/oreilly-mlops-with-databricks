@@ -65,13 +65,15 @@ class ArxivAgent(ResponsesAgent):
 
         # Create tools from config
         host = self.workspace_client.config.host
-        tools = asyncio.run(create_mcp_tools(
-            w=self.workspace_client,
-            url_list=[
-                f"{host}/api/2.0/mcp/vector-search/{catalog}/{schema}",
-                f"{host}/api/2.0/mcp/genie/{genie_space_id}",
-            ],
-        ))
+        tools = asyncio.run(
+            create_mcp_tools(
+                w=self.workspace_client,
+                url_list=[
+                    f"{host}/api/2.0/mcp/vector-search/{catalog}/{schema}",
+                    f"{host}/api/2.0/mcp/genie/{genie_space_id}",
+                ],
+            )
+        )
         self._tools_dict = {tool.name: tool for tool in tools}
 
     def get_tool_specs(self) -> list[dict]:
@@ -79,7 +81,7 @@ class ArxivAgent(ResponsesAgent):
         return [tool_info.spec for tool_info in self._tools_dict.values()]
 
     @mlflow.trace(span_type=SpanType.TOOL)
-    def execute_tool(self, tool_name: str, args: dict) -> Any:
+    def execute_tool(self, tool_name: str, args: dict) -> Any:  # noqa: ANN401
         """Executes the specified tool with the given arguments."""
         if tool_name not in self._tools_dict:
             available = list(self._tools_dict.keys())
@@ -143,14 +145,13 @@ class ArxivAgent(ResponsesAgent):
         return []
 
     @mlflow.trace(span_type=SpanType.CHAIN, name="memory_save")
-    def save_memory(
-        self, session_id: str, messages: list[dict[str, Any]]
-    ) -> None:
+    def save_memory(self, session_id: str, messages: list[dict[str, Any]]) -> None:
         """Save new messages to Lakebase memory."""
         self.memory.save_messages(session_id, messages)
 
     def _extract_output_items(
-        self, events: list[ResponsesAgentStreamEvent],
+        self,
+        events: list[ResponsesAgentStreamEvent],
     ) -> list[dict[str, Any]]:
         """Extract and serialize output items from stream events."""
         return [
@@ -210,11 +211,11 @@ class ArxivAgent(ResponsesAgent):
             tags={
                 "git_sha": os.getenv("GIT_SHA", "local"),
                 "model_serving_endpoint_name": os.getenv(
-                    "MODEL_SERVING_ENDPOINT_NAME", "local"),
+                    "MODEL_SERVING_ENDPOINT_NAME", "local"
+                ),
                 "model_version": os.getenv("MODEL_VERSION", "local"),
             },
-            metadata=(
-                {"mlflow.trace.session": session_id} if session_id else {}),
+            metadata=({"mlflow.trace.session": session_id} if session_id else {}),
             client_request_id=request_id,
         )
 
@@ -243,8 +244,7 @@ class ArxivAgent(ResponsesAgent):
         request_id = custom.get("request_id")
 
         previous_messages = (
-            self.load_memory(session_id)
-            if session_id and self.memory else []
+            self.load_memory(session_id) if session_id and self.memory else []
         )
 
         request_input = [i.model_dump() for i in request.input]
@@ -255,6 +255,7 @@ class ArxivAgent(ResponsesAgent):
             session_id=session_id,
         )
         yield from events
+
 
 def log_register_agent(
     cfg: ProjectConfig,
@@ -282,9 +283,7 @@ def log_register_agent(
     resources = [
         DatabricksServingEndpoint(endpoint_name=cfg.llm_endpoint),
         DatabricksGenieSpace(genie_space_id=cfg.genie_space_id),
-        DatabricksVectorSearchIndex(
-            index_name=f"{cfg.catalog}.{cfg.schema}.arxiv_index"
-        ),
+        DatabricksVectorSearchIndex(index_name=f"{cfg.catalog}.{cfg.schema}.arxiv_index"),
         DatabricksTable(table_name=f"{cfg.catalog}.{cfg.schema}.arxiv_papers"),
         DatabricksSQLWarehouse(warehouse_id=cfg.warehouse_id),
         DatabricksServingEndpoint(endpoint_name="databricks-bge-large-en"),
@@ -300,10 +299,12 @@ def log_register_agent(
     }
 
     test_request = {
-    "input": [
-        {"role": "user",
-         "content": "What are recent papers about LLMs and reasoning?"}
-    ]
+        "input": [
+            {
+                "role": "user",
+                "content": "What are recent papers about LLMs and reasoning?",
+            }
+        ]
     }
 
     mlflow.set_experiment(cfg.experiment_path)
@@ -328,7 +329,7 @@ def log_register_agent(
         model_uri=model_info.model_uri,
         name=model_name,
         env_pack="databricks_model_serving",
-        tags={"git_sha": git_sha, "run_id": run_id}
+        tags={"git_sha": git_sha, "run_id": run_id},
     )
     logger.info(f"Registered version: {registered_model.version}")
 

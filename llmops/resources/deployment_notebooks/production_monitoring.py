@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 import mlflow
 import pandas as pd
 from loguru import logger
@@ -59,13 +60,13 @@ logger.info(f"New traces to evaluate: {len(traces_pdf)}")
 # COMMAND ----------
 # Build eval input
 
-eval_pdf = pd.DataFrame({
-    "trace_id": traces_pdf["trace_id"],
-    "inputs": traces_pdf["request_preview"].apply(
-        lambda x: {"query": x}
-    ),
-    "outputs": traces_pdf["response_text"],
-})
+eval_pdf = pd.DataFrame(
+    {
+        "trace_id": traces_pdf["trace_id"],
+        "inputs": traces_pdf["request_preview"].apply(lambda x: {"query": x}),
+        "outputs": traces_pdf["response_text"],
+    }
+)
 
 # COMMAND ----------
 # Run word_count_check on all traces and log feedback
@@ -94,9 +95,7 @@ logger.info(f"Logged word_count_check for {len(eval_pdf)} traces")
 
 sample_size = max(1, int(len(eval_pdf) * 0.1))
 sampled_pdf = eval_pdf.sample(n=sample_size)
-logger.info(
-    f"Sampled {len(sampled_pdf)} traces for LLM-based evaluation"
-)
+logger.info(f"Sampled {len(sampled_pdf)} traces for LLM-based evaluation")
 
 llm_result = mlflow.genai.evaluate(
     data=sampled_pdf[["inputs", "outputs"]],
@@ -207,7 +206,7 @@ logger.info(f"View {aggregated_view} created")
 
 # COMMAND ----------
 import mlflow
-from mlflow.genai.scorers.guardrails import ToxicLanguage, DetectPII
+from mlflow.genai.scorers.guardrails import DetectPII, ToxicLanguage
 
 eval_dataset = [
     {

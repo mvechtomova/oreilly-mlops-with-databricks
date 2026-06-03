@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 class ProjectConfig(BaseModel):
     """Configuration for the arxiv curator project."""
+
     catalog: str
     schema: str
     volume: str
@@ -17,9 +18,9 @@ class ProjectConfig(BaseModel):
     lakebase_project_id: str | None = None
 
     @classmethod
-    def from_yaml(cls: "ProjectConfig",
-                  config_path: str,
-                  env: str = "dev") -> "ProjectConfig":
+    def from_yaml(
+        cls: "ProjectConfig", config_path: str, env: str = "dev"
+    ) -> "ProjectConfig":
         """
         Load configuration from YAML file.
 
@@ -41,7 +42,5 @@ class ProjectConfig(BaseModel):
         env_config["system_prompt"] = config_dict["system_prompt"]
         env_config["experiment_path"] = config_dict["experiment_path"]
         env_config["usage_policy_id"] = config_dict.get("usage_policy_id")
-        env_config["lakebase_project_id"] = config_dict.get(
-            "lakebase_project_id"
-        )
+        env_config["lakebase_project_id"] = config_dict.get("lakebase_project_id")
         return cls(**env_config)

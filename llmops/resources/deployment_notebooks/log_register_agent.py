@@ -1,6 +1,6 @@
 # Databricks notebook source
+# ruff: noqa
 import mlflow
-from databricks.sdk.runtime import dbutils
 
 from arxiv_curator.agent import log_register_agent
 from arxiv_curator.config import ProjectConfig
@@ -11,19 +11,15 @@ env = get_widget("env", "dev")
 git_sha = get_widget("git_sha", "local")
 run_id = get_widget("run_id", "local")
 
-cfg = ProjectConfig.from_yaml(
-    config_path="../../project_config.yml",
-    env=env)
+cfg = ProjectConfig.from_yaml(config_path="../../project_config.yml", env=env)
 
 mlflow.set_experiment(cfg.experiment_path)
 
 model_name = f"{cfg.catalog}.{cfg.schema}.arxiv_agent"
 
 # COMMAND ----------
-#Run evaluation
-results = evaluate_agent(
-    cfg,
-    eval_inputs_path="../../eval_inputs.txt")
+# Run evaluation
+results = evaluate_agent(cfg, eval_inputs_path="../../eval_inputs.txt")
 
 # COMMAND ----------
 # Log and register model

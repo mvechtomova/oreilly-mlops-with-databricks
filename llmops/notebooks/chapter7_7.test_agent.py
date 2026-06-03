@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 
 import random
 from datetime import datetime
@@ -22,7 +23,7 @@ agent = ArxivAgent(
     catalog=cfg.catalog,
     schema=cfg.schema,
     genie_space_id=cfg.genie_space_id,
-    lakebase_project_id=cfg.lakebase_project_id
+    lakebase_project_id=cfg.lakebase_project_id,
 )
 
 mlflow.models.set_model(agent)
@@ -34,8 +35,7 @@ session_id = f"s-{timestamp}-{random.randint(100000, 999999)}"
 
 first_request = {
     "input": [
-        {"role": "user",
-         "content": "What are recent papers about LLMs and reasoning?"}
+        {"role": "user", "content": "What are recent papers about LLMs and reasoning?"}
     ],
     "custom_inputs": {
         "session_id": session_id,
@@ -50,8 +50,10 @@ print(result_1.model_dump(exclude_none=True))
 # Second request — same session, references the first conversation
 second_request = {
     "input": [
-        {"role": "user",
-         "content": "Rewrite that post focusing on chain-of-thought prompting."}
+        {
+            "role": "user",
+            "content": "Rewrite that post focusing on chain-of-thought prompting.",
+        }
     ],
     "custom_inputs": {
         "session_id": session_id,
@@ -65,4 +67,4 @@ print(result_2.model_dump(exclude_none=True))
 
 # COMMAND ----------
 for chunk in agent.predict_stream(second_request):
-   print(chunk.model_dump(exclude_none=True))
+    print(chunk.model_dump(exclude_none=True))

@@ -1,11 +1,10 @@
 import os
 
 import mlflow
+from databricks.sdk.runtime import dbutils
 from delta.tables import DeltaTable
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession
-
-from databricks.sdk.runtime import dbutils
 
 
 def get_widget(name: str, default: str | None = None) -> str | None:
@@ -33,9 +32,8 @@ def set_mlflow_tracking_uri() -> None:
         mlflow.set_tracking_uri(f"databricks://{profile}")
         mlflow.set_registry_uri(f"databricks-uc://{profile}")
 
-def get_delta_table_version(
-    spark: SparkSession, full_table_name: str
-) -> str:
+
+def get_delta_table_version(spark: SparkSession, full_table_name: str) -> str:
     """
     Get the latest version of a Delta table.
 

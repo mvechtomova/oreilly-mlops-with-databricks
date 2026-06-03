@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 from databricks import agents
 from databricks.sdk import WorkspaceClient
 from mlflow import MlflowClient
@@ -11,8 +12,9 @@ model_name = f"{cfg.catalog}.{cfg.schema}.arxiv_agent"
 endpoint_name = "arxiv-agent-endpoint"
 secret_scope = "arxiv-agent-scope"
 
-model_version = MlflowClient().get_model_version_by_alias(
-    model_name, "latest-model").version
+model_version = (
+    MlflowClient().get_model_version_by_alias(model_name, "latest-model").version
+)
 
 workspace = WorkspaceClient()
 experiment = MlflowClient().get_experiment_by_name(cfg.experiment_path)

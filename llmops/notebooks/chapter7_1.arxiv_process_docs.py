@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 
 from loguru import logger
 from pyspark.sql import SparkSession
@@ -14,15 +15,10 @@ spark = SparkSession.builder.getOrCreate()
 cfg = ProjectConfig.from_yaml("../project_config.yml")
 catalog = cfg.catalog
 schema = cfg.schema
-volume= cfg.volume
+volume = cfg.volume
 
-spark.sql(
-    f"CREATE SCHEMA IF NOT EXISTS {catalog}.{schema}"
-)
-spark.sql(
-    f"CREATE VOLUME IF NOT EXISTS "
-    f"{catalog}.{schema}.{volume}"
-)
+spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog}.{schema}")
+spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.{schema}.{volume}")
 
 # COMMAND ----------
 
@@ -34,8 +30,9 @@ spark.sql(
 # The expected format for date is [YYYYMMDDTTTT+TO+YYYYMMDDTTTT]
 # were the TTTT is provided in 24 hour time to the minute,
 # in GMT.
-import arxiv
 import time
+
+import arxiv
 
 client = arxiv.Client()
 metadata_table = f"{catalog}.{schema}.arxiv_papers"
@@ -48,16 +45,12 @@ if spark.catalog.tableExists(metadata_table):
         """).collect()[0][0]
     )
 else:
-    start = time.strftime(
-        "%Y%m%d%H%M", (time.gmtime(time.time() - 24 * 3600 * 3))
-    )
+    start = time.strftime("%Y%m%d%H%M", (time.gmtime(time.time() - 24 * 3600 * 3)))
 
 end = time.strftime("%Y%m%d%H%M", time.gmtime())
 
 # COMMAND ----------
-search = arxiv.Search(
-    query=f"cat:cs.AI AND submittedDate:[{start} TO {end}]"
-)
+search = arxiv.Search(query=f"cat:cs.AI AND submittedDate:[{start} TO {end}]")
 papers = client.results(search)
 
 # COMMAND ----------
@@ -68,7 +61,7 @@ papers = client.results(search)
 import os
 
 records = []
-pdf_dir = (f"/Volumes/{catalog}/{schema}/{volume}/{end}")
+pdf_dir = f"/Volumes/{catalog}/{schema}/{volume}/{end}"
 os.makedirs(pdf_dir, exist_ok=True)
 
 for paper in papers:
@@ -76,9 +69,7 @@ for paper in papers:
 
     # download PDF
     try:
-        paper.download_pdf(
-            dirpath=pdf_dir, filename=f"{paper_id}.pdf"
-        )
+        paper.download_pdf(dirpath=pdf_dir, filename=f"{paper_id}.pdf")
         # collect metadata (keep datetime intact)
         records.append(
             {
@@ -94,39 +85,33 @@ for paper in papers:
         )
         break
     except Exception:
-        logger.warning(
-            f"Paper {paper_id} was not succesfully processed."
-                )
+        logger.warning(f"Paper {paper_id} was not succesfully processed.")
         pass
-    time.sleep(3) # to avoid rate limiting
+    time.sleep(3)  # to avoid rate limiting
 
 # COMMAND ----------
 
 if len(records) > 0:
     metadata_schema = T.StructType(
         [
-        T.StructField("paper_id", T.StringType(), False),
-        T.StructField("title", T.StringType(), True),
-        T.StructField(
-            "authors", T.ArrayType(T.StringType()), True
-        ),
-        T.StructField("summary", T.StringType(), True),
-        T.StructField("pdf_url", T.StringType(), True),
-        T.StructField("published", T.LongType(), True),
-        T.StructField("processed", T.LongType(), True),
-        T.StructField("volume_path", T.StringType(), True),
+            T.StructField("paper_id", T.StringType(), False),
+            T.StructField("title", T.StringType(), True),
+            T.StructField("authors", T.ArrayType(T.StringType()), True),
+            T.StructField("summary", T.StringType(), True),
+            T.StructField("pdf_url", T.StringType(), True),
+            T.StructField("published", T.LongType(), True),
+            T.StructField("processed", T.LongType(), True),
+            T.StructField("volume_path", T.StringType(), True),
         ]
     )
 
     # create DataFrame
-    metadata_df = spark.createDataFrame(
-        records, schema=metadata_schema).withColumn(
+    metadata_df = spark.createDataFrame(records, schema=metadata_schema).withColumn(
         "ingest_ts", F.current_timestamp()
     )
 
     # write to UC
-    metadata_df.write.format("delta").mode("append").saveAsTable(
-        f"{metadata_table}")
+    metadata_df.write.format("delta").mode("append").saveAsTable(f"{metadata_table}")
 
     spark.sql(
         f"""
@@ -152,19 +137,20 @@ if len(records) > 0:
     )
 
 # COMMAND ----------
-import re
 import json
-from pyspark.sql.types import (
-    ArrayType,
-    StringType,
-    StructField,
-    StructType,
-)
+import re
+
 from pyspark.sql.functions import (
     col,
     concat_ws,
     explode,
     udf,
+)
+from pyspark.sql.types import (
+    ArrayType,
+    StringType,
+    StructField,
+    StructType,
 )
 
 
@@ -180,6 +166,7 @@ def extract_chunks(parsed_content_json: str) -> list[tuple[str, str]]:
             chunks.append((chunk_id, content))
     return chunks
 
+
 chunk_schema = ArrayType(
     StructType(
         [
@@ -191,13 +178,12 @@ chunk_schema = ArrayType(
 extract_chunks_udf = udf(extract_chunks, chunk_schema)
 
 
-df = spark.table(f"{catalog}.{schema}.ai_parsed_docs").where(
-    f"processed = {end}"
-)
+df = spark.table(f"{catalog}.{schema}.ai_parsed_docs").where(f"processed = {end}")
 
 
 def extract_paper_id(path):
     return path.replace(".pdf", "").split("/")[-1]
+
 
 extract_paper_id_udf = udf(extract_paper_id, StringType())
 
@@ -241,9 +227,7 @@ chunks_df = (
         col("paper_id"),
         col("chunk.chunk_id").alias("chunk_id"),
         clean_chunk_udf(col("chunk.content")).alias("text"),
-        concat_ws(
-            "_", col("paper_id"), col("chunk.chunk_id")
-        ).alias("id"),
+        concat_ws("_", col("paper_id"), col("chunk.chunk_id")).alias("id"),
     )
     .join(metadata_df, "paper_id", "left")
 )

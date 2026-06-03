@@ -1,4 +1,5 @@
 # Databricks notebook source
+# ruff: noqa
 import yaml
 from loguru import logger
 from pyspark.sql import SparkSession
@@ -10,8 +11,7 @@ from arxiv_curator.vector_search import VectorSearchManager
 
 env = get_widget("env", "dev")
 
-project_config = ProjectConfig.from_yaml(
-    "../../project_config.yml", env=env)
+project_config = ProjectConfig.from_yaml("../../project_config.yml", env=env)
 logger.info("Configuration loaded:")
 logger.info(yaml.dump(project_config, default_flow_style=False))
 
@@ -19,9 +19,7 @@ logger.info(yaml.dump(project_config, default_flow_style=False))
 spark = SparkSession.builder.getOrCreate()
 
 # Process data
-data_processor = DataProcessor(
-    config=project_config,
-    spark=spark)
+data_processor = DataProcessor(config=project_config, spark=spark)
 records = data_processor.download_and_store_papers()
 
 if records is None:
