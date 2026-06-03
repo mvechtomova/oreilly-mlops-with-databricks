@@ -21,7 +21,7 @@ After every change to `src/` (or anything tests cover), run both before calling 
 - Tests: `uv run --extra dev pytest tests/` — all must pass.
 - Lint + format: `cd mlops && uv run pre-commit run --all-files`. Pre-commit owns ruff check + ruff-format (pinned in `.pre-commit-config.yaml`); it auto-fixes what it can and reports the rest. It must be run from `mlops/` (that is where the config resolves) and end clean. Line length stays within 90 (`[tool.ruff] line-length`).
 
-When the change touches a Databricks/MLflow SDK call, **verify the API against the installed SDK version** (inspect signatures/enums/dataclass fields, e.g. `databricks-sdk` 0.85.0's `data_quality` API) and **update the tests to match** — a renamed param, moved module, or new required field (e.g. `Refresh` requires `object_type`/`object_id`) should be caught by a unit test, not at runtime. If no test covers the changed code, add one (mock `WorkspaceClient`; see [mlops/tests/test_monitoring.py](mlops/tests/test_monitoring.py) and [mlops/tests/test_serving.py](mlops/tests/test_serving.py)).
+When the change touches a Databricks/MLflow SDK call, **verify the API against the installed SDK version** (inspect signatures/enums/dataclass fields, e.g. `databricks-sdk` 0.102.0's `data_quality` API) and **update the tests to match** — a renamed param, moved module, or new required field (e.g. `Refresh` requires `object_type`/`object_id`) should be caught by a unit test, not at runtime. If no test covers the changed code, add one (mock `WorkspaceClient`; see [mlops/tests/test_monitoring.py](mlops/tests/test_monitoring.py) and [mlops/tests/test_serving.py](mlops/tests/test_serving.py)).
 
 ### Respect the line length
 
@@ -32,7 +32,6 @@ Keep every line within the ruff `line-length` (90) set in [mlops/pyproject.toml]
 Prefer a file-level `# ruff: noqa: ...` directive over a `[tool.ruff.lint.per-file-ignores]` entry, so the suppression sits next to the code it covers. The directive needs explicit rule codes, not a category prefix: use `# ruff: noqa: ANN001, ANN201, ANN202` (not `# ruff: noqa: ANN`), and keep it on its own line with no trailing comment. Test modules use exactly this to leave fixtures (`mocker`, `cfg`, ...) un-annotated.
 
 Exceptions that get a *blanket* `# ruff: noqa` (no codes) because they are not lint-clean by design: every notebook (line 2, right under `# Databricks notebook source` — book code, not enforced), the Databricks job scripts that reach for the injected `dbutils` global (use `# ruff: noqa: F821` there), and the `mlops/typings/__builtins__.pyi` runtime stub. ruff-format still reformats notebooks, which is fine.
-
 
 ### Always quote bundle variable references in YAML
 
@@ -86,7 +85,7 @@ Creating serverless resources (feature specs, online stores, serving endpoints, 
 
 - Online stores must reach the `AVAILABLE` state before you can publish to them, so poll `fe.get_online_store(...)` until ready.
 - The budget/usage policy id (`cfg.usage_policy_id`) must be passed to ALL serverless resources, via `budget_policy_id=...` (serving endpoints) or `usage_policy_id=...` (online stores). Omitting it is an easy thing to miss.
-- `EndpointCoreConfigInput` requires `name` under databricks-sdk 0.85.0: pass `name=endpoint_name` inside it, e.g. `EndpointCoreConfigInput(name=endpoint_name, served_entities=...)`. Omitting it raises `TypeError: EndpointCoreConfigInput.__init__() missing 1 required positional argument: 'name'`. This bit us in [mlops/src/hotel_booking/models/serving.py](mlops/src/hotel_booking/models/serving.py) and the chapter 4 serving notebooks.
+- `EndpointCoreConfigInput` requires `name` under databricks-sdk 0.102.0: pass `name=endpoint_name` inside it, e.g. `EndpointCoreConfigInput(name=endpoint_name, served_entities=...)`. Omitting it raises `TypeError: EndpointCoreConfigInput.__init__() missing 1 required positional argument: 'name'`. This bit us in [mlops/src/hotel_booking/models/serving.py](mlops/src/hotel_booking/models/serving.py) and the chapter 4 serving notebooks.
 
 ### Chapter 5: override the job cluster with an interactive one in `dev` (classic compute)
 

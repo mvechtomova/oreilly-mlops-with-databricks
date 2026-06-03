@@ -4,13 +4,13 @@ dynamic = ["version"]
 description = "Code accompanying MLOps with Databrick O'Reilly book"
 requires-python = ">=3.12, <3.13"
 dependencies = [
-    "mlflow==3.8.1",
+    "mlflow==3.11.1",
     "cffi==1.17.1",
     "cloudpickle==3.1.1",
     "numpy==2.4.0",
     "pandas==2.3.0",
     "pyarrow==22.0.0",
-    "databricks-sdk==0.85.0",
+    "databricks-sdk==0.102.0",
     "scikit-learn==1.7.0",
     "lightgbm==4.6.0",
     "scipy==1.16.0",
