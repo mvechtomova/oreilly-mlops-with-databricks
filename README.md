@@ -37,11 +37,13 @@ resources/
 
 ### [llmops/](llmops/)
 
-Covers **Chapter 7** of the book. Demonstrates LLMOps patterns on Databricks, including building, evaluating, and deploying an LLM-powered agent.
+Covers **Chapters 7-9** of the book. Demonstrates LLMOps patterns on Databricks, including building, evaluating, and deploying an LLM-powered agent.
 
 | Chapter | Topic |
 |---------|-------|
-| 7 | LLMOps — vector search, Genie, MLflow tracing, agent evaluation, and agent deployment |
+| 7 | Foundation models and context engineering — vector search, Genie |
+| 8 | MLflow for GenAI — tracing and agent evaluation |
+| 9 | Monitoring and deployment — agent deployment and production monitoring |
 
 **Bundle resources** ([llmops/resources/](llmops/resources/)) — Declarative Automation Bundle definitions:
 
@@ -72,7 +74,7 @@ Each project uses **Python 3.12** with **uv** for dependency management. See the
 cd mlops
 uv sync --extra dev
 
-# LLMOps project (Chapter 7)
+# LLMOps project (Chapters 7–9)
 cd llmops
 uv sync --extra dev
 ```
