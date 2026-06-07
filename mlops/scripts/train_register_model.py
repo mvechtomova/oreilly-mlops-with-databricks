@@ -44,7 +44,6 @@ sklearn_model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
 eval_data = X_test.copy()
 eval_data[cfg.target] = y_test
 
-# Register by default; only an existing model we don't beat stops us.
 should_register = True
 try:
     mlflow.MlflowClient().get_model_version_by_alias(sklearn_model_name, "latest-model")

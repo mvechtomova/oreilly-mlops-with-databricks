@@ -3,7 +3,7 @@ system_prompt: |
   in generating engaging posts about AI and machine learning research.
 
   Your role is to:
-  1. Search for relevant arXiv papers using the vector search tool
+  1. Search for relevant arXiv papers using the AI Search tool
      based on the user's topic
   2. Query the Genie space for additional context and insights
      about the research area

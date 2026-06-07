@@ -37,9 +37,15 @@ Exceptions that get a *blanket* `# ruff: noqa` (no codes) because they are not l
 
 In Databricks Asset Bundle YAML (`databricks.yml` and everything under `resources/`), always wrap any value that is or contains a `${...}` substitution in double quotes — e.g. `pause_status: "${var.schedule_pause_status}"`, `- "${workspace.root_path}"`, `root_path: "/Shared/.bundle/${bundle.target}/${bundle.name}"`. Unquoted forms also work, but mixing them within a file (the preprocessing task unquoted, the train task quoted) reads as inconsistent in the book. Quote everywhere.
 
-### Tag every job
+### Attribute every job's cost: usage policy for serverless, tag for classic compute
 
-Every job defined under `resources/` must carry a `tags:` block (e.g. `project_name: "hotel-booking"`). For serverless jobs you could attribute cost through a usage/budget policy instead of tagging, but the book also demonstrates jobs on classic compute where that does not apply. Tags work in both scenarios, so we use explicit tags everywhere for consistency. See the `tags:` block in [mlops/resources/ml_pipeline.yml](mlops/resources/ml_pipeline.yml).
+Cost attribution must reach `system.billing.usage.custom_tags` on every job. Two cases, because the two compete:
+
+- **Serverless jobs** carry `budget_policy_id: "${var.usage_policy_id}"` (a job-level field), NOT a `tags:` block. The usage policy injects its own tags into the billing rows. See [mlops/resources/ml_pipeline.yml](mlops/resources/ml_pipeline.yml). **A usage policy is ALWAYS applied to a serverless resource, even when you do not pass one**: if none is set, Databricks auto-assigns the first policy in alphabetical order, and that policy's tags land on your usage. So tagging a serverless job with `project` alone does NOT work, the (auto-applied) policy's `project` tag still wins on the key collision and your tag is silently dropped. The only reliable control is to assign the right policy explicitly; do not also add a same-key `project` tag to a policy-covered resource (it will be ignored). This is confirmed behavior, easy to miss because the job still "has a tag" in the YAML.
+- **Classic-compute jobs** can't take a usage policy, so they keep an explicit `tags:` block with key `project` (e.g. `project: "hotel-booking"`). The only one is the monitoring job in [mlops/resources/ml_monitoring.yml](mlops/resources/ml_monitoring.yml).
+- **SQL warehouses** also keep `custom_tags` (key `project`) because serverless SQL warehouses did not support a usage policy at the time of writing. See [mlops/resources/alert.yml](mlops/resources/alert.yml).
+
+`usage_policy_id` is defined once as a bundle variable in each `databricks.yml` (default matches `project_config.yml`), so the policy id lives in one place per project.
 
 ### Notebook imports: introduce in the cell where first used
 
@@ -112,4 +118,38 @@ The committed [mlops/databricks.yml](mlops/databricks.yml) keeps the `dev` targe
 
 ## LLMOps chapters
 
-_(none yet)_
+### Vector search: endpoint and index creation are async; wait before using them
+
+Creating a vector search endpoint or index returns before the resource is
+`ONLINE`, and `get_index` hands back a usable handle even while the index is
+still `PROVISIONING`/updating. Operating on a not-yet-ready resource (e.g.
+calling `index.sync()`, `similarity_search()`, or the agent querying it right
+after deploy) raises "endpoint/index not ready" errors.
+
+- `VectorSearchManager.create_endpoint_if_not_exists` already waits, via
+  `create_endpoint_and_wait`. But `create_or_get_index` uses plain
+  `create_delta_sync_index` (no wait), so a freshly created index is returned
+  before it is ready. See
+  [llmops/src/arxiv_curator/vector_search.py](llmops/src/arxiv_curator/vector_search.py).
+- Remedy (databricks-vectorsearch 0.66): use
+  `create_delta_sync_index_and_wait`, or call `index.wait_until_ready()` before
+  `sync()`/queries; `client.wait_for_endpoint(...)` is the endpoint equivalent.
+- Related, separate failure: deleting an endpoint does NOT delete its index.
+  `index_exists(endpoint_name=...)` then returns `False` (the endpoint is gone),
+  the code calls `create_delta_sync_index`, and UC rejects the still-existing
+  index name with "UC entity ... already exists". Drop the orphaned index
+  (`client.delete_index(index_name=...)`) before re-creating.
+
+### Trace propagation: agent-framework auth vs an explicit SPN are mutually exclusive
+
+To get production traces flowing to an MLflow experiment, there are two paths, and they must not be mixed. The deciding factor is who authenticates to the experiment, NOT whether you call `agents.deploy` or plain model serving. See [llmops/notebooks/chapter9_2.deploy_agent.py](llmops/notebooks/chapter9_2.deploy_agent.py).
+
+- **Agent-framework auth (default):** call `agents.deploy(...)`. It already authenticates to the MLflow experiment for you (and enables inference tables, creates the UC trace table, and creates the experiment if `MLFLOW_EXPERIMENT_ID` is omitted). It also provisions automatic auth for exactly the resources the agent declared at log/register time via the `resources=[...]` list (the `DatabricksServingEndpoint`, `DatabricksVectorSearchIndex`, `DatabricksGenieSpace`, `DatabricksSQLWarehouse`, `DatabricksTable`, ... in [llmops/notebooks/chapter8_4.evaluate_log_register_agent.py](llmops/notebooks/chapter8_4.evaluate_log_register_agent.py)). This is the auth that breaks: if you set `DATABRICKS_CLIENT_ID` / `DATABRICKS_CLIENT_SECRET` / `DATABRICKS_HOST` in `environment_vars`, they override that framework-managed resource auth, and the agent can no longer reach the resources from its `resources=[...]` list (vector search, Lakebase, Genie, etc.). So in this mode you MUST NOT set those three. Pass only the app-level vars (`GIT_SHA`, `MODEL_VERSION`, `MODEL_SERVING_ENDPOINT_NAME`, `MLFLOW_EXPERIMENT_ID`, and the `LAKEBASE_SP_*` your code reads).
+- **Explicit-SPN auth:** create a service principal, grant it `CAN_EDIT` on the experiment, and supply it via `DATABRICKS_CLIENT_ID` / `DATABRICKS_CLIENT_SECRET` / `DATABRICKS_HOST` plus `ENABLE_MLFLOW_TRACING=true` and `MLFLOW_EXPERIMENT_ID`. Once you take on the SPN yourself, the deployment command (`agents.deploy` or `model_serving`) no longer matters, both work. This is the only way to propagate traces when NOT using the agent framework.
+
+So: either let the framework own auth and never set `DATABRICKS_CLIENT_ID`, or own the SPN yourself and set it everywhere. Half-and-half breaks resource auth.
+
+Two more sharp edges with `agents.deploy`:
+
+- **UC-backed experiments do not work for traces yet.** `agents.deploy` provisions a UC trace table, but if the MLflow experiment is created with UC as its backend, trace propagation does not work at the time of writing. Use a classic (non-UC) experiment so traces land where the auth above makes them work.
+- **Secrets are resolved at deploy time, not pulled live.** Secret references in `environment_vars` (e.g. `f"{{secrets/{secret_scope}/client-secret}}"`) are evaluated once, at the moment of deployment. The running agent does not re-read the scope. So if you rotate a secret and invalidate the old value, the live agent keeps using the stale value and breaks. To rotate safely: write the new secret, REDEPLOY the agent (so it picks up the new value) while the old value is still valid, and only then invalidate the old one.

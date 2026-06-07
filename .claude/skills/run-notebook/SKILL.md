@@ -46,19 +46,16 @@ Look for `resources/<resource_key>.yml` in the project directory. If it already 
 
 ### 5. Create the job resource file
 
-First, read existing resource files in the project's `resources/` directory to determine the project's `tags.project_name` value:
-- `llmops` uses `project_name: "arxiv-curator"`
-- `mlops` uses `project_name: "hotel-booking"`
+Serverless jobs attribute cost through a usage policy, NOT a `tags:` block. A usage policy is always applied to a serverless resource anyway (Databricks auto-assigns the alphabetically-first one if you do not set one, and the policy's tags win over any same-key resource tag), so set the policy explicitly via `budget_policy_id`. Both projects already define a `usage_policy_id` bundle variable in their `databricks.yml`, so reference that.
 
-Create `resources/<resource_key>.yml` with this exact structure (substitute `<resource_key>`, `<job_display_name>`, `<project_name>`, and `<notebook_path>` with the actual values):
+Create `resources/<resource_key>.yml` with this exact structure (substitute `<resource_key>`, `<job_display_name>`, and `<notebook_path>` with the actual values):
 
 ```yaml
 resources:
   jobs:
     <resource_key>:
       name: <job_display_name>
-      tags:
-        project_name: "<project_name>"
+      budget_policy_id: "${var.usage_policy_id}"
 
       environments:
         - environment_key: default
@@ -81,16 +78,20 @@ resources:
 Where:
 - `<resource_key>` = the derived key (e.g. `hello_world_job`)
 - `<job_display_name>` = kebab-case version of the notebook name (e.g. `hello-world`)
-- `<project_name>` = the tag from existing resources (`arxiv-curator` or `hotel-booking`)
 - `<notebook_path>` = notebook path relative to the project directory (e.g. `notebooks/hello_world.py`)
 
-Also add the `git_sha` variable definition to the project's `databricks.yml` if it is not already present:
+Note: `budget_policy_id: "${var.usage_policy_id}"` is referenced as-is, the same for both projects. The differing value lives in each project's `databricks.yml` variable default.
+
+Also add the `git_sha` and `usage_policy_id` variable definitions to the project's `databricks.yml` if they are not already present (the `usage_policy_id` default is the project's policy id, matching `project_config.yml`):
 
 ```yaml
 variables:
   git_sha:
     description: "Git SHA of the deployed commit"
     default: "local"
+  usage_policy_id:
+    description: usage/budget policy id for cost attribution
+    default: "<policy_id>"  # llmops: 686c435d-...  mlops: cdad6f29-...
 ```
 
 ### 6. Deploy the bundle
@@ -118,4 +119,4 @@ Report the output to the user, including any run URL printed by the CLI.
 /run-notebook llmops/notebooks/hello_world.py
 ```
 
-This detects the `llmops` project, derives resource key `hello_world_job`, creates `llmops/resources/hello_world_job.yml` with `project_name: "arxiv-curator"`, then runs `cd llmops && databricks bundle deploy && databricks bundle run hello_world_job`.
+This detects the `llmops` project, derives resource key `hello_world_job`, creates `llmops/resources/hello_world_job.yml` with `budget_policy_id: "${var.usage_policy_id}"`, then runs `cd llmops && databricks bundle deploy && databricks bundle run hello_world_job`.

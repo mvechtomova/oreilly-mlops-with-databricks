@@ -6,15 +6,6 @@ import time
 import arxiv
 from loguru import logger
 from pyspark.sql import SparkSession
-from pyspark.sql import types as T
-from pyspark.sql.functions import (
-    col,
-    concat_ws,
-    current_timestamp,
-    explode,
-    udf,
-)
-from pyspark.sql.types import ArrayType, StringType, StructField, StructType
 
 from arxiv_curator.config import ProjectConfig
 
@@ -44,49 +35,57 @@ class DataProcessor:
         self.volume = config.volume
 
         self.end = time.strftime("%Y%m%d%H%M", time.gmtime())
-        self.pdf_dir = f"/Volumes/{self.catalog}/{self.schema}\
-            /{self.volume}/{self.end}"
+        self.pdf_dir = f"/Volumes/{self.catalog}/{self.schema}/{self.volume}/{self.end}"
         os.makedirs(self.pdf_dir, exist_ok=True)
         self.papers_table = f"{self.catalog}.{self.schema}.arxiv_papers"
         self.parsed_table = f"{self.catalog}.{self.schema}.ai_parsed_docs_table"
 
-    def _get_range_start(self) -> tuple[str, str]:
+    def _get_range_start(self, integration_testing: bool = False) -> str:
         """
         Get start time range for arxiv paper search.
-        If arxiv_papers table exists, uses max(processed) as start.
-        Otherwise, uses 3 days ago as start.
+        If integration_testing is True, always uses 3 days ago as start.
+        Otherwise, if arxiv_papers table exists, uses max(processed) as start,
+        falling back to 3 days ago when the table does not exist.
 
         Returns:
             start string in "YYYYMMDDHHMM" format
         """
 
-        if self.spark.catalog.tableExists(self.papers_table):
+        use_table = not integration_testing and self.spark.catalog.tableExists(
+            self.papers_table
+        )
+        if use_table:
             result = self.spark.sql(f"""
                 SELECT max(processed)
-                FROM {self.apapers_table}
+                FROM {self.papers_table}
             """).collect()
             start = str(result[0][0])
             logger.info(f"Found existing arxiv_papers table. Starting from: {start}")
         else:
             start = time.strftime("%Y%m%d%H%M", time.gmtime(time.time() - 24 * 3600 * 3))
-            logger.info(
-                f"""No existing arxiv_papers table.
-                Starting from 3 days ago: {start}"""
-            )
+            logger.info(f"Starting from 3 days ago: {start}")
         return start
 
     def download_and_store_papers(
         self,
+        integration_testing: bool = False,
     ) -> list[dict] | None:
         """
         Download papers from arxiv and store metadata
         in arxiv_papers table.
 
+        Args:
+            integration_testing: When True, always search from 3 days ago
+                instead of the last processed time, for deterministic tests.
+
         Returns:
             List of paper metadata dictionaries if papers were downloaded,
             otherwise None
         """
-        start = self._get_range_start()
+        from pyspark.sql import types as T
+        from pyspark.sql.functions import current_timestamp
+
+        start = self._get_range_start(integration_testing=integration_testing)
 
         # Search for papers in arxiv
         client = arxiv.Client()
@@ -241,6 +240,9 @@ class DataProcessor:
         Process parsed documents to extract and clean chunks.
         Reads from ai_parsed_docs table and saves to arxiv_chunks table.
         """
+        from pyspark.sql.functions import col, concat_ws, explode, udf
+        from pyspark.sql.types import ArrayType, StringType, StructField, StructType
+
         logger.info(
             f"""Processing parsed documents from
             {self.parsed_table} for end date {self.end}"""
@@ -298,13 +300,17 @@ class DataProcessor:
         """)
         logger.info(f"Change Data Feed enabled for {arxiv_chunks_table}")
 
-    def process_and_save(self) -> None:
+    def process_and_save(self, integration_testing: bool = False) -> None:
         """
         Complete workflow: download papers, parse PDFs, and process chunks.
         Matches the logic from chapter6_1 notebook.
+
+        Args:
+            integration_testing: When True, always search from 3 days ago
+                instead of the last processed time, for deterministic tests.
         """
         # Step 1: Download papers and store metadata
-        records = self.download_and_store_papers()
+        records = self.download_and_store_papers(integration_testing=integration_testing)
 
         # Only continue if we have new papers
         if records is None:

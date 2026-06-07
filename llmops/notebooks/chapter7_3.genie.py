@@ -1,14 +1,5 @@
 # Databricks notebook source
 # ruff: noqa
-
-from arxiv_curator.config import ProjectConfig
-
-cfg = ProjectConfig.from_yaml("../project_config.yml")
-catalog = cfg.catalog
-schema = cfg.schema
-
-
-# COMMAND ----------
 # create warehouse
 
 from databricks.sdk import WorkspaceClient
@@ -31,6 +22,13 @@ warehouse_id = "1883724c3376103a"  # created.id
 
 # COMMAND ----------
 import json
+
+from arxiv_curator.config import ProjectConfig
+
+cfg = ProjectConfig.from_yaml("../project_config.yml")
+catalog = cfg.catalog
+schema = cfg.schema
+
 
 serialized_space = {
     "version": 1,

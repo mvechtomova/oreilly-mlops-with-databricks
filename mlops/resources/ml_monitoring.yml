@@ -7,7 +7,7 @@ resources:
         timezone_id: "Europe/Amsterdam"
         pause_status: "${var.schedule_pause_status}"
       tags:
-        project_name: "hotel-booking"
+        project: "hotel_booking"
 
       job_clusters:
         - job_cluster_key: "hotel-booking-cluster"

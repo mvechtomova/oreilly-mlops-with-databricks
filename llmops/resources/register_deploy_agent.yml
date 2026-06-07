@@ -2,8 +2,7 @@ resources:
   jobs:
     log_register_agent_job:
       name: arxiv-agent-log-register
-      tags:
-        project_name: "arxiv-curator"
+      budget_policy_id: "${var.usage_policy_id}"
       environments:
         - environment_key: default
           spec:
@@ -23,8 +22,7 @@ resources:
 
     deploy_agent_job:
       name: arxiv-agent-deploy
-      tags:
-        project_name: "arxiv-curator"
+      budget_policy_id: "${var.usage_policy_id}"
       environments:
         - environment_key: default
           spec:
@@ -43,8 +41,7 @@ resources:
 
     register_deploy_agent:
       name: arxiv-agent-register-deploy-pipeline
-      tags:
-        project_name: "arxiv-curator"
+      budget_policy_id: "${var.usage_policy_id}"
 
       tasks:
         - task_key: run_log_register_agent

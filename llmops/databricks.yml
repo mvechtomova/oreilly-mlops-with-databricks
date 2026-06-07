@@ -21,6 +21,10 @@ variables:
   schedule_pause_status:
     description: schedule pause status
     default: PAUSED
+  #  matches project_config.yml
+  usage_policy_id:
+    description: usage/budget policy id for cost attribution
+    default: 686c435d-90af-4c40-9ca4-442d4a3d8899
 
 include:
   - resources/*.yml
@@ -33,8 +37,6 @@ targets:
     workspace:
       host: https://adb-971256932836835.15.azuredatabricks.net
       root_path: "/Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}"
-    variables:
-      warehouse_id: 1883724c3376103a
 
   acc:
     workspace:

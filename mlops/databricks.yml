@@ -21,6 +21,10 @@ variables:
   schedule_pause_status:
     description: schedule pause status
     default: PAUSED
+# matches project_config.yml
+  usage_policy_id:
+    description: usage/budget policy id for cost attribution 
+    default: cdad6f29-a213-4525-9330-e25b90afbe7a
 
 sync:
   include:
@@ -50,3 +54,4 @@ targets:
       root_path: "/Shared/.bundle/${bundle.target}/${bundle.name}"
     variables:
       schedule_pause_status: UNPAUSED
+

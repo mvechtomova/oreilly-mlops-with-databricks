@@ -10,7 +10,7 @@ resources:
       tags:
         custom_tags:
         - key: "project"
-        - value: arxiv-curator"
+          value: "arxiv_curator"
   dashboards:
     agent-monitoring-dashboard:
       display_name: "Agent Monitoring Dashboard"

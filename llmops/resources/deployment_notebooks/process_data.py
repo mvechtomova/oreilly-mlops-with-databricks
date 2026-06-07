@@ -10,6 +10,7 @@ from arxiv_curator.utils.common import get_widget
 from arxiv_curator.vector_search import VectorSearchManager
 
 env = get_widget("env", "dev")
+integration_testing = get_widget("integration_testing", "false")
 
 project_config = ProjectConfig.from_yaml("../../project_config.yml", env=env)
 logger.info("Configuration loaded:")
@@ -20,7 +21,9 @@ spark = SparkSession.builder.getOrCreate()
 
 # Process data
 data_processor = DataProcessor(config=project_config, spark=spark)
-records = data_processor.download_and_store_papers()
+records = data_processor.download_and_store_papers(
+    integration_testing=integration_testing
+)
 
 if records is None:
     logger.info("No new papers to process. Exiting.")
