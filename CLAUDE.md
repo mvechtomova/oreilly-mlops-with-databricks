@@ -23,6 +23,15 @@ After every change to `src/` (or anything tests cover), run both before calling 
 
 When the change touches a Databricks/MLflow SDK call, **verify the API against the installed SDK version** (inspect signatures/enums/dataclass fields, e.g. `databricks-sdk` 0.102.0's `data_quality` API) and **update the tests to match** — a renamed param, moved module, or new required field (e.g. `Refresh` requires `object_type`/`object_id`) should be caught by a unit test, not at runtime. If no test covers the changed code, add one (mock `WorkspaceClient`; see [mlops/tests/test_monitoring.py](mlops/tests/test_monitoring.py) and [mlops/tests/test_serving.py](mlops/tests/test_serving.py)).
 
+### Always `autospec=True` when patching an SDK or own callable
+
+A bare `mocker.Mock()` / `mocker.patch(...)` accepts any attribute, method, and argument silently, so an SDK rename or signature change passes the test while breaking production — the opposite of what these tests are for. So **every `mocker.patch(...)` / `mocker.patch.object(...)` that targets a real callable (mlflow, databricks-sdk, sdv, dotenv, delta) or one of our own functions/methods MUST pass `autospec=True`.** It binds the mock to the installed signature, so drift fails the test. Two cases where autospec genuinely cannot apply, and the alternative that protects them instead:
+
+- **`WorkspaceClient` / `SparkSession`** can't be autospec'd — their service attributes (`.serving_endpoints`, `.data_quality`, `.catalog`) are assigned dynamically in `__init__`, so `create_autospec(WorkspaceClient)` doesn't see them. Leave these as plain `mocker.Mock()` and rely on building requests from **real SDK dataclasses/enums** (`Refresh`, `Monitor`, `ServedEntityInput`, `RefreshTrigger`, ...) — those constructors validate field names at test time. See [mlops/tests/test_monitoring.py](mlops/tests/test_monitoring.py) / [mlops/tests/test_serving.py](mlops/tests/test_serving.py).
+- **`mlflow.patch.dict`** and leaf return-value mocks aren't patches of a callable, so autospec is N/A.
+
+**mlflow patch-target gotcha (cost real debugging time):** patch `mlflow.*` helpers at their **canonical path** (`mocker.patch("mlflow.sklearn.log_model", autospec=True)`), NOT via the module alias (`mocker.patch("hotel_booking.models.x.mlflow.sklearn.log_model", ...)`). mlflow lazy-loads its submodules, and resolving the alias path while patching one submodule (e.g. `mlflow.models.evaluate`) makes the loader rebuild a sibling submodule, **silently dropping an earlier patch** (`mlflow.sklearn.log_model` reverts to the real function and your test hits the real MLflow store). Names imported *directly into the module under test* (`from mlflow.models import infer_signature`, `MlflowClient`, `_mlflow_conda_env`) are the exception: those must be patched at the module-alias path (`f"{module}.infer_signature"`), because the direct import already bound the name. See [mlops/tests/test_lightgbm_model.py](mlops/tests/test_lightgbm_model.py) and [mlops/tests/test_pyfunc_wrapper.py](mlops/tests/test_pyfunc_wrapper.py).
+
 ### Respect the line length
 
 Keep every line within the ruff `line-length` (90) set in [mlops/pyproject.toml](mlops/pyproject.toml). This applies to code, comments, and docstrings. Wrap or rephrase rather than letting a line run over.
@@ -51,6 +60,10 @@ Cost attribution must reach `system.billing.usage.custom_tags` on every job. Two
 
 In `mlops/notebooks` (and llmops notebooks), do NOT hoist all imports to the top of the file. Put each import in the `# COMMAND ----------` cell where it is first used, so the book can show the import alongside the code that needs it. Within each cell's import block, sort per PEP / isort rules (standard library, third party, then first party, alphabetical within groups). See [mlops/notebooks/chapter4_1.model_serving.py](mlops/notebooks/chapter4_1.model_serving.py) as the reference example.
 
+### Notebooks: plain comments only, never `# MAGIC %md`
+
+In every Databricks notebook (`mlops/notebooks`, `llmops/notebooks`), do NOT use `# MAGIC %md` markdown cells. Explain things with plain `#` comments next to the code instead. Keep them short, and keep every line within the ruff `line-length` (90), comments included.
+
 ## Testing and dependencies
 
 ### `pyspark` must come from `databricks-connect`, never installed on its own
@@ -59,6 +72,10 @@ In `mlops/notebooks` (and llmops notebooks), do NOT hoist all imports to the top
 
 - Consequence for tests: use `databricks-connect` for testing. The `ci` extra in [mlops/pyproject.toml](mlops/pyproject.toml) therefore includes `databricks-connect` so that modules importing `pyspark`/`delta` (e.g. `data_loader`, `data_processor`, `common`) import cleanly on a GitHub runner. Unit tests mock the Spark session, so no cluster is started.
 - Do not add a bare `pyspark` pin to any extra.
+
+### Coverage: `--no-summary` in `addopts` hides the pytest-cov report
+
+`pytest-cov` is in the `dev` and `ci` extras, so coverage runs with `uv run --extra dev pytest tests/ --cov=hotel_booking --cov-report=term-missing`. But the default `addopts` in [mlops/pyproject.toml](mlops/pyproject.toml) (`-s --no-header --no-summary`, kept for clean book output) **suppresses the coverage table** — pytest-cov prints in pytest's terminal-summary hook, which `--no-summary` disables. The run succeeds but you see no numbers. Override it for coverage runs: `uv run --extra dev pytest tests/ -o addopts="-s" --cov=hotel_booking --cov-report=term-missing`. Leave `addopts` itself unchanged.
 
 ## MLOps chapters
 
@@ -76,6 +93,16 @@ LightGBM supports integer-encoded categorical features, which often performs bet
 - The `adjust_price` helper is defined at *module level*, outside the class. It will NOT be importable at the serving step unless the custom package is logged via `code_paths=[...]` and `conda_env=...` in `log_register_model`. Forgetting this gives a serving-time `ModuleNotFoundError`, not a logging error, so it bites late.
 - This is the clean alternative to the self-contained `CatToIntTransformer`-inside-`train` trick above: logging the package with `code_paths` + `conda_env` makes all modules accessible regardless of how the code is structured, so helpers can live wherever is natural.
 - `log_register_model` takes the wrapped model's `ModelInfo`, the pyfunc model name to register under, the experiment name, tags, and `code_paths`.
+
+### Chapter 3: `client_request_id` never reaches the model; route A/B on `params`
+
+For the A/B testing demo ([mlops/notebooks/chapter3_5.ab_testing_demo.py](mlops/notebooks/chapter3_5.ab_testing_demo.py)), the routing key (`booking_id`) must travel in the request body, NOT as `client_request_id`. Two distinct channels carry the same `Booking_ID`, one per consumer:
+
+- `client_request_id` (top-level payload field, used in [mlops/notebooks/chapter6_1.call_endpoint.py](mlops/notebooks/chapter6_1.call_endpoint.py)) is an observability key for the inference-table / monitoring join only. The pyfunc scoring server's `_split_data_and_params` keeps only the `dataframe_records`/`dataframe_split`/`instances`/`inputs` keys plus `params`, and silently discards every other top-level key, including `client_request_id`. So it CANNOT reach `predict` and cannot drive routing.
+- `params.booking_id` is the channel that reaches the model. Two hard requirements, each a silent-drop trap: (1) `predict` must declare a `params` argument — the pyfunc wrapper inspects the signature and drops params otherwise; (2) the logged signature must define a params schema (`infer_signature(..., params={"booking_id": "none"})`) — with no params schema, `_enforce_params_schema` drops ALL params to `{}`, and any key not in the schema is filtered out too.
+- `params` is per-request, not per-row: one `params` dict applies to the whole request, so a request routes to a single variant. Fine for A/B serving (one booking per call); you cannot split a multi-record batch across variants with one param.
+- `PythonModelContext` (the `context` arg) carries artifacts only, not request metadata — it is not a way to read the request id either.
+- Verified against mlflow 3.11.1: scoring server `_split_data_and_params` / `invocations`, pyfunc wrapper `predict` param-forwarding, and `models/utils.py::_enforce_params_schema`.
 
 ### Chapter 4: `fe.create_training_set` bakes the input df schema into the serving contract
 

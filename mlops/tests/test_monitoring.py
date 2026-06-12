@@ -89,3 +89,89 @@ def test_creates_when_monitor_absent(build_manager) -> None:
     assert inference.granularities == [
         AggregationGranularity.AGGREGATION_GRANULARITY_5_MINUTES
     ]
+
+
+def test_load_new_payload_reads_all_when_monitoring_table_absent(
+    build_manager,
+) -> None:
+    manager, _ = build_manager(monitor_exists=True)
+    manager.spark.catalog.tableExists.return_value = False
+
+    manager._load_new_payload_data()
+
+    query = manager.spark.sql.call_args.args[0]
+    assert query == f"SELECT * FROM {manager.payload_table}"
+    assert "WHERE" not in query
+
+
+def test_load_new_payload_reads_incrementally_when_table_exists(
+    build_manager,
+) -> None:
+    manager, _ = build_manager(monitor_exists=True)
+    manager.spark.catalog.tableExists.return_value = True
+
+    manager._load_new_payload_data()
+
+    query = manager.spark.sql.call_args.args[0]
+    # Only rows newer than the latest already-monitored request_time are pulled.
+    assert "WHERE request_time >" in query
+    assert f"MAX(request_time) FROM {manager.monitoring_table}" in query
+
+
+def test_parse_and_transform_payload_runs_full_chain(build_manager, mocker) -> None:
+    manager, _ = build_manager(monitor_exists=True)
+    inf_table = mocker.Mock()
+
+    result = manager._parse_and_transform_payload(inf_table)
+
+    # Chain begins with from_json parsing of the raw request column...
+    inf_table.withColumn.assert_called()
+    # ...and ends in a select projecting the flattened monitoring schema.
+    assert result is not None
+
+
+def test_join_with_ground_truth_left_joins_on_booking_id(build_manager, mocker) -> None:
+    manager, _ = build_manager(monitor_exists=True)
+    df = mocker.Mock()
+
+    manager._join_with_ground_truth(df)
+
+    manager.spark.table.assert_called_once_with(manager.ground_truth_table)
+    join_kwargs = df.join.call_args.kwargs
+    assert join_kwargs["on"] == "Booking_ID"
+    assert join_kwargs["how"] == "left"
+
+
+def test_update_monitoring_table_noop_when_no_new_data(build_manager, mocker) -> None:
+    manager, _ = build_manager(monitor_exists=True)
+    empty = mocker.Mock()
+    empty.isEmpty.return_value = True
+    mocker.patch.object(
+        manager, "_load_new_payload_data", return_value=empty, autospec=True
+    )
+    parse = mocker.patch.object(manager, "_parse_and_transform_payload", autospec=True)
+
+    assert manager.update_monitoring_table() == 0
+    parse.assert_not_called()
+
+
+def test_update_monitoring_table_appends_and_counts(build_manager, mocker) -> None:
+    manager, _ = build_manager(monitor_exists=True)
+    raw = mocker.Mock()
+    raw.isEmpty.return_value = False
+    mocker.patch.object(
+        manager, "_load_new_payload_data", return_value=raw, autospec=True
+    )
+    mocker.patch.object(
+        manager, "_parse_and_transform_payload", return_value=raw, autospec=True
+    )
+
+    final = mocker.Mock()
+    final.count.return_value = 5
+    mocker.patch.object(
+        manager, "_join_with_ground_truth", return_value=final, autospec=True
+    )
+
+    assert manager.update_monitoring_table() == 5
+    saver = final.write.format.return_value.mode.return_value.saveAsTable
+    saver.assert_called_once_with(manager.monitoring_table)

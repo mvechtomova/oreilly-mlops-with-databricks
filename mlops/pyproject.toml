@@ -30,12 +30,14 @@ dev = ["databricks-connect>=17.3.2, <18",
        "pip>=25.0.1, <26",
        "pre-commit>=4.1.0, <5",
        "pytest>=8.3.4, <9",
-       "pytest-mock>=3.14.0, <4"]
+       "pytest-mock>=3.14.0, <4",
+       "pytest-cov>=7.1.0, <8"]
 
 ci = ["databricks-connect>=17.3.2, <18",
       "pre-commit>=4.1.0, <5",
       "pytest>=8.3.4, <9",
-      "pytest-mock>=3.14.0, <4"]
+      "pytest-mock>=3.14.0, <4",
+      "pytest-cov>=7.1.0, <8"]
 
 [build-system]
 requires = [

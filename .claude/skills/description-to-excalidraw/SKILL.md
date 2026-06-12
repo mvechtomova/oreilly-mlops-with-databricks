@@ -1,59 +1,58 @@
 ---
-name: png-to-excalidraw
-description: Convert raw PNG diagrams in visuals_raw/ into Excalidraw JSON files in visuals/ that match the brand palette and styling. Trigger whenever the user asks to turn a PNG (or screenshot/sketch) into an Excalidraw diagram, recreate a diagram in Excalidraw, restyle a PNG diagram with the project palette, or mentions converting files under visuals_raw/.
+name: description-to-excalidraw
+description: Create an Excalidraw JSON diagram in visuals/ from a written description (no source image), using the project's brand palette and styling. Trigger whenever the user describes a diagram in words and asks to draw/create/make it in Excalidraw, sketch a diagram from a spec, build a new diagram from scratch, or otherwise wants an Excalidraw file without an existing PNG to convert.
 ---
 
-# png-to-excalidraw
+# description-to-excalidraw
 
-Convert a raw PNG diagram into an `.excalidraw.json` file that matches the source layout and content, restyled with the project's brand palette and consistent Excalidraw element styling.
+Create an `.excalidraw.json` file from a **written description** of a diagram — a list of boxes, sections, arrows, and layout in words — restyled with the project's brand palette and consistent Excalidraw element styling. This is the sibling of [png-to-excalidraw](../png-to-excalidraw/SKILL.md): same palette, same style rules, same flaws-and-corrections; the only difference is there is no source image, so you build the layout from the description instead of tracing one.
 
 ## When to use
 
-Trigger for any of: "turn this PNG into Excalidraw", "recreate this diagram", "convert visuals_raw/X.png", "redo this in Excalidraw", "make an Excalidraw version of...". If the user pastes or points at a PNG inside `visuals_raw/`, assume this skill applies.
+Trigger for any of: "draw a diagram of...", "make an Excalidraw showing X → Y → Z", "create a diagram with these boxes...", "sketch the architecture where...", "I need a new figure for the chapter that shows...". If the user describes the *content* of a diagram in words and wants an Excalidraw file, and there is no PNG to convert, this skill applies. If they point at a PNG in `visuals_raw/`, use [png-to-excalidraw](../png-to-excalidraw/SKILL.md) instead.
 
 ## Input
 
-A PNG filename or path, passed as the argument or referenced in the user's message.
+A natural-language description of the diagram, passed as the argument or in the user's message. It may specify some or all of: the boxes/cards and their labels, sections or groupings, arrows and their direction, the grid or flow shape, and any code/sub-text inside cards.
 
-Resolution rules:
-- Filename only (e.g. `mlops_components.png`) → look in `visuals_raw/<arg>`.
-- Path given → use as-is. Must be a `.png`.
-- Not found → list PNGs in `visuals_raw/` with `ls visuals_raw/*.png` and stop.
-- Not a PNG → stop and tell the user.
-- Missing argument → ask which PNG to convert; list available ones.
+When the description is **underspecified**, fill gaps with the sensible defaults below rather than stalling — but ask the user first when a load-bearing choice is genuinely ambiguous:
+- **Grid vs. flow vs. free-form**: if the description implies a sequence ("A then B then C"), default to a left-to-right or top-to-bottom flow with arrows. If it implies categories/components, default to a grid. If unsure which, ask.
+- **Section grouping / color-coding**: if the user names two or more distinct groups, color-code them (orange primary, dark grey secondary — see palette). If they name none, use neutral borders.
+- **Number of boxes and labels**: use exactly what the user lists. Do not invent extra boxes to "round out" the diagram, and do not drop ones they named.
 
 ## Output
 
-Write to `visuals/<basename_without_ext>.excalidraw.json`. If the file already exists, ask before overwriting — the user may have hand-edited it.
+The user usually wants a specific figure name. Resolve the output path in this order:
+1. If the user gives a name (e.g. "call it Figure5.12" or "save as model_lifecycle"), write to `visuals/<that>.excalidraw.json`.
+2. Otherwise, derive a short kebab/Figure-style slug from the description and **confirm it with the user** before writing.
+
+If the target file already exists, ask before overwriting — the user may have hand-edited it (see [[excalidraw-open-editor-clobber]]: also avoid writing while they have it open in the VS Code editor, or your write gets clobbered).
 
 ## Procedure
 
-### 1. View the source
+### 1. Parse the description into an inventory
 
-Use `Read` on the PNG. The image renders directly in the tool result — you can see boxes, labels, icons, arrows, and groupings.
+From the words, build the same inventory png-to-excalidraw builds from an image:
+- Every distinct card / box and its exact label (verbatim from the user).
+- **The internal layout of each card** — stacked-centered title+body, or split label↔code side-by-side? Decide per card (see step 5 / "Inspect each card's internal layout").
+- Multi-line text or code inside cards (quote any code the user gives **verbatim**; don't pad it with extra calls).
+- Section containers / group backgrounds and which cards belong to each.
+- Icons or accent shapes.
+- Arrows and connectors with direction, and which boxes they join.
+- The overall shape: grid (note dimensions, e.g. 4×5), linear flow, or free-form.
 
-### 2. Inventory
+The goal is to **realize the description faithfully** — same boxes, same labels, the grouping and flow the user asked for — not to redesign or embellish.
 
-Make a mental (or short scratch) list of:
-- Every distinct card / box and its label
-- **The internal layout of each card** — is text centered as a single column, or split side-by-side (e.g. label on the left, code or value on the right)? Note this per card before placing anything. See "Inspect each card's internal layout" in step 5.
-- Multi-line text inside cards (e.g. tool lists like "GitHub Actions / Jenkins / Azure pipelines", or code examples with several lines)
-- Section containers / group backgrounds (if any)
-- Icons or accent shapes
-- Arrows and connectors with their direction
-- Rows and columns — most diagrams here are grids; note the dimensions (e.g. 4×5)
-
-The goal is to **match layout and content**, not redesign. Same boxes, same labels, same relative positions, and the **same intra-card arrangement**.
-
-### 3. Plan the canvas
+### 2. Plan the canvas
 
 - Default canvas width: 1100–1400px depending on column count.
-- Pick a uniform box size for each row/column and reuse it across the grid — this is what makes the result look intentional rather than ad-hoc. Both example PNGs use a strict grid.
-- Leave consistent gutters between cards — **minimum 20px on both axes** (horizontal *and* vertical). This applies to free-form / scattered layouts (e.g. the "ML code surrounded by components" diagram) just as much as grids: when boxes have varying heights and aren't on a shared row baseline, it's easy to leave two of them 0–5px apart or overlapping. After placing each box, compute `next.y - (prev.y + prev.height)` (and the x equivalent) for neighbors and make sure it's ≥ 20.
-- If a card title is longer than the card is wide (e.g. "Human Review & Feedback" in a 230px card), its text overflows and collides with neighboring tiles. Prefer **widening the cards** in that row (keep a normal ~30–40px gutter) over spreading the tiles far apart — a huge gutter looks worse than slightly larger boxes. When you resize a card, also update its title and body text elements' `x` and `width` to match, or they render off-center.
+- Pick a uniform box size per row/column and reuse it across the grid — this is what makes the result look intentional rather than ad-hoc.
+- Leave consistent gutters — **minimum 20px on both axes** (horizontal *and* vertical). This applies to free-form / scattered layouts just as much as grids: when boxes have varying heights and aren't on a shared row baseline, it's easy to leave two of them 0–5px apart or overlapping. After placing each box, compute `next.y - (prev.y + prev.height)` (and the x equivalent) for neighbors and make sure it's ≥ 20.
+- If a card title is longer than the card is wide (e.g. "Human Review & Feedback" in a 230px card), its text overflows and collides with neighbours. Prefer **widening the cards** in that row (keep a normal ~30–40px gutter) over spreading the tiles far apart — a huge gutter looks worse than slightly larger boxes. When you resize a card, also update its title and body text elements' `x` and `width` to match, or they render off-center.
+- For a flow diagram, lay boxes on a shared baseline (same `y` for a horizontal flow, same `x` for a vertical one) and reserve ~60–120px between them for the arrows.
 - `appState.viewBackgroundColor` is the canvas color (`bg`, `#f6f5f3`).
 
-### 4. Emit the JSON
+### 3. Emit the JSON
 
 Top-level shape:
 
@@ -79,7 +78,7 @@ Element schema mirrors [visuals/ci_cd_architecture.excalidraw.json](../../../vis
 
 Give each element a stable `id` and a unique numeric `seed` / `version` / `versionNonce` (any positive integer; just don't collide).
 
-### 5. Apply the style rules
+### 4. Apply the style rules
 
 Every element uses these defaults:
 
@@ -95,7 +94,7 @@ Every element uses these defaults:
 | `fontSize`       | `20` for titles, `16` for body text, `14` for badges/labels  |
 | `opacity`        | `100`                                                        |
 
-### 6. Apply the color palette by role
+### 5. Apply the color palette by role
 
 Named palette — use the **role**, not raw hex, when reasoning about which color goes where:
 
@@ -129,6 +128,8 @@ Default role-to-element mapping:
 - **Arrow / connector** → stroke `text` (black `#1a1a1a`) or `text-tertiary` (grey `#9a9a9a`) — see the arrow rule below
 - **Tertiary metadata** → `text-tertiary`
 
+**No em-dashes or en-dashes in any text content** (see [[no-em-dashes-in-prose]]): in labels, titles, and captions use commas or colons instead. This applies to the words rendered inside the diagram, not just prose.
+
 ### Arrows: always black or grey, straight, matching Figure5.1 / Figure6.2
 
 Arrows are **never** colored (no orange, no blue). Use only black `text` (`#1a1a1a`) or grey `text-tertiary` (`#9a9a9a`) for the stroke. Match the exact arrow shape used in [visuals/Figure5.1.excalidraw.json](../../../visuals/Figure5.1.excalidraw.json) and [visuals/Figure6.2.excalidraw.json](../../../visuals/Figure6.2.excalidraw.json):
@@ -148,12 +149,12 @@ Arrows are **never** colored (no orange, no blue). Use only black `text` (`#1a1a
 
 **Arrows must keep a small gap from every box — they may not touch or overlap one, not even by a pixel.** Inset both ends by ~3px from the box edges: start the arrow ~3px outside the source box and end its tip ~3px short of the target box (so the arrowhead points *at* the edge without crossing it). An arrow crossing a *grouping/section container* outline to reach a card nested inside it is acceptable (that is how you connect into a container); clipping through any *other* box is not. After writing, validate programmatically: for every arrow, take its segment bounding box inflated by 2px and assert it does not intersect any rectangle except the two it connects (and section containers it must pass through). Fix and re-emit before reporting if any arrow clips a box. Also give vertical pipeline connectors the same ~3px gap at both ends rather than butting them flush against the cards.
 
-### 7. Write and report
+### 6. Write and report
 
-Write the JSON file to `visuals/<basename>.excalidraw.json`. Report:
+Write the JSON file to `visuals/<name>.excalidraw.json`. Report:
 - The output path
 - Element count
-- One-line summary of grid dimensions or layout (e.g. "5×4 grid of component cards")
+- One-line summary of grid dimensions or layout (e.g. "5×4 grid of component cards" or "left-to-right 4-stage flow")
 
 ## Element template (rectangle with centered text)
 
@@ -220,14 +221,14 @@ Write the JSON file to `visuals/<basename>.excalidraw.json`. Report:
 }
 ```
 
-For a card with a title + secondary sub-text, use two separate text elements stacked inside the card (one bound, or both free-positioned at the card's x/y with explicit offsets) — match what looks closest to the source PNG.
+For a card with a title + secondary sub-text, use two separate text elements stacked inside the card (one bound, or both free-positioned at the card's x/y with explicit offsets) — match what the description calls for.
 
 ### Inspect each card's internal layout
 
-Before placing text, decide for each card whether its contents are **stacked-centered**, **split inside one card**, or **label-outside-box**. Defaulting to centered title-over-body loses information density and visually drifts away from the source.
+Before placing text, decide for each card whether its contents are **stacked-centered**, **split inside one card**, or **label-outside-box**. Defaulting to centered title-over-body loses information density.
 
-- **Stacked-centered**: title on top, sub-text below, both centered horizontally inside one bordered card. Use this only when the source clearly shows centered content with a single visible border.
-- **Label-outside-box** (most common for API / cheatsheet diagrams like MLflow `log_*` ↔ `load_*`): the bordered/colored rectangle wraps **only** the code or value on the right; the label (title + sub-text) is free text sitting to the **left** of the rectangle with no border around it. This is the default when the source shows a side-by-side label↔code pairing — do not put a border around the label.
+- **Stacked-centered**: title on top, sub-text below, both centered horizontally inside one bordered card. Use this when the description shows centered content with a single visible border.
+- **Label-outside-box** (most common for API / cheatsheet diagrams like MLflow `log_*` ↔ `load_*`): the bordered/colored rectangle wraps **only** the code or value on the right; the label (title + sub-text) is free text sitting to the **left** of the rectangle with no border around it. This is the default when the description shows a side-by-side label↔code pairing — do not put a border around the label.
 
 For label-outside-box rows:
 - **No rectangle around the label.** Only the code area gets a bordered rectangle (`strokeColor` = section accent: orange for primary, dark grey for secondary).
@@ -250,14 +251,15 @@ For label-outside-box rows:
   - Use `fontFamily: 8` (Comic Shanns, the Excalidraw "Code" preset), `fontSize: 11`, `lineHeight: 1.4`.
   - For multi-line code, wrap with explicit `\n` and indentation; keep the box height constant across the grid for visual rhythm rather than enlarging individual boxes.
 - **Never bind the code text to the box** (`containerId: null`, box's `boundElements: []`). Binding stretches the line height and re-centers the text in ways that defeat the manual vertical centering above.
-- **Quote code from the source PNG verbatim.** Don't append extra method calls or attribute chains "for completeness" if the source shows only `mlflow.get_run()` — the user wants the diagram to match what's in the image, not a fuller reference. When in doubt, read fewer lines from the PNG, not more.
+- **Quote code from the description verbatim.** Don't append extra method calls or attribute chains "for completeness" if the user wrote only `mlflow.get_run()` — the diagram should match what they asked for, not a fuller reference. When in doubt, write less, not more.
 
 Common mistakes (don't do these):
 - Putting a border around the entire row (label + code). The label has no border.
 - Making code boxes ~500px+ wide because the row is wide. Boxes hug the code; the label uses the leftover space; extra width goes into the gutter.
 - Trusting `verticalAlign: "middle"` to center unbound text inside a taller box. It doesn't — unbound text always anchors to its `y`. Compute `y = box.y + (box.height - text.height) / 2` manually, with `text.height` set to the natural text height (lines × fontSize × lineHeight).
 - Setting `text.x = box.x` with no inset. The first glyph sits on the stroke. Inset by ~14px on each side.
-- Padding the code snippet with extra information not present in the source (e.g. expanding `mlflow.get_run()` into `run = mlflow.get_run(...); run.data.params; run.info...`).
+- Padding the code snippet with extra information not present in the description.
+- Inventing boxes, labels, or arrows the user did not describe to "complete" the picture.
 
 ### Bound text height must be the natural text height, not the container height
 
@@ -290,4 +292,4 @@ Tell the user to drag the file into `excalidraw.com` and check:
 - Text centered horizontally and vertically in every card, with even line spacing across cards (2-line cards unbound — see line-spacing rule above).
 - **Vertical centering is mandatory and must be checked programmatically before reporting — never eyeball it.** The recurring bug: a bound text element given the container's full `height` (instead of its natural text height) makes Excalidraw top-align the label. Generate every bound label with `text.height = round(numLines * fontSize * lineHeight)` and `text.y = box.y + (box.height - text.height) / 2`, then loop over all text elements with a `containerId` and assert `abs((box.y + box.height/2) - (text.y + text.height/2)) <= 0.6`; for unbound labels assert the same against their intended center. Fail loudly and fix before writing the final file — do not report success with any label off-center.
 - No two boxes overlap or sit closer than ~20px on either axis — check this programmatically before reporting (loop over box bounding boxes), don't eyeball it. Stacked boxes with different heights are the usual offender.
-- Layout matches the source PNG's grouping and order.
+- The diagram contains exactly the boxes, labels, sections, and arrows the user described — nothing invented, nothing dropped.
