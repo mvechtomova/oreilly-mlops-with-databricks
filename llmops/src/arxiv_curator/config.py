@@ -14,7 +14,6 @@ class ProjectConfig(BaseModel):
     warehouse_id: str
     experiment_path: str
     usage_policy_id: str | None = None
-    # Lakebase connection settings
     lakebase_project_id: str | None = None
 
     @classmethod

@@ -1,15 +1,15 @@
 {
   "type": "excalidraw",
   "version": 2,
-  "source": "claude",
+  "source": "https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor",
   "elements": [
     {
       "angle": 0,
       "seed": 1001,
-      "version": 1,
-      "versionNonce": 1002,
+      "version": 2,
+      "versionNonce": 1899866561,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -30,15 +30,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "a0"
     },
     {
       "angle": 0,
       "seed": 1003,
-      "version": 1,
-      "versionNonce": 1004,
+      "version": 34,
+      "versionNonce": 246285487,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916443101,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -49,13 +50,13 @@
       "frameId": null,
       "id": "heading_main",
       "type": "text",
-      "x": 20,
-      "y": 32,
-      "width": 1170,
-      "height": 30,
-      "text": "Databricks components",
-      "originalText": "Databricks components",
-      "fontSize": 24,
+      "x": 302.57220458984375,
+      "y": 29.5,
+      "width": 604.8555908203125,
+      "height": 35,
+      "text": "Databricks components for MLOps and LLMOps",
+      "originalText": "Databricks components for MLOps and LLMOps",
+      "fontSize": 28,
       "fontFamily": 6,
       "textAlign": "center",
       "verticalAlign": "top",
@@ -66,15 +67,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "a1"
     },
     {
       "angle": 0,
       "seed": 1005,
-      "version": 1,
-      "versionNonce": 1006,
+      "version": 2,
+      "versionNonce": 1648675233,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -102,15 +104,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "a2"
     },
     {
       "angle": 0,
       "seed": 1007,
-      "version": 1,
-      "versionNonce": 1008,
+      "version": 2,
+      "versionNonce": 1753144559,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -131,15 +134,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "a3"
     },
     {
       "angle": 0,
       "seed": 1009,
-      "version": 1,
-      "versionNonce": 1010,
+      "version": 2,
+      "versionNonce": 152890753,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -151,7 +155,7 @@
       "id": "body_0",
       "type": "text",
       "x": 40,
-      "y": 183.0,
+      "y": 183,
       "width": 260,
       "height": 20,
       "text": "Lakeflow Jobs",
@@ -167,15 +171,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "a4"
     },
     {
       "angle": 0,
       "seed": 1011,
-      "version": 1,
-      "versionNonce": 1012,
+      "version": 2,
+      "versionNonce": 1435723535,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -203,15 +208,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "a5"
     },
     {
       "angle": 0,
       "seed": 1013,
-      "version": 1,
-      "versionNonce": 1014,
+      "version": 2,
+      "versionNonce": 218469729,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -232,15 +238,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "a6"
     },
     {
       "angle": 0,
       "seed": 1015,
-      "version": 1,
-      "versionNonce": 1016,
+      "version": 2,
+      "versionNonce": 1607576879,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -252,7 +259,7 @@
       "id": "body_1",
       "type": "text",
       "x": 330,
-      "y": 173.0,
+      "y": 173,
       "width": 260,
       "height": 40,
       "text": "MLflow +\nUnity Catalog",
@@ -268,15 +275,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "a7"
     },
     {
       "angle": 0,
       "seed": 1017,
-      "version": 1,
-      "versionNonce": 1018,
+      "version": 2,
+      "versionNonce": 21905729,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -304,15 +312,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "a8"
     },
     {
       "angle": 0,
       "seed": 1019,
-      "version": 1,
-      "versionNonce": 1020,
+      "version": 2,
+      "versionNonce": 849489743,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -333,15 +342,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "a9"
     },
     {
       "angle": 0,
       "seed": 1021,
-      "version": 1,
-      "versionNonce": 1022,
+      "version": 2,
+      "versionNonce": 1666609441,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -353,7 +363,7 @@
       "id": "body_2",
       "type": "text",
       "x": 620,
-      "y": 163.0,
+      "y": 163,
       "width": 260,
       "height": 60,
       "text": "Lakeflow Jobs\n(using Databricks\ncompute)",
@@ -369,15 +379,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aA"
     },
     {
       "angle": 0,
       "seed": 1023,
-      "version": 1,
-      "versionNonce": 1024,
+      "version": 2,
+      "versionNonce": 2019388783,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -405,15 +416,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aB"
     },
     {
       "angle": 0,
       "seed": 1025,
-      "version": 1,
-      "versionNonce": 1026,
+      "version": 2,
+      "versionNonce": 1485677825,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -434,15 +446,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "aC"
     },
     {
       "angle": 0,
       "seed": 1027,
-      "version": 1,
-      "versionNonce": 1028,
+      "version": 2,
+      "versionNonce": 2085349263,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -454,7 +467,7 @@
       "id": "body_3",
       "type": "text",
       "x": 910,
-      "y": 163.0,
+      "y": 163,
       "width": 260,
       "height": 60,
       "text": "Model Serving,\nFeature Serving,\nFoundation models",
@@ -470,15 +483,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aD"
     },
     {
       "angle": 0,
       "seed": 1029,
-      "version": 1,
-      "versionNonce": 1030,
+      "version": 2,
+      "versionNonce": 745757921,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -506,15 +520,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aE"
     },
     {
       "angle": 0,
       "seed": 1031,
-      "version": 1,
-      "versionNonce": 1032,
+      "version": 2,
+      "versionNonce": 212213167,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -535,15 +550,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "aF"
     },
     {
       "angle": 0,
       "seed": 1033,
-      "version": 1,
-      "versionNonce": 1034,
+      "version": 2,
+      "versionNonce": 244783297,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -555,7 +571,7 @@
       "id": "body_4",
       "type": "text",
       "x": 40,
-      "y": 373.0,
+      "y": 373,
       "width": 260,
       "height": 40,
       "text": "Data Quality\nMonitoring",
@@ -571,15 +587,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aG"
     },
     {
       "angle": 0,
       "seed": 1035,
-      "version": 1,
-      "versionNonce": 1036,
+      "version": 2,
+      "versionNonce": 479498191,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -607,15 +624,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aH"
     },
     {
       "angle": 0,
       "seed": 1037,
-      "version": 1,
-      "versionNonce": 1038,
+      "version": 2,
+      "versionNonce": 278419617,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -636,15 +654,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "aI"
     },
     {
       "angle": 0,
       "seed": 1039,
-      "version": 1,
-      "versionNonce": 1040,
+      "version": 2,
+      "versionNonce": 640663023,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -656,7 +675,7 @@
       "id": "body_5",
       "type": "text",
       "x": 330,
-      "y": 383.0,
+      "y": 383,
       "width": 260,
       "height": 20,
       "text": "Delta tables",
@@ -672,15 +691,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aJ"
     },
     {
       "angle": 0,
       "seed": 1041,
-      "version": 1,
-      "versionNonce": 1042,
+      "version": 2,
+      "versionNonce": 1680252033,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -708,15 +728,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aK"
     },
     {
       "angle": 0,
       "seed": 1043,
-      "version": 1,
-      "versionNonce": 1044,
+      "version": 2,
+      "versionNonce": 1283467279,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -737,15 +758,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "aL"
     },
     {
       "angle": 0,
       "seed": 1045,
-      "version": 1,
-      "versionNonce": 1046,
+      "version": 2,
+      "versionNonce": 1493263457,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -757,7 +779,7 @@
       "id": "body_6",
       "type": "text",
       "x": 620,
-      "y": 373.0,
+      "y": 373,
       "width": 260,
       "height": 40,
       "text": "Feature Engineering\nin Unity Catalog",
@@ -773,15 +795,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aM"
     },
     {
       "angle": 0,
       "seed": 1047,
-      "version": 1,
-      "versionNonce": 1048,
+      "version": 2,
+      "versionNonce": 1031687727,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -809,15 +832,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aN"
     },
     {
       "angle": 0,
       "seed": 1049,
-      "version": 1,
-      "versionNonce": 1050,
+      "version": 2,
+      "versionNonce": 452472897,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -838,15 +862,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "aO"
     },
     {
       "angle": 0,
       "seed": 1051,
-      "version": 1,
-      "versionNonce": 1052,
+      "version": 2,
+      "versionNonce": 1410510927,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -858,7 +883,7 @@
       "id": "body_7",
       "type": "text",
       "x": 910,
-      "y": 373.0,
+      "y": 373,
       "width": 260,
       "height": 40,
       "text": "Databricks\nAI Search",
@@ -874,15 +899,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aP"
     },
     {
       "angle": 0,
       "seed": 1053,
-      "version": 1,
-      "versionNonce": 1054,
+      "version": 2,
+      "versionNonce": 803897377,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -910,15 +936,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aQ"
     },
     {
       "angle": 0,
       "seed": 1055,
-      "version": 1,
-      "versionNonce": 1056,
+      "version": 2,
+      "versionNonce": 2048249455,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -939,15 +966,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "aR"
     },
     {
       "angle": 0,
       "seed": 1057,
-      "version": 1,
-      "versionNonce": 1058,
+      "version": 2,
+      "versionNonce": 902288385,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -959,7 +987,7 @@
       "id": "body_8",
       "type": "text",
       "x": 40,
-      "y": 573.0,
+      "y": 573,
       "width": 260,
       "height": 40,
       "text": "Databricks\nAI Guardrails",
@@ -975,15 +1003,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aS"
     },
     {
       "angle": 0,
       "seed": 1059,
-      "version": 1,
-      "versionNonce": 1060,
+      "version": 2,
+      "versionNonce": 1246767247,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1011,15 +1040,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aT"
     },
     {
       "angle": 0,
       "seed": 1061,
-      "version": 1,
-      "versionNonce": 1062,
+      "version": 2,
+      "versionNonce": 1620028385,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1040,15 +1070,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "aU"
     },
     {
       "angle": 0,
       "seed": 1063,
-      "version": 1,
-      "versionNonce": 1064,
+      "version": 2,
+      "versionNonce": 1920614063,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1060,7 +1091,7 @@
       "id": "body_9",
       "type": "text",
       "x": 330,
-      "y": 583.0,
+      "y": 583,
       "width": 260,
       "height": 20,
       "text": "Unity AI Gateway",
@@ -1076,15 +1107,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aV"
     },
     {
       "angle": 0,
       "seed": 1065,
-      "version": 1,
-      "versionNonce": 1066,
+      "version": 2,
+      "versionNonce": 944867265,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1112,15 +1144,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aW"
     },
     {
       "angle": 0,
       "seed": 1067,
-      "version": 1,
-      "versionNonce": 1068,
+      "version": 2,
+      "versionNonce": 1430032591,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1141,15 +1174,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "aX"
     },
     {
       "angle": 0,
       "seed": 1069,
-      "version": 1,
-      "versionNonce": 1070,
+      "version": 2,
+      "versionNonce": 388818849,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1161,7 +1195,7 @@
       "id": "body_10",
       "type": "text",
       "x": 620,
-      "y": 583.0,
+      "y": 583,
       "width": 260,
       "height": 20,
       "text": "Lakebase",
@@ -1177,15 +1211,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aY"
     },
     {
       "angle": 0,
       "seed": 1071,
-      "version": 1,
-      "versionNonce": 1072,
+      "version": 2,
+      "versionNonce": 1815060207,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1213,15 +1248,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aZ"
     },
     {
       "angle": 0,
       "seed": 1073,
-      "version": 1,
-      "versionNonce": 1074,
+      "version": 2,
+      "versionNonce": 1733380993,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1242,15 +1278,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "aa"
     },
     {
       "angle": 0,
       "seed": 1075,
-      "version": 1,
-      "versionNonce": 1076,
+      "version": 2,
+      "versionNonce": 1776019727,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1262,7 +1299,7 @@
       "id": "body_11",
       "type": "text",
       "x": 910,
-      "y": 583.0,
+      "y": 583,
       "width": 260,
       "height": 20,
       "text": "MLflow Tracing",
@@ -1278,15 +1315,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "ab"
     },
     {
       "angle": 0,
       "seed": 1077,
-      "version": 1,
-      "versionNonce": 1078,
+      "version": 2,
+      "versionNonce": 553530209,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1314,15 +1352,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "ac"
     },
     {
       "angle": 0,
       "seed": 1079,
-      "version": 1,
-      "versionNonce": 1080,
+      "version": 2,
+      "versionNonce": 465170223,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1343,15 +1382,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "ad"
     },
     {
       "angle": 0,
       "seed": 1081,
-      "version": 1,
-      "versionNonce": 1082,
+      "version": 2,
+      "versionNonce": 142810945,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1363,7 +1403,7 @@
       "id": "body_12",
       "type": "text",
       "x": 40,
-      "y": 783.0,
+      "y": 783,
       "width": 260,
       "height": 20,
       "text": "MLflow Evaluate",
@@ -1379,15 +1419,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "ae"
     },
     {
       "angle": 0,
       "seed": 1083,
-      "version": 1,
-      "versionNonce": 1084,
+      "version": 2,
+      "versionNonce": 204616015,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1415,15 +1456,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "af"
     },
     {
       "angle": 0,
       "seed": 1085,
-      "version": 1,
-      "versionNonce": 1086,
+      "version": 2,
+      "versionNonce": 742362913,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1444,15 +1486,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "ag"
     },
     {
       "angle": 0,
       "seed": 1087,
-      "version": 1,
-      "versionNonce": 1088,
+      "version": 2,
+      "versionNonce": 1688022895,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1464,7 +1507,7 @@
       "id": "body_13",
       "type": "text",
       "x": 330,
-      "y": 783.0,
+      "y": 783,
       "width": 260,
       "height": 20,
       "text": "MLflow",
@@ -1480,15 +1523,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "ah"
     },
     {
       "angle": 0,
       "seed": 1089,
-      "version": 1,
-      "versionNonce": 1090,
+      "version": 2,
+      "versionNonce": 581108481,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1509,15 +1553,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "ai"
     },
     {
       "angle": 0,
       "seed": 1091,
-      "version": 1,
-      "versionNonce": 1092,
+      "version": 6,
+      "versionNonce": 1127856449,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916446259,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1528,13 +1573,13 @@
       "frameId": null,
       "id": "heading_cross",
       "type": "text",
-      "x": 20,
-      "y": 900,
-      "width": 1170,
-      "height": 30,
+      "x": 437.8401184082031,
+      "y": 897.5,
+      "width": 334.31976318359375,
+      "height": 35,
       "text": "Cross-cutting components",
       "originalText": "Cross-cutting components",
-      "fontSize": 24,
+      "fontSize": 28,
       "fontFamily": 6,
       "textAlign": "center",
       "verticalAlign": "top",
@@ -1545,15 +1590,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "aj"
     },
     {
       "angle": 0,
       "seed": 1093,
-      "version": 1,
-      "versionNonce": 1094,
+      "version": 2,
+      "versionNonce": 137165537,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1574,15 +1620,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "ak"
     },
     {
       "angle": 0,
       "seed": 1095,
-      "version": 1,
-      "versionNonce": 1096,
+      "version": 2,
+      "versionNonce": 425549743,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1594,7 +1641,7 @@
       "id": "cross_body_0",
       "type": "text",
       "x": 40,
-      "y": 1019.0,
+      "y": 1019,
       "width": 260,
       "height": 22,
       "text": "Lakebase",
@@ -1610,15 +1657,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "al"
     },
     {
       "angle": 0,
       "seed": 1097,
-      "version": 1,
-      "versionNonce": 1098,
+      "version": 2,
+      "versionNonce": 1030551233,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1639,15 +1687,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "am"
     },
     {
       "angle": 0,
       "seed": 1099,
-      "version": 1,
-      "versionNonce": 1100,
+      "version": 2,
+      "versionNonce": 1427345871,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1659,7 +1708,7 @@
       "id": "cross_body_1",
       "type": "text",
       "x": 330,
-      "y": 1019.0,
+      "y": 1019,
       "width": 260,
       "height": 22,
       "text": "Unity Catalog",
@@ -1675,15 +1724,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "an"
     },
     {
       "angle": 0,
       "seed": 1101,
-      "version": 1,
-      "versionNonce": 1102,
+      "version": 2,
+      "versionNonce": 1694660257,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1704,15 +1754,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "ao"
     },
     {
       "angle": 0,
       "seed": 1103,
-      "version": 1,
-      "versionNonce": 1104,
+      "version": 2,
+      "versionNonce": 998146031,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1724,7 +1775,7 @@
       "id": "cross_body_2",
       "type": "text",
       "x": 620,
-      "y": 1019.0,
+      "y": 1019,
       "width": 260,
       "height": 22,
       "text": "DABs",
@@ -1740,15 +1791,16 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "ap"
     },
     {
       "angle": 0,
       "seed": 1105,
-      "version": 1,
-      "versionNonce": 1106,
+      "version": 2,
+      "versionNonce": 563935873,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1769,15 +1821,16 @@
       "roundness": {
         "type": 3
       },
-      "boundElements": []
+      "boundElements": [],
+      "index": "aq"
     },
     {
       "angle": 0,
       "seed": 1107,
-      "version": 1,
-      "versionNonce": 1108,
+      "version": 2,
+      "versionNonce": 245803535,
       "isDeleted": false,
-      "updated": 1,
+      "updated": 1780916223158,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -1789,7 +1842,7 @@
       "id": "cross_body_3",
       "type": "text",
       "x": 910,
-      "y": 1019.0,
+      "y": 1019,
       "width": 260,
       "height": 22,
       "text": "Databricks apps",
@@ -1805,12 +1858,15 @@
       "boundElements": [],
       "containerId": null,
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "index": "ar"
     }
   ],
   "appState": {
-    "viewBackgroundColor": "#f6f5f3",
-    "gridSize": null
+    "gridSize": 20,
+    "gridStep": 5,
+    "gridModeEnabled": false,
+    "viewBackgroundColor": "#f6f5f3"
   },
   "files": {}
 }

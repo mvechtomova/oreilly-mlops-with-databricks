@@ -3,12 +3,8 @@
 
 from loguru import logger
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
-from pyspark.sql import types as T
 
 from arxiv_curator.config import ProjectConfig
-
-# COMMAND ----------
 
 spark = SparkSession.builder.getOrCreate()
 
@@ -17,6 +13,7 @@ catalog = cfg.catalog
 schema = cfg.schema
 volume = cfg.volume
 
+# COMMAND ----------
 spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog}.{schema}")
 spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.{schema}.{volume}")
 
@@ -49,7 +46,6 @@ else:
 
 end = time.strftime("%Y%m%d%H%M", time.gmtime())
 
-# COMMAND ----------
 search = arxiv.Search(query=f"cat:cs.AI AND submittedDate:[{start} TO {end}]")
 papers = client.results(search)
 
@@ -66,7 +62,6 @@ os.makedirs(pdf_dir, exist_ok=True)
 
 for paper in papers:
     paper_id = paper.get_short_id()
-
     # download PDF
     try:
         paper.download_pdf(dirpath=pdf_dir, filename=f"{paper_id}.pdf")
@@ -83,13 +78,14 @@ for paper in papers:
                 "volume_path": f"{pdf_dir}/{paper_id}.pdf",
             }
         )
-        break
     except Exception:
         logger.warning(f"Paper {paper_id} was not succesfully processed.")
         pass
     time.sleep(3)  # to avoid rate limiting
 
 # COMMAND ----------
+from pyspark.sql import functions as F
+from pyspark.sql import types as T
 
 if len(records) > 0:
     metadata_schema = T.StructType(
@@ -105,12 +101,10 @@ if len(records) > 0:
         ]
     )
 
-    # create DataFrame
     metadata_df = spark.createDataFrame(records, schema=metadata_schema).withColumn(
         "ingest_ts", F.current_timestamp()
     )
 
-    # write to UC
     metadata_df.write.format("delta").mode("append").saveAsTable(f"{metadata_table}")
 
     spark.sql(
@@ -144,17 +138,15 @@ from pyspark.sql.functions import (
     col,
     concat_ws,
     explode,
-    udf,
-)
+    udf)
+
 from pyspark.sql.types import (
     ArrayType,
     StringType,
     StructField,
-    StructType,
-)
+    StructType)
 
 
-# UDF to extract chunks from parsed_content JSON
 def extract_chunks(parsed_content_json: str) -> list[tuple[str, str]]:
     parsed_dict = json.loads(parsed_content_json)
     chunks = []
@@ -166,7 +158,6 @@ def extract_chunks(parsed_content_json: str) -> list[tuple[str, str]]:
             chunks.append((chunk_id, content))
     return chunks
 
-
 chunk_schema = ArrayType(
     StructType(
         [
@@ -177,18 +168,13 @@ chunk_schema = ArrayType(
 )
 extract_chunks_udf = udf(extract_chunks, chunk_schema)
 
-
-df = spark.table(f"{catalog}.{schema}.ai_parsed_docs").where(f"processed = {end}")
-
+# COMMAND ----------
 
 def extract_paper_id(path):
     return path.replace(".pdf", "").split("/")[-1]
 
-
 extract_paper_id_udf = udf(extract_paper_id, StringType())
 
-
-# UDF to clean chunk text
 def clean_chunk(text: str) -> str:
     # fix hyphenation across line breaks:
     # "docu-\nments" => "documents"
@@ -202,10 +188,10 @@ def clean_chunk(text: str) -> str:
 
     return t.strip()
 
-
 clean_chunk_udf = udf(clean_chunk, StringType())
 
 # COMMAND ----------
+df = spark.table(f"{catalog}.{schema}.ai_parsed_docs").where(f"processed = {end}")
 
 # Load metadata table
 metadata_df = spark.table(metadata_table).select(
@@ -229,15 +215,12 @@ chunks_df = (
         clean_chunk_udf(col("chunk.content")).alias("text"),
         concat_ws("_", col("paper_id"), col("chunk.chunk_id")).alias("id"),
     )
-    .join(metadata_df, "paper_id", "left")
-)
+    .join(metadata_df, "paper_id", "left"))
 
-# COMMAND ----------
 # Write to table
 chunks_table = f"{catalog}.{schema}.arxiv_chunks"
 chunks_df.write.mode("append").saveAsTable(chunks_table)
 
-# COMMAND ----------
 spark.sql(
     f"""ALTER TABLE {chunks_table}
     SET TBLPROPERTIES (delta.enableChangeDataFeed = true)
