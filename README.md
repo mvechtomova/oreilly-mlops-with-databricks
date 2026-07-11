@@ -21,7 +21,7 @@ Covers **Chapters 2-6** of the book. Demonstrates a complete ML lifecycle for a 
 | 2 | Developing on Databricks — data preprocessing |
 | 3 | Experiment tracking in MLflow, model training, logging, and registration in Unity Catalog |
 | 4 | Model serving, feature serving, and endpoint authentication |
-| 5 | CI/CD with Databricks Asset Bundles |
+| 5 | CI/CD with Declarative Automation Bundles |
 | 6 | Data Quality monitoring |
 
 **Bundle resources** ([mlops/resources/](mlops/resources/)) — Declarative Automation Bundle definitions:
@@ -30,7 +30,8 @@ Covers **Chapters 2-6** of the book. Demonstrates a complete ML lifecycle for a 
 resources/
 ├── ml_pipeline.yml     # Lakeflow job: preprocess, train + register, deploy
 ├── ml_monitoring.yml   # Lakeflow job: refresh the monitoring table
-└── alert.yml           # SQL alert on a monitoring metric
+├── alert.yml           # SQL alert on a monitoring metric
+└── testing.yml         # notebook test jobs for the chapter demos
 ```
 
 ---
@@ -50,9 +51,9 @@ Covers **Chapters 7-9** of the book. Demonstrates LLMOps patterns on Databricks,
 ```text
 resources/
 ├── process_data.yml            # Lakeflow job: process arxiv documents
-├── vector_sarch_job.yml        # Lakeflow job: build the vector search index
 ├── register_deploy_agent.yml   # Lakeflow job: register & deploy the agent
 ├── production_monitoring.yml   # Lakeflow job: agent production monitoring
+├── integration_test.yml        # Lakeflow job: end-to-end test chaining the jobs above
 ├── dashboard/                  # Lakeview monitoring dashboard
 │   ├── agent_monitoring_dashboard.yml
 │   └── agent_monitoring_dashboard.lvdash.json

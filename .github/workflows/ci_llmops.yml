@@ -5,7 +5,7 @@ on:
     branches:
       - 'main'
     paths:
-      - 'llmops'
+      - 'llmops/**'
 
 jobs:
   pytest_and_checks:

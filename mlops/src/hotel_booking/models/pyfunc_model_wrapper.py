@@ -34,7 +34,7 @@ class HotelBookingModelWrapper(mlflow.pyfunc.PythonModel):
         experiment_name: str,
         tags: Tags,
         code_paths: list,
-    ) -> None:
+    ) -> str:
         """Log and register the Pyfunc model."""
         wrapped_model_uri = wrapped_model_info.model_uri
         input_example_dict = mlflow.artifacts.load_dict(

@@ -58,6 +58,7 @@ pythonpath = [ "." ]
 [tool.ruff]
 line-length = 90
 
+[tool.ruff.lint]
 select = [
     "F",    # pyflakes rules
     "E",    # pycodestyle error rules
@@ -76,9 +77,7 @@ ignore = [
     "D213", # multi-line-summary-second-line
     "C901", # too complex
     "ERA001", # commented out code
-    "ANN204",
-    "ANN102",
-    "ANN101"
+    "ANN204", # missing return type for special method
 ]
 
 [tool.ruff.format]

@@ -106,9 +106,7 @@ testing_source = mlflow.data.get_source(testing_input)
 testing_source.load()
 
 # COMMAND ----------
-model_name = (
-    f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
-)
+model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
 registered_model = mlflow.register_model(
     model_uri=logged_model.model_uri,
     name=model_name,
@@ -151,9 +149,7 @@ code_paths = [f"../dist/hotel_booking-{__version__}-py3-none-any.whl"]
 from hotel_booking.models.pyfunc_model_wrapper import HotelBookingModelWrapper
 
 wrapper = HotelBookingModelWrapper()
-pyfunc_model_name = (
-    f"{cfg.catalog}.{cfg.schema}.hotel_booking_pyfunc"
-)
+pyfunc_model_name = f"{cfg.catalog}.{cfg.schema}.hotel_booking_pyfunc"
 
 wrapper.log_register_model(
     wrapped_model_info=model_info,

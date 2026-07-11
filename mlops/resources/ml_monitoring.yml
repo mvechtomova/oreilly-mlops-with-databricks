@@ -1,13 +1,13 @@
 resources:
   jobs:
-    house-price-monitor-update:
+    hotel-booking-monitor-update:
       name: hotel-booking-monitor-update-workflow
       schedule:
         quartz_cron_expression: "0 0 9 * * ?"
         timezone_id: "Europe/Amsterdam"
         pause_status: "${var.schedule_pause_status}"
       tags:
-        project: "hotel_booking"
+        project: "hotel-booking"
 
       job_clusters:
         - job_cluster_key: "hotel-booking-cluster"

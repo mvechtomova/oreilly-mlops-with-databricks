@@ -10,6 +10,10 @@ Overall rules (conventions, testing, dependencies) come first; chapter-specific 
 
 Whenever the user gives feedback or states a preference during a session (how to structure things, tools to use, conventions to follow), write it into this file as a rule so it survives across sessions. Do this as part of acting on the feedback, not only when asked.
 
+### Say "Declarative Automation Bundles", not "Databricks Asset Bundles"
+
+The product was renamed; the book and all repo docs use the new name (see README.md). In any prose, docs, or comments write "Declarative Automation Bundles" (or "bundles" on later mentions), never "Databricks Asset Bundles" or "DABs".
+
 ### Use `uv` for everything, including testing
 
 Run all Python tooling through `uv`: `uv sync --extra dev` (or `--extra ci`) to set up, `uv run pytest` to test, `uv run <tool>` for anything else. Do not invoke `python`, `pip`, or `pytest` directly against the system or a hand-activated venv.
@@ -94,9 +98,9 @@ LightGBM supports integer-encoded categorical features, which often performs bet
 - This is the clean alternative to the self-contained `CatToIntTransformer`-inside-`train` trick above: logging the package with `code_paths` + `conda_env` makes all modules accessible regardless of how the code is structured, so helpers can live wherever is natural.
 - `log_register_model` takes the wrapped model's `ModelInfo`, the pyfunc model name to register under, the experiment name, tags, and `code_paths`.
 
-### Chapter 3: `client_request_id` never reaches the model; route A/B on `params`
+### Chapter 4: `client_request_id` never reaches the model; route A/B on `params`
 
-For the A/B testing demo ([mlops/notebooks/chapter3_5.ab_testing_demo.py](mlops/notebooks/chapter3_5.ab_testing_demo.py)), the routing key (`booking_id`) must travel in the request body, NOT as `client_request_id`. Two distinct channels carry the same `Booking_ID`, one per consumer:
+For the A/B testing demo ([mlops/notebooks/chapter4_1a.ab_testing_demo.py](mlops/notebooks/chapter4_1a.ab_testing_demo.py)), the routing key (`booking_id`) must travel in the request body, NOT as `client_request_id`. Two distinct channels carry the same `Booking_ID`, one per consumer:
 
 - `client_request_id` (top-level payload field, used in [mlops/notebooks/chapter6_1.call_endpoint.py](mlops/notebooks/chapter6_1.call_endpoint.py)) is an observability key for the inference-table / monitoring join only. The pyfunc scoring server's `_split_data_and_params` keeps only the `dataframe_records`/`dataframe_split`/`instances`/`inputs` keys plus `params`, and silently discards every other top-level key, including `client_request_id`. So it CANNOT reach `predict` and cannot drive routing.
 - `params.booking_id` is the channel that reaches the model. Two hard requirements, each a silent-drop trap: (1) `predict` must declare a `params` argument — the pyfunc wrapper inspects the signature and drops params otherwise; (2) the logged signature must define a params schema (`infer_signature(..., params={"booking_id": "none"})`) — with no params schema, `_enforce_params_schema` drops ALL params to `{}`, and any key not in the schema is filtered out too.

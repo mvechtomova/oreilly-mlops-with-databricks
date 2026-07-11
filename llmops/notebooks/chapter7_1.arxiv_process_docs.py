@@ -134,17 +134,9 @@ if len(records) > 0:
 import json
 import re
 
-from pyspark.sql.functions import (
-    col,
-    concat_ws,
-    explode,
-    udf)
+from pyspark.sql.functions import col, concat_ws, explode, udf
 
-from pyspark.sql.types import (
-    ArrayType,
-    StringType,
-    StructField,
-    StructType)
+from pyspark.sql.types import ArrayType, StringType, StructField, StructType
 
 
 def extract_chunks(parsed_content_json: str) -> list[tuple[str, str]]:
@@ -158,6 +150,7 @@ def extract_chunks(parsed_content_json: str) -> list[tuple[str, str]]:
             chunks.append((chunk_id, content))
     return chunks
 
+
 chunk_schema = ArrayType(
     StructType(
         [
@@ -170,10 +163,13 @@ extract_chunks_udf = udf(extract_chunks, chunk_schema)
 
 # COMMAND ----------
 
+
 def extract_paper_id(path):
     return path.replace(".pdf", "").split("/")[-1]
 
+
 extract_paper_id_udf = udf(extract_paper_id, StringType())
+
 
 def clean_chunk(text: str) -> str:
     # fix hyphenation across line breaks:
@@ -187,6 +183,7 @@ def clean_chunk(text: str) -> str:
     t = re.sub(r"\s+", " ", t)
 
     return t.strip()
+
 
 clean_chunk_udf = udf(clean_chunk, StringType())
 
@@ -215,7 +212,8 @@ chunks_df = (
         clean_chunk_udf(col("chunk.content")).alias("text"),
         concat_ws("_", col("paper_id"), col("chunk.chunk_id")).alias("id"),
     )
-    .join(metadata_df, "paper_id", "left"))
+    .join(metadata_df, "paper_id", "left")
+)
 
 # Write to table
 chunks_table = f"{catalog}.{schema}.arxiv_chunks"

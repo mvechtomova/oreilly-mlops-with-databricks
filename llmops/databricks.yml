@@ -1,4 +1,4 @@
-# This is a Databricks asset bundle definition for oreilly-mlops-with-databricks.
+# This is a Declarative Automation Bundle definition for oreilly-llmops-with-databricks.
 # The Databricks extension requires databricks.yml configuration file.
 # See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
 

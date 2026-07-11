@@ -1,8 +1,5 @@
 # Databricks notebook source
 # ruff: noqa
-import json
-import os
-
 import mlflow
 
 from hotel_booking.utils.common import set_mlflow_tracking_uri
@@ -15,10 +12,12 @@ experiment = mlflow.set_experiment(experiment_name="/Shared/demo")
 mlflow.set_experiment_tags(
     {"repository_name": "mvechtomova/oreilly-mlops-with-databricks"}
 )
-
 print(experiment)
 # COMMAND ----------
 # dump class attributes in a json file for visualization
+import json
+import os
+
 if not os.path.exists("../demo_artifacts"):
     os.mkdir("../demo_artifacts")
 with open("../demo_artifacts/mlflow_experiment.json", "w") as json_file:

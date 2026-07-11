@@ -150,7 +150,7 @@ class LightGBMModel:
             self.metrics = result.metrics
             return self.model_info
 
-    def register_model(self: "LightGBMModel", model_name: str, tags: Tags) -> None:
+    def register_model(self: "LightGBMModel", model_name: str, tags: Tags) -> str:
         """Register the model in MLflow Model Registry."""
         client = MlflowClient()
         registered_model = mlflow.register_model(

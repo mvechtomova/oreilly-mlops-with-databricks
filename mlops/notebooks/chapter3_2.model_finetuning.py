@@ -11,6 +11,7 @@ from hotel_booking.data.data_loader import DataLoader
 from hotel_booking.utils.common import set_mlflow_tracking_uri
 
 set_mlflow_tracking_uri()
+
 cfg = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
 spark = SparkSession.builder.getOrCreate()

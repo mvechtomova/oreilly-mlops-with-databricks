@@ -8,8 +8,7 @@
 # COMMAND ----------
 from hotel_booking.config import ProjectConfig
 
-cfg = ProjectConfig.from_yaml(
-    config_path="../project_config.yml")
+cfg = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
 model_name_a = f"{cfg.catalog}.{cfg.schema}.hotel_booking_basic"
 model_a_uri = f"models:/{model_name_a}@latest-model"
@@ -29,9 +28,7 @@ model_b = LightGBMModel(config=cfg)
 model_b.train(
     X_train=X_train,
     y_train=y_train,
-    parameters={"learning_rate": 0.01,
-                "n_estimators": 1000,
-                "max_depth": 6},
+    parameters={"learning_rate": 0.01, "n_estimators": 1000, "max_depth": 6},
 )
 
 # COMMAND ----------
@@ -64,12 +61,11 @@ import numpy as np
 import pandas as pd
 from mlflow.pyfunc import PythonModelContext
 
+
 class HotelBookingABTestWrapper(mlflow.pyfunc.PythonModel):
     def load_context(self, context: PythonModelContext) -> None:
-        self.model_a = mlflow.sklearn.load_model(
-            context.artifacts["model-a"])
-        self.model_b = mlflow.sklearn.load_model(
-            context.artifacts["model-b"])
+        self.model_a = mlflow.sklearn.load_model(context.artifacts["model-a"])
+        self.model_b = mlflow.sklearn.load_model(context.artifacts["model-b"])
 
     def predict(
         self,
@@ -93,6 +89,7 @@ class HotelBookingABTestWrapper(mlflow.pyfunc.PythonModel):
             "booking_id": booking_id,
         }
 
+
 # COMMAND ----------
 from mlflow.models import infer_signature
 
@@ -112,14 +109,12 @@ signature = infer_signature(
     params={"booking_id": "none"},
 )
 
-with mlflow.start_run(run_name="ab-test-wrapper",
-                      tags=tags.to_dict()) as run:
+with mlflow.start_run(run_name="ab-test-wrapper", tags=tags.to_dict()) as run:
     run_id = run.info.run_id
     model_info = mlflow.pyfunc.log_model(
         python_model=wrapper,
         name="pyfunc-ab-test",
-        artifacts={"model-a": model_a_uri,
-                   "model-b": model_b_uri},
+        artifacts={"model-a": model_a_uri, "model-b": model_b_uri},
         signature=signature,
         input_example=X_test[0:1],
     )

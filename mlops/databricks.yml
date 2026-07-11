@@ -1,4 +1,4 @@
-# This is a Databricks asset bundle definition for oreilly-mlops-with-databricks.
+# This is a Declarative Automation Bundle definition for oreilly-mlops-with-databricks.
 # The Databricks extension requires databricks.yml configuration file.
 # See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
 
@@ -23,7 +23,7 @@ variables:
     default: PAUSED
 # matches project_config.yml
   usage_policy_id:
-    description: usage/budget policy id for cost attribution 
+    description: usage/budget policy id for cost attribution
     default: cdad6f29-a213-4525-9330-e25b90afbe7a
 
 sync:
@@ -54,4 +54,3 @@ targets:
       root_path: "/Shared/.bundle/${bundle.target}/${bundle.name}"
     variables:
       schedule_pause_status: UNPAUSED
-

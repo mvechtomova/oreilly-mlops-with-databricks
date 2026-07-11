@@ -116,11 +116,7 @@ with psycopg.connect(conn_string) as conn:
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## Test with LakebaseMemory Class
-
-# COMMAND ----------
-
+# Test the same flow through the LakebaseMemory class used by the agent.
 from arxiv_curator.memory import LakebaseMemory
 
 memory = LakebaseMemory(
