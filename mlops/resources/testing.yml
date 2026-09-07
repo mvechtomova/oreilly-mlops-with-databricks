@@ -2,7 +2,7 @@ resources:
   jobs:
     test-chapter2-preprocess-data:
       name: test-chapter2-preprocess-data
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       environments:
         - environment_key: default
           spec:
@@ -18,7 +18,7 @@ resources:
 
     test-chapter3-1-experiment-tracking-demo:
       name: test-chapter3-1-experiment-tracking-demo
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       environments:
         - environment_key: default
           spec:
@@ -34,7 +34,7 @@ resources:
 
     test-chapter3-2-model-finetuning:
       name: test-chapter3-2-model-finetuning
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       environments:
         - environment_key: default
           spec:
@@ -50,7 +50,7 @@ resources:
 
     test-chapter3-3-model-logging-registering-demo:
       name: test-chapter3-3-model-logging-registering-demo
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       environments:
         - environment_key: default
           spec:
@@ -66,7 +66,7 @@ resources:
 
     test-chapter3-4-model-evaluation:
       name: test-chapter3-4-model-evaluation
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       environments:
         - environment_key: default
           spec:
@@ -82,7 +82,7 @@ resources:
 
     test-chapter4-1-model-serving:
       name: test-chapter4-1-model-serving
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       environments:
         - environment_key: default
           spec:
@@ -98,7 +98,7 @@ resources:
 
     test-chapter4-2-feature-serving:
       name: test-chapter4-2-feature-serving
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       environments:
         - environment_key: default
           spec:
@@ -114,7 +114,7 @@ resources:
 
     test-chapter4-3-model-serving-feature-lookup:
       name: test-chapter4-3-model-serving-feature-lookup
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       environments:
         - environment_key: default
           spec:
@@ -130,7 +130,7 @@ resources:
 
     test-chapter6-1-call-endpoint:
       name: test-chapter6-1-call-endpoint
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       environments:
         - environment_key: default
           spec:
@@ -146,7 +146,7 @@ resources:
 
     test-chapter6-2-enable-monitor:
       name: test-chapter6-2-enable-monitor
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       environments:
         - environment_key: default
           spec:
@@ -162,7 +162,7 @@ resources:
 
     test-all-notebooks-sequential:
       name: test-all-notebooks-sequential
-      budget_policy_id: "${var.usage_policy_id}"
+      # budget_policy_id: "${var.usage_policy_id}"  # not available on Free Edition
       # Positional start index (1-10). Notebooks before this index are skipped.
       # Default 1 runs the full chain. Override at run time, e.g.:
       #   databricks bundle run test-all-notebooks-sequential --params start_from=6

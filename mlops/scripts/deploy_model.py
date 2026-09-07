@@ -43,7 +43,7 @@ model_version = wrapper.log_register_model(
 serve_model(
     entity_name=model_name,
     entity_version=model_version,
-    budget_policy_id=cfg.usage_policy_id,
+    # budget_policy_id=cfg.usage_policy_id,  # not available on Free Edition
     endpoint_name="hotel-booking-pyfunc",
     schema_name=cfg.schema,
     catalog_name=cfg.catalog,

@@ -65,7 +65,8 @@ instance_name = "hotel-booking-price-preds"
 # create_online_store fails if the store already exists
 try:
     fe.create_online_store(
-        name=instance_name, capacity="CU_1", usage_policy_id=cfg.usage_policy_id
+        name=instance_name,
+        capacity="CU_1",  # usage_policy_id not on Free Edition
     )
 except Exception as e:
     print(f"Online store {instance_name} may already exist: {e}")
@@ -109,7 +110,7 @@ endpoint_name = "hotel-booking-feature-serving"
 w.serving_endpoints.create(
     name=endpoint_name,
     config=EndpointCoreConfigInput(name=endpoint_name, served_entities=served_entities),
-    budget_policy_id=cfg.usage_policy_id,
+    # budget_policy_id=cfg.usage_policy_id,  # not available on Free Edition
 )
 
 # COMMAND ----------

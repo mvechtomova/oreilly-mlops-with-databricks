@@ -32,4 +32,4 @@ cat_features:
 
 target: average_price
 
-usage_policy_id: cdad6f29-a213-4525-9330-e25b90afbe7a
+# usage_policy_id: cdad6f29-a213-4525-9330-e25b90afbe7a  # not available on Free Edition

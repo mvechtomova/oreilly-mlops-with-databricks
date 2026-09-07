@@ -169,7 +169,7 @@ endpoint_name = "hotel-booking-ab-test"
 serve_model(
     entity_name=ab_model_name,
     entity_version=registered_model.version,
-    budget_policy_id=cfg.usage_policy_id,
+    # budget_policy_id=cfg.usage_policy_id,  # not available on Free Edition
     endpoint_name=endpoint_name,
     catalog_name=cfg.catalog,
     schema_name=cfg.schema,

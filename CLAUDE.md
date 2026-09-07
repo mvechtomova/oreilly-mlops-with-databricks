@@ -60,6 +60,8 @@ Cost attribution must reach `system.billing.usage.custom_tags` on every job. Two
 
 `usage_policy_id` is defined once as a bundle variable in each `databricks.yml` (default matches `project_config.yml`), so the policy id lives in one place per project.
 
+**Free Edition caveat:** budget policies do not exist on Free Edition (no `databricks budget-policies` CLI command, no account-level budget policy API). All `usage_policy_id` / `budget_policy_id` references in the mlops project are therefore commented out (see `mlops/databricks.yml`, `mlops/project_config.yml`, `mlops/resources/*.yml`, `serve_model` in `serving.py`, `deploy_model.py`, the chapter 4 notebooks, and `tests/test_serving.py`). Re-enable them if the project moves to a paid tier. Note that mlops still passes `budget_policy_id` nowhere on Free Edition — endpoint/job creation simply omits it.
+
 ### Notebook imports: introduce in the cell where first used
 
 In `mlops/notebooks` (and llmops notebooks), do NOT hoist all imports to the top of the file. Put each import in the `# COMMAND ----------` cell where it is first used, so the book can show the import alongside the code that needs it. Within each cell's import block, sort per PEP / isort rules (standard library, third party, then first party, alphabetical within groups). See [mlops/notebooks/chapter4_1.model_serving.py](mlops/notebooks/chapter4_1.model_serving.py) as the reference example.

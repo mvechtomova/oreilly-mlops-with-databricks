@@ -80,7 +80,7 @@ if not endpoint_exists:
             traffic_config=traffic_config,
         ),
         ai_gateway=ai_gateway_cfg,
-        budget_policy_id=cfg.usage_policy_id,
+        # budget_policy_id=cfg.usage_policy_id,  # not available on Free Edition
     )
 else:
     w.serving_endpoints.update_config(name=endpoint_name, served_entities=served_entities)

@@ -10,7 +10,7 @@ from databricks.sdk.service.serving import (
 def serve_model(
     entity_name: str,
     entity_version: str,
-    budget_policy_id: str,
+    # budget_policy_id: str,  # not available on Free Edition
     endpoint_name: str,
     catalog_name: str,
     schema_name: str,
@@ -49,7 +49,7 @@ def serve_model(
                 served_entities=served_entities,
             ),
             ai_gateway=ai_gateway_cfg,
-            budget_policy_id=budget_policy_id,
+            # budget_policy_id=budget_policy_id,
         )
     else:
         workspace.serving_endpoints.update_config(

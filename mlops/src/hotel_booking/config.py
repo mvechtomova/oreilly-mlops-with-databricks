@@ -23,7 +23,7 @@ class ProjectConfig(BaseModel):
     catalog: str
     schema: str
     parameters: Parameters
-    usage_policy_id: str
+    # usage_policy_id: str  # not available on Free Edition
 
     @classmethod
     def from_yaml(

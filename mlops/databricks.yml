@@ -21,10 +21,11 @@ variables:
   schedule_pause_status:
     description: schedule pause status
     default: PAUSED
+# usage_policy_id is commented out: budget policies are not available on Free Edition
 # matches project_config.yml
-  usage_policy_id:
-    description: usage/budget policy id for cost attribution
-    default: cdad6f29-a213-4525-9330-e25b90afbe7a
+#   usage_policy_id:
+#     description: usage/budget policy id for cost attribution
+#     default: cdad6f29-a213-4525-9330-e25b90afbe7a
 
 sync:
   include:
@@ -38,19 +39,19 @@ targets:
     default: true
     mode: development
     workspace:
-      host: https://adb-971256932836835.15.azuredatabricks.net
+      host: https://dbc-b576ddfe-9e99.cloud.databricks.com
       root_path: "/Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}"
 
   acc:
     workspace:
-      host: https://adb-971256932836835.15.azuredatabricks.net
+      host: https://dbc-b576ddfe-9e99.cloud.databricks.com
       root_path: "/Shared/.bundle/${bundle.target}/${bundle.name}"
     variables:
       schedule_pause_status: PAUSED
 
   prd:
     workspace:
-      host: https://adb-971256932836835.15.azuredatabricks.net
+      host: https://dbc-b576ddfe-9e99.cloud.databricks.com
       root_path: "/Shared/.bundle/${bundle.target}/${bundle.name}"
     variables:
       schedule_pause_status: UNPAUSED

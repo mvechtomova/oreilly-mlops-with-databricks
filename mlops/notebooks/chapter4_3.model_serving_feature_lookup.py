@@ -210,7 +210,7 @@ if not endpoint_exists:
             name=endpoint_name,
             served_entities=served_entities,
         ),
-        budget_policy_id=cfg.usage_policy_id,
+        # budget_policy_id=cfg.usage_policy_id,  # not available on Free Edition
     )
 else:
     w.serving_endpoints.update_config(name=endpoint_name, served_entities=served_entities)
